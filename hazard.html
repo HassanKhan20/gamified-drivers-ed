@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>APEX — Daily Hazard Drill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="app.css" />
+<style>
+  .hazard-frame { max-width: 980px; margin: 0 auto; padding: 28px 24px 80px; }
+  .hazard-stage {
+    position: relative; width: 100%; aspect-ratio: 16/9;
+    border-radius: 18px; overflow: hidden;
+    border: 1px solid var(--stone-200); background: #cbd5e1;
+    cursor: crosshair; user-select: none;
+  }
+  .hazard-stage svg { display: block; width: 100%; height: 100%; }
+
+  .hotspot { fill: transparent; cursor: pointer; transition: fill 0.2s; }
+  .hotspot:hover { fill: rgba(255,255,255,0.08); }
+  .hotspot.spotted { fill: rgba(22,163,74,0.0); }
+  .hotspot.revealed-missed { fill: rgba(239,43,29,0.18); stroke: var(--racing); stroke-width: 2; stroke-dasharray: 6 4; }
+
+  .marker { display: none; pointer-events: none; }
+  .hotspot.spotted ~ .marker { display: block; }
+
+  .miss-flash {
+    position: absolute; pointer-events: none;
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 3px solid var(--racing); transform: translate(-50%, -50%);
+    animation: miss-anim 0.6s ease-out forwards;
+  }
+  @keyframes miss-anim {
+    0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.4); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.6); }
+  }
+
+  .hazard-hud {
+    position: absolute; top: 16px; left: 16px; right: 16px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    pointer-events: none;
+  }
+  .hud-badge { background: rgba(0,0,0,0.7); color: white; padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; backdrop-filter: blur(8px); }
+  .hud-badge .num { color: var(--ember); font-weight: 800; }
+
+  .hud-conditions { display: flex; gap: 6px; }
+  .hud-cond { background: rgba(0,0,0,0.7); color: white; padding: 6px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; backdrop-filter: blur(8px); display: inline-flex; align-items: center; gap: 5px; }
+
+  .hazard-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; gap: 12px; flex-wrap: wrap; }
+  .progress-strip { flex: 1; display: flex; gap: 6px; align-items: center; min-width: 200px; }
+  .pip { width: 36px; height: 8px; border-radius: 4px; background: var(--stone-200); transition: background 0.3s; }
+  .pip.on { background: linear-gradient(90deg, var(--racing), var(--ember)); }
+
+  .reveal-card { display: none; margin-top: 24px; }
+  .reveal-card.show { display: block; }
+  .reveal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .reveal-item { padding: 14px; border-radius: 12px; border: 1px solid; display: flex; gap: 12px; align-items: flex-start; }
+  .reveal-item.found { background: #f0fdf4; border-color: #bbf7d0; }
+  .reveal-item.missed { background: var(--racing-50); border-color: #fecaca; }
+  .reveal-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .reveal-item.found .reveal-icon { background: #16a34a; color: white; }
+  .reveal-item.missed .reveal-icon { background: var(--racing); color: white; }
+  .reveal-item h4 { margin: 0 0 4px; font-size: 14px; font-weight: 700; }
+  .reveal-item p { margin: 0; font-size: 12px; color: var(--ink-700); line-height: 1.5; }
+
+  .score-card {
+    background: linear-gradient(135deg, #18181b 0%, #1c1917 100%);
+    color: white; padding: 24px; border-radius: 16px; margin-top: 16px;
+    display: flex; gap: 24px; align-items: center; flex-wrap: wrap;
+  }
+  .score-num { font-family: 'Space Grotesk'; font-size: 48px; font-weight: 800; line-height: 1; }
+  .score-label { font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+  .score-stat { display: flex; flex-direction: column; gap: 2px; }
+
+  .lesson-title { font-family: 'Space Grotesk'; font-size: 28px; font-weight: 700; margin: 6px 0; letter-spacing: -0.02em; }
+  .lesson-sub { color: var(--ink-500); font-size: 14px; margin: 0 0 24px; }
+
+  .toast {
+    position: fixed; left: 50%; top: 90px; transform: translate(-50%, -20px);
+    background: #16a34a; color: white; padding: 10px 18px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s; z-index: 100;
+    box-shadow: 0 12px 30px -8px rgba(22,163,74,0.5);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <a href="dashboard.html" class="sidebar-logo">
+      <div class="sidebar-logo-mark">A</div>
+      <span class="sidebar-logo-text">APEX</span>
+    </a>
+    <div class="nav-section-label">Learn</div>
+    <a class="nav-item" href="dashboard.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4v-7H10v7H6a2 2 0 0 1-2-2V9z"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item" href="lesson.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      Lessons
+    </a>
+    <a class="nav-item active" href="hazard.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      Hazard Drill
+    </a>
+    <a class="nav-item" href="soon.html?f=Drive%20Log&d=Track%20every%20behind-the-wheel%20hour%20with%20parent%20sign-off%2C%20GPS%20routes%2C%20weather%20conditions%2C%20and%20auto-totals%20toward%20your%20state%20requirement.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm14 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/><path d="M3 17V9l2-5h14l2 5v8h-3M16 17H8"/></svg>
+      Drive Log
+      <span class="badge-soon">SOON</span>
+    </a>
+    <div class="nav-section-label">Trust</div>
+    <a class="nav-item" href="compliance.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Compliance
+    </a>
+    <button class="signout" onclick="APEX.reset(); location.href='index.html';">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sign out
+    </button>
+  </aside>
+
+  <main class="main">
+    <div id="topbar"></div>
+
+    <div class="hazard-frame" style="padding-top: 0;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+        <div>
+          <p style="font-size: 11px; font-weight: 700; color: var(--racing); letter-spacing: 0.15em; text-transform: uppercase; margin: 0;">Daily hazard drill</p>
+          <h1 class="lesson-title">Spot the hazards in this scene.</h1>
+          <p class="lesson-sub">Click everywhere you'd watch out for. There are <strong id="hazardTotal">5</strong> real hazards. Take your time — no fake timer.</p>
+        </div>
+        <div class="badge badge-amber" style="white-space: nowrap;">+30 XP for a perfect run</div>
+      </div>
+
+      <div class="hazard-stage" id="stage" onclick="missClick(event)">
+        <svg viewBox="0 0 800 450" id="scene" preserveAspectRatio="xMidYMid slice">
+          <!-- SKY -->
+          <defs>
+            <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#7dd3fc"/>
+              <stop offset="60%" stop-color="#fdba74"/>
+              <stop offset="100%" stop-color="#fbcfe8"/>
+            </linearGradient>
+            <linearGradient id="road" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#525252"/>
+              <stop offset="100%" stop-color="#262626"/>
+            </linearGradient>
+          </defs>
+          <rect width="800" height="280" fill="url(#sky)"/>
+          <!-- Sun -->
+          <circle cx="640" cy="100" r="38" fill="#fde047" opacity="0.95"/>
+          <circle cx="640" cy="100" r="60" fill="#fde047" opacity="0.25"/>
+
+          <!-- Distant buildings -->
+          <path d="M0 270 L60 270 L60 220 L100 220 L100 240 L150 240 L150 200 L200 200 L200 230 L250 230 L250 195 L300 195 L300 235 L360 235 L360 215 L420 215 L420 240 L480 240 L480 200 L540 200 L540 245 L590 245 L590 220 L640 220 L640 240 L700 240 L700 215 L760 215 L760 245 L800 245 L800 280 L0 280 Z" fill="#52525b" opacity="0.5"/>
+
+          <!-- School zone speed limit sign — HAZARD 5 (subtle) -->
+          <g>
+            <rect x="525" y="120" width="48" height="60" rx="3" fill="#fbbf24" stroke="#0a0a0a" stroke-width="2"/>
+            <text x="549" y="138" text-anchor="middle" font-size="9" font-weight="700" fill="#0a0a0a" font-family="Inter">SCHOOL</text>
+            <text x="549" y="151" text-anchor="middle" font-size="9" font-weight="700" fill="#0a0a0a" font-family="Inter">ZONE</text>
+            <text x="549" y="170" text-anchor="middle" font-size="14" font-weight="900" fill="#0a0a0a" font-family="Inter">20</text>
+            <line x1="549" y1="180" x2="549" y2="280" stroke="#52525b" stroke-width="3"/>
+          </g>
+
+          <!-- ROAD -->
+          <rect y="280" width="800" height="170" fill="url(#road)"/>
+          <!-- Center dashed line -->
+          <line x1="0" y1="350" x2="800" y2="350" stroke="#fef3c7" stroke-width="4" stroke-dasharray="40 30"/>
+          <!-- Sidewalk on right -->
+          <rect x="0" y="280" width="800" height="6" fill="#a3a3a3"/>
+          <!-- Curb -->
+          <rect x="0" y="430" width="800" height="20" fill="#737373"/>
+
+          <!-- PARKED CAR LEFT (with door starting to open — HAZARD 4) -->
+          <g>
+            <rect x="60" y="300" width="140" height="60" rx="6" fill="#3b82f6"/>
+            <rect x="76" y="312" width="50" height="22" fill="#1e3a8a" opacity="0.7"/>
+            <rect x="138" y="312" width="50" height="22" fill="#1e3a8a" opacity="0.7"/>
+            <circle cx="90" cy="365" r="11" fill="#0a0a0a"/>
+            <circle cx="180" cy="365" r="11" fill="#0a0a0a"/>
+            <!-- Door slightly ajar — note the gap and rotation -->
+            <g transform="translate(60 320) rotate(-25 0 20)">
+              <rect x="0" y="0" width="48" height="40" fill="#2563eb" stroke="#1e3a8a" stroke-width="1"/>
+              <rect x="6" y="6" width="36" height="16" fill="#1e3a8a" opacity="0.8"/>
+            </g>
+          </g>
+
+          <!-- BALL ON ROAD — HAZARD 2 -->
+          <g>
+            <circle cx="380" cy="395" r="14" fill="#ef4444"/>
+            <path d="M380 381 Q392 395 380 409 Q368 395 380 381" fill="#7f1d1d"/>
+            <ellipse cx="380" cy="412" rx="14" ry="3" fill="#000" opacity="0.3"/>
+          </g>
+
+          <!-- PARKED CAR FAR RIGHT (with pedestrian peeking — HAZARD 1) -->
+          <g>
+            <rect x="430" y="300" width="120" height="60" rx="6" fill="#94a3b8"/>
+            <rect x="442" y="312" width="38" height="22" fill="#1e293b" opacity="0.7"/>
+            <rect x="494" y="312" width="38" height="22" fill="#1e293b" opacity="0.7"/>
+            <circle cx="455" cy="365" r="11" fill="#0a0a0a"/>
+            <circle cx="535" cy="365" r="11" fill="#0a0a0a"/>
+            <text x="490" y="345" text-anchor="middle" font-size="9" fill="#1e293b" font-weight="700" font-family="Space Grotesk">VAN</text>
+          </g>
+
+          <!-- Pedestrian peeking from behind van — HAZARD 1 -->
+          <g>
+            <!-- head -->
+            <circle cx="558" cy="306" r="7" fill="#fde68a"/>
+            <!-- hair -->
+            <path d="M551 304 Q558 296 565 304" fill="#7c2d12"/>
+            <!-- shoulders/torso peek -->
+            <path d="M555 313 L562 313 L562 332 L555 332 Z" fill="#1e40af"/>
+          </g>
+
+          <!-- CYCLIST APPROACHING ON RIGHT — HAZARD 3 -->
+          <g>
+            <!-- bike frame -->
+            <line x1="690" y1="395" x2="715" y2="395" stroke="#0a0a0a" stroke-width="2"/>
+            <line x1="700" y1="395" x2="700" y2="375" stroke="#0a0a0a" stroke-width="2"/>
+            <line x1="700" y1="375" x2="710" y2="375" stroke="#0a0a0a" stroke-width="2"/>
+            <line x1="710" y1="375" x2="720" y2="395" stroke="#0a0a0a" stroke-width="2"/>
+            <circle cx="690" cy="400" r="10" fill="none" stroke="#0a0a0a" stroke-width="2"/>
+            <circle cx="720" cy="400" r="10" fill="none" stroke="#0a0a0a" stroke-width="2"/>
+            <!-- rider torso -->
+            <rect x="697" y="358" width="10" height="20" fill="#16a34a" rx="2"/>
+            <!-- head with helmet -->
+            <circle cx="702" cy="350" r="7" fill="#dc2626"/>
+            <!-- shadow -->
+            <ellipse cx="705" cy="412" rx="20" ry="3" fill="#000" opacity="0.3"/>
+          </g>
+
+          <!-- DECOY: tree shadow on road (looks like something but isn't a hazard) -->
+          <g opacity="0.4">
+            <ellipse cx="240" cy="395" rx="40" ry="10" fill="#000"/>
+          </g>
+
+          <!-- DECOY: bird in sky -->
+          <g>
+            <path d="M380 80 Q386 76 392 80 Q386 84 380 80 M380 80 Q374 76 368 80 Q374 84 380 80" stroke="#0a0a0a" stroke-width="2" fill="none"/>
+          </g>
+
+          <!-- ============== HOTSPOTS (clickable) ============== -->
+          <!-- Each hotspot is invisible until clicked; on click shows green check marker -->
+
+          <!-- 1. Pedestrian behind van -->
+          <g class="hotspot-group" data-id="ped">
+            <circle class="hotspot" cx="558" cy="318" r="34" onclick="event.stopPropagation(); spot('ped', 558, 318)"/>
+          </g>
+          <!-- 2. Ball on road -->
+          <g class="hotspot-group" data-id="ball">
+            <circle class="hotspot" cx="380" cy="395" r="32" onclick="event.stopPropagation(); spot('ball', 380, 395)"/>
+          </g>
+          <!-- 3. Cyclist -->
+          <g class="hotspot-group" data-id="cyc">
+            <circle class="hotspot" cx="705" cy="378" r="38" onclick="event.stopPropagation(); spot('cyc', 705, 378)"/>
+          </g>
+          <!-- 4. Opening car door -->
+          <g class="hotspot-group" data-id="door">
+            <ellipse class="hotspot" cx="48" cy="346" rx="34" ry="34" onclick="event.stopPropagation(); spot('door', 48, 346)"/>
+          </g>
+          <!-- 5. School zone sign -->
+          <g class="hotspot-group" data-id="school">
+            <rect class="hotspot" x="510" y="110" width="80" height="80" rx="6" onclick="event.stopPropagation(); spot('school', 549, 150)"/>
+          </g>
+
+          <!-- Markers (rendered after hotspots so they appear on top when shown) -->
+          <g id="markers"></g>
+        </svg>
+
+        <div class="hazard-hud">
+          <div class="hud-badge">
+            <span class="num" id="foundCount">0</span> / <span id="totalCount">5</span> spotted
+          </div>
+          <div class="hud-conditions">
+            <span class="hud-cond">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>
+              Dusk
+            </span>
+            <span class="hud-cond">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM19 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/><path d="M3 17V9l2-5h14l2 5v8h-3M16 17H8"/></svg>
+              28 mph
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hazard-actions">
+        <div class="progress-strip">
+          <div class="pip" id="pip-1"></div>
+          <div class="pip" id="pip-2"></div>
+          <div class="pip" id="pip-3"></div>
+          <div class="pip" id="pip-4"></div>
+          <div class="pip" id="pip-5"></div>
+          <span style="font-size: 12px; color: var(--ink-500); margin-left: 8px;">Hazards spotted</span>
+        </div>
+        <button id="doneBtn" class="btn btn-primary btn-lg" onclick="finish()">I'm done — score me</button>
+      </div>
+
+      <!-- REVEAL CARD -->
+      <div class="reveal-card" id="reveal">
+        <div class="score-card">
+          <div class="score-stat">
+            <div class="score-num xp-counter" id="scoreNum" style="background: linear-gradient(135deg, #ff5a4a, #fbbf24); -webkit-background-clip: text; background-clip: text; color: transparent;">5/5</div>
+            <div class="score-label">Hazards spotted</div>
+          </div>
+          <div class="score-stat">
+            <div class="score-num" id="xpEarned">+30</div>
+            <div class="score-label">XP earned</div>
+          </div>
+          <div class="score-stat">
+            <div class="score-num" id="rankNum">Top 12%</div>
+            <div class="score-label">Of new drivers</div>
+          </div>
+          <div style="flex: 1; min-width: 140px; text-align: right;">
+            <a href="dashboard.html" class="btn" style="background: white; color: var(--ink-900);">Back to dashboard</a>
+          </div>
+        </div>
+
+        <h3 class="font-display" style="margin: 24px 0 12px; font-size: 18px; font-weight: 700;">What was actually there.</h3>
+        <div class="reveal-grid" id="revealGrid"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast">Hazard spotted!</div>
+
+<script src="app.js"></script>
+<script>
+  const s = APEX.guard();
+
+  const HAZARDS = {
+    ped:    { name: 'Pedestrian behind parked van',  why: 'Anyone hidden behind a parked vehicle near a sidewalk is a potential pop-out. Cover the brake.', x: 558, y: 318 },
+    ball:   { name: 'Ball rolling into the road',    why: 'A loose ball usually means a child is following it — and a child won\'t look both ways.', x: 380, y: 395 },
+    cyc:    { name: 'Cyclist in your right lane',    why: 'Right-side cyclists are vulnerable to "right-hooks" if you turn without checking the right-rear blind spot.', x: 705, y: 378 },
+    door:   { name: 'Car door starting to open',     why: 'A door cracked open means the driver is about to exit. Always plan a buffer when passing parked cars.', x: 48, y: 346 },
+    school: { name: 'School zone speed limit (20)',  why: 'Easy to miss in your peripheral vision. Reduced speed zones often have uneven enforcement and unpredictable kids.', x: 549, y: 150 }
+  };
+
+  const TOTAL = Object.keys(HAZARDS).length;
+  const found = new Set();
+
+  function spot(id, x, y) {
+    if (found.has(id)) return;
+    found.add(id);
+
+    const group = document.querySelector('.hotspot-group[data-id="' + id + '"]');
+    if (group) group.querySelector('.hotspot').classList.add('spotted');
+
+    // Place a check marker
+    const markerSvg = `
+      <g class="marker-anim" transform="translate(${x} ${y})">
+        <circle r="22" fill="#16a34a" opacity="0.95"/>
+        <circle r="22" fill="none" stroke="#16a34a" stroke-width="2">
+          <animate attributeName="r" from="22" to="38" dur="0.7s" repeatCount="1"/>
+          <animate attributeName="opacity" from="0.7" to="0" dur="0.7s" repeatCount="1"/>
+        </circle>
+        <path d="M-8 0 L-2 6 L8 -5" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </g>
+    `;
+    document.getElementById('markers').insertAdjacentHTML('beforeend', markerSvg);
+
+    document.getElementById('foundCount').textContent = found.size;
+    document.getElementById('pip-' + found.size).classList.add('on');
+    showToast('Hazard spotted: ' + HAZARDS[id].name);
+
+    if (found.size === TOTAL) {
+      setTimeout(finish, 800);
+    }
+  }
+
+  function missClick(event) {
+    // Only trigger when clicking the bare scene, not a hotspot
+    if (event.target.classList.contains('hotspot')) return;
+    if (document.getElementById('reveal').classList.contains('show')) return;
+
+    const stage = document.getElementById('stage');
+    const rect = stage.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    const flash = document.createElement('div');
+    flash.className = 'miss-flash';
+    flash.style.left = x + 'px';
+    flash.style.top = y + 'px';
+    stage.appendChild(flash);
+    setTimeout(() => flash.remove(), 600);
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  function finish() {
+    const reveal = document.getElementById('reveal');
+    if (reveal.classList.contains('show')) return;
+
+    // Mark missed hotspots in red dashed
+    Object.keys(HAZARDS).forEach((id) => {
+      if (!found.has(id)) {
+        const group = document.querySelector('.hotspot-group[data-id="' + id + '"]');
+        if (group) group.querySelector('.hotspot').classList.add('revealed-missed');
+      }
+    });
+
+    // Scoring
+    const score = found.size;
+    const xp = score === TOTAL ? 30 : (score >= 3 ? 15 : 5);
+    document.getElementById('scoreNum').textContent = score + '/' + TOTAL;
+    document.getElementById('xpEarned').textContent = '+' + xp;
+    document.getElementById('rankNum').textContent =
+      score === TOTAL ? 'Top 12%' : score >= 4 ? 'Top 30%' : score >= 3 ? 'Top 55%' : 'Below avg';
+
+    // Build reveal grid
+    let html = '';
+    Object.keys(HAZARDS).forEach((id) => {
+      const h = HAZARDS[id];
+      const wasFound = found.has(id);
+      html += `
+        <div class="reveal-item ${wasFound ? 'found' : 'missed'}">
+          <div class="reveal-icon">
+            ${wasFound
+              ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
+              : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+            }
+          </div>
+          <div>
+            <h4>${h.name}</h4>
+            <p>${h.why}</p>
+          </div>
+        </div>
+      `;
+    });
+    document.getElementById('revealGrid').innerHTML = html;
+
+    reveal.classList.add('show');
+    document.getElementById('doneBtn').style.display = 'none';
+
+    APEX.awardXP(xp);
+    if (score === TOTAL) fireConfetti(60);
+    fireXpBurst(xp);
+
+    reveal.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Init
+  document.getElementById('topbar').innerHTML = APEX_TOPBAR(
+    'Daily Hazard Drill',
+    'Hazard-perception training is clinically proven to reduce new-driver crash rates.'
+  );
+  document.getElementById('totalCount').textContent = TOTAL;
+  document.getElementById('hazardTotal').textContent = TOTAL;
+</script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>APEX — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="app.css" />
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a href="dashboard.html" class="sidebar-logo">
+      <div class="sidebar-logo-mark">A</div>
+      <span class="sidebar-logo-text">APEX</span>
+    </a>
+    <div class="nav-section-label">Learn</div>
+    <a class="nav-item active" href="dashboard.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4v-7H10v7H6a2 2 0 0 1-2-2V9z"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item" href="lesson.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      Lessons
+    </a>
+    <a class="nav-item" href="hazard.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      Hazard Drill
+      <span class="badge-soon" style="background: var(--racing-50); color: var(--racing); border: 1px solid #fecaca;">NEW</span>
+    </a>
+    <a class="nav-item" href="soon.html?f=Drive%20Log&d=Track%20every%20behind-the-wheel%20hour%20with%20parent%20sign-off%2C%20GPS%20routes%2C%20weather%20conditions%2C%20and%20auto-totals%20toward%20your%20state%20requirement.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm14 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/><path d="M3 17V9l2-5h14l2 5v8h-3M16 17H8"/></svg>
+      Drive Log
+      <span class="badge-soon">SOON</span>
+    </a>
+    <div class="nav-section-label">Progress</div>
+    <a class="nav-item" href="soon.html?f=Achievements&d=Unlock%2040%2B%20badges%20for%20streaks%2C%20perfect%20quiz%20runs%2C%20chapter%20masteries%2C%20and%20safe-driving%20milestones.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1h3M18 9h2a2 2 0 0 0 2-2V6a1 1 0 0 0-1-1h-3M6 9V3h12v6a6 6 0 0 1-12 0zM9 21h6M12 17v4"/></svg>
+      Achievements
+      <span class="badge-soon">SOON</span>
+    </a>
+    <a class="nav-item" href="soon.html?f=Friends%20%26%20Leaderboard&d=Compete%20with%20classmates%20on%20weekly%20XP%20and%20hazard-perception%20scores.%20League%20promotions%20every%207%20days.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Friends
+      <span class="badge-soon">SOON</span>
+    </a>
+    <div class="nav-section-label">Trust</div>
+    <a class="nav-item" href="compliance.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Compliance
+    </a>
+    <div class="nav-section-label">Account</div>
+    <a class="nav-item" href="soon.html?f=Settings&d=Profile%2C%20notifications%2C%20parent%20connection%2C%20and%20privacy%20controls.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      Settings
+      <span class="badge-soon">SOON</span>
+    </a>
+    <button class="signout" onclick="APEX.reset(); location.href='index.html';">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sign out
+    </button>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div id="topbar"></div>
+
+    <!-- WELCOME HERO -->
+    <div class="card fade-in" style="padding: 32px; background: linear-gradient(135deg, #18181b 0%, #1c1917 100%); color: white; border: none; margin-bottom: 24px; position: relative; overflow: hidden;">
+      <div style="position: absolute; right: -30px; top: -30px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(239,43,29,0.5), transparent 70%); border-radius: 50%;"></div>
+      <div style="position: absolute; right: 80px; bottom: -20px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(249,115,22,0.4), transparent 70%); border-radius: 50%;"></div>
+
+      <div style="position: relative;">
+        <p style="font-size: 12px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #fb923c; margin: 0 0 8px;">Today's mission</p>
+        <h2 class="font-display" style="font-size: 32px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.02em;">The Pedestrian Pop-Up</h2>
+        <p style="color: rgba(255,255,255,0.7); margin: 0 0 24px; max-width: 440px; line-height: 1.5;">Chapter 1.3 · A real scenario most new drivers fail. Make the call before we teach the rule.</p>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;">
+          <span class="badge badge-amber" style="background: rgba(249,115,22,0.2); color: #fdba74; border-color: rgba(249,115,22,0.3);">~7 min</span>
+          <span class="badge badge-amber" style="background: rgba(249,115,22,0.2); color: #fdba74; border-color: rgba(249,115,22,0.3);">+50 XP</span>
+          <span class="badge badge-amber" style="background: rgba(249,115,22,0.2); color: #fdba74; border-color: rgba(249,115,22,0.3);">Streak +1</span>
+        </div>
+
+        <a href="lesson.html" class="btn btn-primary btn-lg" style="background: white; color: var(--racing-dark);">
+          Start lesson →
+        </a>
+      </div>
+    </div>
+
+    <!-- THREE COLUMNS -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px;">
+
+      <!-- Streak calendar -->
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <h3 class="font-display" style="font-size: 16px; margin: 0; font-weight: 700;">Your streak</h3>
+          <span class="badge badge-amber"><span id="streakNum"></span> DAYS</span>
+        </div>
+        <div class="streak-row" id="streakRow"></div>
+        <p style="font-size: 12px; color: var(--ink-500); margin: 14px 0 0;">Don't break the streak — one lesson a day keeps it alive.</p>
+      </div>
+
+      <!-- Course progress -->
+      <div class="card">
+        <h3 class="font-display" style="font-size: 16px; margin: 0 0 14px; font-weight: 700;">Course progress</h3>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+          <span class="font-display" style="font-size: 28px; font-weight: 700;"><span id="completedCount"></span> / 12</span>
+          <span style="font-size: 12px; color: var(--ink-500);">chapters · 24 hrs total</span>
+        </div>
+        <div class="progress-bar thick" style="margin-bottom: 12px;">
+          <div class="progress-bar-fill" id="progressFill" style="width: 0%;"></div>
+        </div>
+        <p style="font-size: 12px; color: var(--ink-500); margin: 0;">~<span id="hoursLeft"></span> hrs of active learning to your TDLR certificate.</p>
+      </div>
+
+      <!-- Recent badges -->
+      <div class="card">
+        <h3 class="font-display" style="font-size: 16px; margin: 0 0 14px; font-weight: 700;">Recent badges</h3>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+          <div class="badge-tile unlocked">
+            <div class="badge-tile-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+            <div class="badge-tile-name">First Lesson</div>
+          </div>
+          <div class="badge-tile unlocked">
+            <div class="badge-tile-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 0.67c0 0 2.43 2.84 2.43 5.59 0 2.62-1.72 4.74-4.34 4.74-2.63 0-4.61-2.12-4.61-4.74l.04-.45c-2.55 3.04-4.04 6.67-4.04 10.45 0 4.97 4.03 9 9 9s9-4.03 9-9C21.02 8.65 17.5 4.07 13.5.67z"/></svg></div>
+            <div class="badge-tile-name">3-day Streak</div>
+          </div>
+          <div class="badge-tile unlocked">
+            <div class="badge-tile-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div class="badge-tile-name">Perfect Quiz</div>
+          </div>
+          <div class="badge-tile locked">
+            <div class="badge-tile-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <div class="badge-tile-name">7-day Streak</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HAZARD DRILL CTA -->
+    <a href="hazard.html" class="card card-hover fade-in" style="margin-bottom: 24px; display: flex; align-items: center; gap: 20px; padding: 22px; background: linear-gradient(135deg, var(--racing-50), var(--ember-50)); border: 1px solid #fecaca; text-decoration: none; color: inherit;">
+      <div style="width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, var(--racing), var(--ember)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 10px 24px -8px rgba(239,43,29,0.5);">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      </div>
+      <div style="flex: 1;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+          <span class="badge" style="background: var(--racing); color: white; border: none;">DAILY · NEW</span>
+        </div>
+        <h3 class="font-display" style="font-size: 18px; font-weight: 700; margin: 4px 0;">Daily Hazard Drill</h3>
+        <p style="margin: 0; font-size: 13px; color: var(--ink-700);">Spot the 5 hazards in today's scene. Hazard-perception training is clinically proven to reduce new-driver crash rates.</p>
+      </div>
+      <div style="text-align: right; flex-shrink: 0;">
+        <div class="font-display" style="color: var(--racing); font-weight: 800; font-size: 14px;">+30 XP</div>
+        <div style="font-size: 11px; color: var(--ink-500); font-weight: 600;">90 sec</div>
+      </div>
+    </a>
+
+    <!-- LEADERBOARD (coming soon overlay) -->
+    <div class="card" style="margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 class="font-display" style="font-size: 16px; margin: 0; font-weight: 700;">Friend leaderboard</h3>
+        <a href="soon.html?f=Friends%20%26%20Leaderboard&d=Compete%20with%20classmates%20on%20weekly%20XP%20and%20hazard-perception%20scores.%20League%20promotions%20every%207%20days." style="color: var(--racing); font-size: 13px; font-weight: 600;">Open →</a>
+      </div>
+      <div class="soon-overlay" style="border-radius: 12px;">
+        <div style="opacity: 0.4;">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--stone-200);">
+            <div style="font-family: 'Space Grotesk'; font-weight: 700; color: var(--racing);">1</div>
+            <div class="profile-chip" style="width: 32px; height: 32px; font-size: 12px;">M</div>
+            <div style="flex: 1; font-weight: 600;">Maya R.</div>
+            <div style="font-weight: 700;">820 XP</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--stone-200);">
+            <div style="font-family: 'Space Grotesk'; font-weight: 700;">2</div>
+            <div class="profile-chip" style="width: 32px; height: 32px; font-size: 12px;">J</div>
+            <div style="flex: 1; font-weight: 600;">Jordan T.</div>
+            <div style="font-weight: 700;">660 XP</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px;">
+            <div style="font-family: 'Space Grotesk'; font-weight: 700;">3</div>
+            <div class="profile-chip" style="width: 32px; height: 32px; font-size: 12px;" id="meChip">D</div>
+            <div style="flex: 1; font-weight: 600;">You</div>
+            <div style="font-weight: 700;" id="meXp">240 XP</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS HINT -->
+    <div class="card" style="background: linear-gradient(135deg, var(--racing-50) 0%, var(--ember-50) 100%); border: 1px solid #fecaca;">
+      <div style="display: flex; gap: 16px; align-items: flex-start;">
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: white; color: var(--racing); display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #fecaca;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </div>
+        <div>
+          <h4 class="font-display" style="margin: 0 0 4px; font-weight: 700; font-size: 15px;">No fake timers in APEX.</h4>
+          <p style="margin: 0; font-size: 13px; color: var(--ink-700); line-height: 1.5;">State hour requirements come from real interaction — scenarios, decisions, mastery quizzes. Idle time doesn't count. So the more you actually engage, the faster you finish.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="app.js"></script>
+<script>
+  const s = APEX.guard();
+  if (s) {
+    document.getElementById('topbar').innerHTML = APEX_TOPBAR(
+      'Welcome back, ' + (s.user || 'driver') + '.',
+      'Pick up where you left off — Chapter 1.3 is queued.'
+    );
+    document.getElementById('streakNum').textContent = s.streak;
+    document.getElementById('completedCount').textContent = (s.completedLessons || []).length;
+    const pct = Math.round(((s.completedLessons || []).length / 12) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('hoursLeft').textContent = Math.max(0, 32 - Math.round((s.completedLessons || []).length * 2.5));
+    document.getElementById('meChip').textContent = (s.user || 'D').charAt(0).toUpperCase();
+    document.getElementById('meXp').textContent = s.xp + ' XP';
+
+    // Streak row — last 7 days
+    const days = ['M','T','W','T','F','S','S'];
+    const today = new Date().getDay();
+    const todayIdx = today === 0 ? 6 : today - 1;
+    const streakDays = Math.min(s.streak, 7);
+    let row = '';
+    for (let i = 0; i < 7; i++) {
+      const isPast = i < todayIdx;
+      const isToday = i === todayIdx;
+      const filled = isPast && (todayIdx - i) < streakDays;
+      const todayFilled = isToday && streakDays > 0;
+      const cls = (filled || todayFilled) ? 'active' : '';
+      row += `<div class="streak-day ${cls}"><span class="day-num">${days[i]}</span></div>`;
+    }
+    document.getElementById('streakRow').innerHTML = row;
+  }
+</script>
+</body>
+</html>

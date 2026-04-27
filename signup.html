@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>APEX — Get started</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="app.css" />
+<style>
+  body { background: linear-gradient(135deg, #fff1f0 0%, #ffffff 50%, #fff7ed 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .auth-card { background: white; border-radius: 24px; padding: 40px; max-width: 460px; width: 100%; box-shadow: 0 30px 80px -30px rgba(239,43,29,0.25); border: 1px solid var(--stone-200); }
+  .role-card { padding: 18px; border: 2px solid var(--stone-200); border-radius: 14px; cursor: pointer; transition: all 0.15s; display: flex; gap: 14px; align-items: flex-start; background: white; }
+  .role-card:hover { border-color: var(--racing); transform: translateY(-2px); box-shadow: 0 10px 30px -10px rgba(239,43,29,0.25); }
+  .role-card.selected { border-color: var(--racing); background: var(--racing-50); }
+  .role-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--racing-50); color: var(--racing); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .role-card.selected .role-icon { background: var(--racing); color: white; }
+  .role-title { font-family: 'Space Grotesk'; font-size: 16px; font-weight: 700; }
+  .role-desc { font-size: 13px; color: var(--ink-500); margin-top: 2px; }
+  input[type=text] { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--stone-200); font-size: 15px; font-family: inherit; transition: border-color 0.15s; }
+  input[type=text]:focus { outline: none; border-color: var(--racing); box-shadow: 0 0 0 3px rgba(239,43,29,0.1); }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--ink-700); }
+</style>
+</head>
+<body>
+  <div class="auth-card fade-in">
+    <a href="index.html" style="display: inline-flex; align-items: center; gap: 10px; margin-bottom: 28px;">
+      <div class="sidebar-logo-mark">A</div>
+      <span class="sidebar-logo-text">APEX</span>
+    </a>
+
+    <h1 class="font-display" style="font-size: 28px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.02em;">Try the prototype.</h1>
+    <p style="color: var(--ink-500); font-size: 14px; margin: 0 0 28px;">No real account needed — this saves to your browser only.</p>
+
+    <form id="signupForm" onsubmit="handleSubmit(event)">
+      <label>What's your name?</label>
+      <input type="text" id="name" placeholder="Hassan" required style="margin-bottom: 22px;" autofocus />
+
+      <label>I am a…</label>
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px;">
+        <div class="role-card selected" data-role="teen" onclick="pickRole('teen')">
+          <div class="role-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm14 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/><path d="M3 17V9l2-5h14l2 5v8h-3M16 17H8"/>
+            </svg>
+          </div>
+          <div>
+            <div class="role-title">Teen driver</div>
+            <div class="role-desc">Take lessons, earn XP, build streaks, get my license.</div>
+          </div>
+        </div>
+        <div class="role-card" data-role="parent" onclick="pickRole('parent')">
+          <div class="role-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <div>
+            <div class="role-title">Parent / Guardian</div>
+            <div class="role-desc">Monitor my teen's progress, log drives, run the co-pilot view.</div>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg btn-block">
+        Continue →
+      </button>
+    </form>
+
+    <p style="font-size: 12px; color: var(--ink-400); margin: 18px 0 0; text-align: center;">By continuing you agree to nothing — this is a prototype.</p>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    let role = 'teen';
+    function pickRole(r) {
+      role = r;
+      document.querySelectorAll('.role-card').forEach(c => c.classList.toggle('selected', c.dataset.role === r));
+    }
+    function handleSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      APEX.set({ user: name, role });
+      location.href = role === 'parent' ? 'parent.html' : 'dashboard.html';
+    }
+  </script>
+</body>
+</html>

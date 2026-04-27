@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>APEX — Compliance & Trust</title>
+<meta name="description" content="How APEX is built to comply with TDLR, ROSCA, and COPPA — and how that's different from the incumbents." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="app.css" />
+<style>
+  body { background: white; }
+  .compliance-frame { max-width: 1080px; margin: 0 auto; padding: 28px 24px 80px; }
+  .nav-back { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-500); font-size: 13px; font-weight: 600; margin-bottom: 24px; }
+  .nav-back:hover { color: var(--ink-900); }
+
+  .hero {
+    background: linear-gradient(135deg, var(--racing-50) 0%, var(--ember-50) 100%);
+    border: 1px solid #fecaca; border-radius: 22px;
+    padding: 48px; margin-bottom: 36px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before { content: ''; position: absolute; top: -60px; right: -60px; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(239,43,29,0.2), transparent 70%); }
+  .hero h1 { font-family: 'Space Grotesk'; font-size: 44px; font-weight: 800; letter-spacing: -0.025em; margin: 0 0 14px; line-height: 1.05; max-width: 720px; }
+  .hero p { font-size: 17px; color: var(--ink-700); max-width: 600px; line-height: 1.55; margin: 0; }
+  .hero .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: white; border: 1px solid #fecaca; font-size: 11px; font-weight: 700; color: var(--racing); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 18px; }
+  .hero .pill-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--racing); animation: pulse-dot 2s ease-in-out infinite; }
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .pillars { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 36px; }
+  .pillar {
+    background: white; border: 1px solid var(--stone-200); border-radius: 16px; padding: 24px;
+    position: relative;
+  }
+  .pillar-icon {
+    width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px; color: white;
+  }
+  .pillar h3 { font-family: 'Space Grotesk'; font-size: 17px; font-weight: 700; margin: 0 0 8px; }
+  .pillar p { font-size: 14px; color: var(--ink-500); margin: 0; line-height: 1.55; }
+  .pillar-status { display: inline-block; margin-top: 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .section-h { font-family: 'Space Grotesk'; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 6px; }
+  .section-sub { color: var(--ink-500); font-size: 15px; margin: 0 0 22px; }
+
+  .deny-list { background: white; border: 1px solid var(--stone-200); border-radius: 16px; padding: 28px; margin-bottom: 36px; }
+  .deny-row { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--stone-200); align-items: flex-start; }
+  .deny-row:last-child { border-bottom: none; }
+  .deny-cross { width: 28px; height: 28px; border-radius: 8px; background: var(--racing-50); color: var(--racing); display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #fecaca; font-weight: 700; }
+  .deny-content h4 { font-family: 'Space Grotesk'; font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+  .deny-content p { font-size: 13px; color: var(--ink-500); margin: 0; line-height: 1.55; }
+  .deny-cite { font-size: 11px; color: var(--ink-400); margin-top: 6px; font-weight: 600; }
+
+  .compare-table { background: white; border: 1px solid var(--stone-200); border-radius: 16px; overflow: hidden; margin-bottom: 36px; }
+  .compare-table table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .compare-table th, .compare-table td { padding: 16px 18px; text-align: left; border-bottom: 1px solid var(--stone-200); }
+  .compare-table th { background: var(--paper-2); font-weight: 700; color: var(--ink-700); font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table .yes { color: #16a34a; font-weight: 700; }
+  .compare-table .no { color: var(--racing); font-weight: 700; }
+  .compare-table .me { color: var(--racing); font-weight: 800; }
+
+  .verify {
+    background: linear-gradient(135deg, #18181b 0%, #1c1917 100%); color: white;
+    border-radius: 16px; padding: 32px; margin-bottom: 28px;
+  }
+  .verify h2 { font-family: 'Space Grotesk'; font-size: 22px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.02em; }
+  .verify p { color: rgba(255,255,255,0.65); font-size: 14px; margin: 0 0 20px; }
+  .verify-links { display: flex; flex-wrap: wrap; gap: 8px; }
+  .verify-link { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; font-size: 13px; font-weight: 500; color: white; transition: all 0.15s; }
+  .verify-link:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); }
+
+  .cta-foot { text-align: center; padding: 40px 0 8px; }
+  .cta-foot h2 { font-family: 'Space Grotesk'; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 12px; }
+  .cta-foot p { color: var(--ink-500); margin: 0 0 20px; }
+</style>
+</head>
+<body>
+<div class="compliance-frame fade-in">
+
+  <a class="nav-back" href="index.html">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back to APEX
+  </a>
+
+  <!-- HERO -->
+  <div class="hero">
+    <span class="pill"><span class="pill-dot"></span> Compliance &amp; Trust</span>
+    <h1>We built APEX to follow the law,<br/>not exploit it.</h1>
+    <p>Every promise on this page is a written commitment. The incumbents bury terms in fine print, auto-enroll your kid in subscriptions you didn't ask for, and lock courses on day 366. We don't.</p>
+  </div>
+
+  <!-- 4 TRUST PILLARS -->
+  <div class="pillars">
+    <div class="pillar">
+      <div class="pillar-icon" style="background: var(--racing);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <h3>State-approved</h3>
+      <p>TDLR (Texas Department of Licensing and Regulation) approval pending. We follow the Program of Organized Instruction word-for-word: every required topic, every minimum hour. The "instructional hour" is 55 minutes.</p>
+      <span class="pillar-status" style="color: #d97706;">In approval</span>
+    </div>
+
+    <div class="pillar">
+      <div class="pillar-icon" style="background: #16a34a;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
+      </div>
+      <h3>ROSCA-clean</h3>
+      <p>The federal Restore Online Shoppers Confidence Act bans negative-option marketing without clear disclosure. We don't sell roadside assistance, recurring add-ons, or any subscription. One charge. Done.</p>
+      <span class="pillar-status" style="color: #16a34a;">Compliant</span>
+    </div>
+
+    <div class="pillar">
+      <div class="pillar-icon" style="background: #16a34a;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <h3>COPPA-aware</h3>
+      <p>For students under 18, the parent confirms the account before any purchase. Minors can't authorize add-on charges. Cancellation works from the parent's email — not buried inside the kid's account.</p>
+      <span class="pillar-status" style="color: #16a34a;">Compliant</span>
+    </div>
+
+    <div class="pillar">
+      <div class="pillar-icon" style="background: #16a34a;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <h3>Lifetime access · 14-day refund</h3>
+      <p>Other courses void your purchase after 365 days, no notice. Yours never expires — even if your teen takes a year off. And if you change your mind in 14 days, full refund, no questions, even on partial completion.</p>
+      <span class="pillar-status" style="color: #16a34a;">Guaranteed</span>
+    </div>
+  </div>
+
+  <!-- WHAT WE DON'T DO -->
+  <h2 class="section-h">What APEX won't do.</h2>
+  <p class="section-sub">A list of practices we've audited from competitors' BBB filings and refused to copy.</p>
+
+  <div class="deny-list">
+    <div class="deny-row">
+      <div class="deny-cross">✗</div>
+      <div class="deny-content">
+        <h4>Auto-enroll your minor in a recurring subscription</h4>
+        <p>A Texas competitor ties their discounted course price to a 30-day "free" Allstate Roadside trial that renews at $5/mo, with cancellation only available via the minor's login. We don't do this.</p>
+        <div class="deny-cite">Reference: BBB complaints citing FTC ROSCA &amp; TX Bus &amp; Comm §17.46(b)(24)</div>
+      </div>
+    </div>
+    <div class="deny-row">
+      <div class="deny-cross">✗</div>
+      <div class="deny-content">
+        <h4>Use "minister's discounts" — a fake list price next to a fake sale price</h4>
+        <p>Competitors list "$115 → $74 today only" permanently. We don't. Our price is the price.</p>
+      </div>
+    </div>
+    <div class="deny-row">
+      <div class="deny-cross">✗</div>
+      <div class="deny-content">
+        <h4>Expire your purchased course after a year</h4>
+        <p>Industry-standard contracts let providers void a course you paid for at day 366 with no notice. Lifetime access is non-negotiable for us.</p>
+      </div>
+    </div>
+    <div class="deny-row">
+      <div class="deny-cross">✗</div>
+      <div class="deny-content">
+        <h4>Force per-page timers that lock you on a slide for 60 seconds</h4>
+        <p>TDLR rules require minimum total hours, not per-slide timers — that's a competitor invention. We track real engagement; idle time pauses the clock; quiz wins count toward your hours.</p>
+        <div class="deny-cite">Reference: TDLR Rule 84, Texas Education Code Ch. 1001 Subchapter C</div>
+      </div>
+    </div>
+    <div class="deny-row">
+      <div class="deny-cross">✗</div>
+      <div class="deny-content">
+        <h4>Charge processing fees on refunds</h4>
+        <p>Some industry players keep 10% as a "processing fee" on refunds. Ours are 100% within the 14-day window.</p>
+      </div>
+    </div>
+    <div class="deny-row">
+      <div class="deny-cross">✗</div>
+      <div class="deny-content">
+        <h4>Sell or share your data with marketing partners</h4>
+        <p>Student progress data stays inside APEX. The only third-party we share with is the state agency that issues your certificate.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPARISON TABLE -->
+  <h2 class="section-h">Side-by-side.</h2>
+  <p class="section-sub">How APEX policy compares to publicly-documented competitor practices.</p>
+
+  <div class="compare-table">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 38%;">Policy</th>
+          <th style="width: 28%;">Aceable (per BBB)</th>
+          <th style="width: 16%;">Industry standard</th>
+          <th style="width: 18%;">APEX</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Bundled recurring add-ons</strong></td>
+          <td><span class="no">Yes — $5/mo Roadside</span></td>
+          <td><span class="no">Often</span></td>
+          <td><span class="me">Never</span></td>
+        </tr>
+        <tr>
+          <td><strong>Course expiration</strong></td>
+          <td>365 days</td>
+          <td>365 days typical</td>
+          <td><span class="me">Lifetime</span></td>
+        </tr>
+        <tr>
+          <td><strong>Refund window</strong></td>
+          <td>30 days, only if not started</td>
+          <td>3–30 days, often with fees</td>
+          <td><span class="me">14 days, no questions</span></td>
+        </tr>
+        <tr>
+          <td><strong>Per-slide forced timer</strong></td>
+          <td><span class="no">Yes</span></td>
+          <td><span class="no">Yes</span></td>
+          <td><span class="me">No — engagement-based</span></td>
+        </tr>
+        <tr>
+          <td><strong>Cancel sub from parent account</strong></td>
+          <td><span class="no">Must use minor's login</span></td>
+          <td>—</td>
+          <td><span class="me">Not applicable (no subs)</span></td>
+        </tr>
+        <tr>
+          <td><strong>Sells/shares student data</strong></td>
+          <td>Allstate Roadside data sharing</td>
+          <td>Varies</td>
+          <td><span class="me">Never</span></td>
+        </tr>
+        <tr>
+          <td><strong>Pricing transparency</strong></td>
+          <td><span class="no">"List price → discounted"</span></td>
+          <td><span class="no">Common</span></td>
+          <td><span class="me">One flat price</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- VERIFY -->
+  <div class="verify">
+    <h2>Don't take our word for it.</h2>
+    <p>Verify any of these claims directly with the regulators and laws we reference.</p>
+    <div class="verify-links">
+      <a class="verify-link" href="https://www.tdlr.texas.gov/driver/" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+        TDLR Driver Education
+      </a>
+      <a class="verify-link" href="https://www.ftc.gov/legal-library/browse/statutes/restore-online-shoppers-confidence-act" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+        FTC: ROSCA
+      </a>
+      <a class="verify-link" href="https://www.ftc.gov/legal-library/browse/rules/childrens-online-privacy-protection-rule-coppa" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+        FTC: COPPA
+      </a>
+      <a class="verify-link" href="https://www.bbb.org/us/tx/austin/profile/real-estate-school/aceable-0825-1000135026/complaints" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+        Aceable BBB record
+      </a>
+      <a class="verify-link" href="https://statutes.capitol.texas.gov/Docs/BC/htm/BC.17.htm" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+        TX Bus &amp; Comm Code §17
+      </a>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-foot">
+    <h2>Drivers ed shouldn't require a lawyer.</h2>
+    <p>Try the prototype. See how the actual product feels.</p>
+    <a href="signup.html" class="btn btn-primary btn-lg">Launch the prototype →</a>
+  </div>
+
+</div>
+</body>
+</html>

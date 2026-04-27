@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>APEX — Parent Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="app.css" />
+</head>
+<body>
+<div class="app-layout">
+
+  <aside class="sidebar">
+    <a href="parent.html" class="sidebar-logo">
+      <div class="sidebar-logo-mark">A</div>
+      <span class="sidebar-logo-text">APEX</span>
+    </a>
+    <div class="nav-section-label">Parent View</div>
+    <a class="nav-item active" href="parent.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4v-7H10v7H6a2 2 0 0 1-2-2V9z"/></svg>
+      Overview
+    </a>
+    <a class="nav-item" href="soon.html?f=Drive%20Logbook&d=Every%20behind-the-wheel%20session%20your%20teen%20has%20logged%2C%20with%20your%20sign-off%2C%20GPS%20routes%2C%20weather%2C%20and%20a%20running%20total%20toward%20your%20state's%20required%20practice%20hours.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm14 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/><path d="M3 17V9l2-5h14l2 5v8h-3M16 17H8"/></svg>
+      Drive Log
+      <span class="badge-soon">SOON</span>
+    </a>
+    <a class="nav-item" href="soon.html?f=Weekly%20Report&d=Sunday%20email%20with%20your%20teen's%20progress%2C%20weakest%20concepts%2C%20recommended%20topics%20to%20discuss%20on%20the%20next%20drive%2C%20and%20behavior%20trends.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Reports
+      <span class="badge-soon">SOON</span>
+    </a>
+    <a class="nav-item" href="soon.html?f=Insurance%20Discount%20Paperwork&d=Auto-generated%2C%20pre-filled%20documents%20for%20State%20Farm%2C%20Allstate%2C%20Geico%2C%20and%2018%20other%20insurers'%20good-student%20and%20drivers-ed%20discount%20programs.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Insurance
+      <span class="badge-soon">SOON</span>
+    </a>
+    <a class="nav-item" href="soon.html?f=Settings&d=Manage%20notifications%2C%20add%20a%20second%20parent%2C%20and%20configure%20your%20teen's%20practice%20goals.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      Settings
+      <span class="badge-soon">SOON</span>
+    </a>
+    <button class="signout" onclick="APEX.reset(); location.href='index.html';">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sign out
+    </button>
+  </aside>
+
+  <main class="main">
+    <div id="topbar"></div>
+
+    <!-- TEEN SUMMARY HERO -->
+    <div class="card fade-in" style="margin-bottom: 20px; padding: 28px;">
+      <div style="display: flex; align-items: center; gap: 18px; margin-bottom: 22px;">
+        <div class="profile-chip" style="width: 56px; height: 56px; font-size: 22px;">S</div>
+        <div style="flex: 1;">
+          <div style="font-size: 12px; color: var(--ink-500); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;">Your teen</div>
+          <h2 class="font-display" style="font-size: 24px; font-weight: 700; margin: 2px 0 4px; letter-spacing: -0.02em;">Sarah Johnson</h2>
+          <div style="font-size: 13px; color: var(--ink-500);">Texas · Permit issued Mar 2026 · 6 months until eligible test date</div>
+        </div>
+        <a href="soon.html?f=Detailed%20Progress&d=Drill%20into%20every%20chapter%2C%20every%20quiz%20attempt%2C%20every%20wrong%20answer%2C%20and%20what%20to%20practice%20next." class="btn btn-secondary">View detail →</a>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
+        <div class="card" style="padding: 16px; background: linear-gradient(135deg, var(--racing-50), var(--ember-50)); border-color: #fecaca;">
+          <div style="font-size: 11px; color: var(--ink-500); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">Streak</div>
+          <div class="font-display" style="font-size: 28px; font-weight: 800; color: var(--racing); margin-top: 4px;">5 days</div>
+        </div>
+        <div class="card" style="padding: 16px;">
+          <div style="font-size: 11px; color: var(--ink-500); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">Course</div>
+          <div class="font-display" style="font-size: 28px; font-weight: 800; margin-top: 4px;">2/12</div>
+          <div style="font-size: 11px; color: var(--ink-500); margin-top: 2px;">chapters complete</div>
+        </div>
+        <div class="card" style="padding: 16px;">
+          <div style="font-size: 11px; color: var(--ink-500); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">Drive hours</div>
+          <div class="font-display" style="font-size: 28px; font-weight: 800; margin-top: 4px;">12.5</div>
+          <div style="font-size: 11px; color: var(--ink-500); margin-top: 2px;">of 30 required (TX)</div>
+        </div>
+        <div class="card" style="padding: 16px;">
+          <div style="font-size: 11px; color: var(--ink-500); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">Quiz avg</div>
+          <div class="font-display" style="font-size: 28px; font-weight: 800; color: #16a34a; margin-top: 4px;">94%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TWO-COL LAYOUT -->
+    <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; margin-bottom: 20px;">
+
+      <!-- DRIVE LOG PREVIEW -->
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 class="font-display" style="font-size: 17px; font-weight: 700; margin: 0;">Recent practice drives</h3>
+          <a href="soon.html?f=Drive%20Logbook&d=Every%20behind-the-wheel%20session%2C%20parent-signed%2C%20with%20GPS%20route%20replay%20and%20conditions." style="color: var(--racing); font-size: 13px; font-weight: 600;">Log a drive →</a>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; gap: 14px; align-items: center; padding: 14px; border: 1px solid var(--stone-200); border-radius: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--racing-50); display: flex; align-items: center; justify-content: center; color: var(--racing);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM19 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/><path d="M3 17V9l2-5h14l2 5v8h-3M16 17H8"/></svg>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600;">Highway practice — I-35 north</div>
+              <div style="font-size: 12px; color: var(--ink-500);">2.5 hrs · Wet roads · 42 mi · You signed off Apr 22</div>
+            </div>
+            <span class="badge badge-green">Signed</span>
+          </div>
+
+          <div style="display: flex; gap: 14px; align-items: center; padding: 14px; border: 1px solid var(--stone-200); border-radius: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--racing-50); display: flex; align-items: center; justify-content: center; color: var(--racing);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM19 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/><path d="M3 17V9l2-5h14l2 5v8h-3M16 17H8"/></svg>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600;">Parking lot drills</div>
+              <div style="font-size: 12px; color: var(--ink-500);">1 hr · Clear · 3-pt turns, parallel · Apr 19</div>
+            </div>
+            <span class="badge badge-green">Signed</span>
+          </div>
+
+          <div style="display: flex; gap: 14px; align-items: center; padding: 14px; border: 1px solid var(--stone-200); border-radius: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--racing-50); display: flex; align-items: center; justify-content: center; color: var(--racing);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM19 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/><path d="M3 17V9l2-5h14l2 5v8h-3M16 17H8"/></svg>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600;">Neighborhood loops</div>
+              <div style="font-size: 12px; color: var(--ink-500);">45 min · Clear · Turn signals + stop signs · Apr 16</div>
+            </div>
+            <span class="badge badge-amber">Pending</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCENARIO OF THE DAY -->
+      <div class="card" style="background: linear-gradient(135deg, #18181b 0%, #1c1917 100%); color: white; border: none; position: relative; overflow: hidden;">
+        <div style="position: absolute; right: -40px; top: -40px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(239,43,29,0.4), transparent 70%); border-radius: 50%;"></div>
+        <div style="position: relative;">
+          <p style="font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: #fb923c; margin: 0 0 8px;">SCENARIO OF THE DAY</p>
+          <h3 class="font-display" style="font-size: 20px; font-weight: 700; margin: 0 0 12px; letter-spacing: -0.02em;">Talk through this on your next drive.</h3>
+          <p style="color: rgba(255,255,255,0.75); font-size: 14px; line-height: 1.55; margin: 0 0 16px;">"You're approaching a green light and there's a delivery van parked on the right blocking your view of the sidewalk. What's the best move?"</p>
+          <p style="font-size: 12px; color: #fb923c; margin: 0 0 16px;"><strong>Tip for the parent:</strong> ask Sarah this <em>before</em> she gets in the car. Then watch what she does in similar real situations.</p>
+          <a href="soon.html?f=Scenario%20Library&d=A%20growing%20library%20of%20drive-along%20scenarios%20to%20test%20your%20teen's%20instincts%20in%20real%20conditions." class="btn" style="background: white; color: var(--racing-dark); font-size: 13px;">See full library →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- INSURANCE DISCOUNT TRACKER -->
+    <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border-color: #bbf7d0;">
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <div style="width: 52px; height: 52px; border-radius: 14px; background: #16a34a; color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div style="flex: 1;">
+          <div style="font-size: 11px; font-weight: 700; color: #16a34a; text-transform: uppercase; letter-spacing: 0.08em;">On track for insurance discount</div>
+          <h4 class="font-display" style="margin: 2px 0 4px; font-weight: 700; font-size: 16px;">~$340/year savings projected once Sarah completes the course.</h4>
+          <p style="margin: 0; font-size: 13px; color: var(--ink-700);">We'll auto-generate the paperwork for your insurer the day she gets her certificate.</p>
+        </div>
+        <a href="soon.html?f=Insurance%20Discount%20Paperwork&d=Auto-generated%20documents%20for%2021%20major%20insurers'%20drivers-ed%20and%20good-student%20discounts%2C%20pre-filled%20with%20your%20teen's%20completion%20data." class="btn btn-secondary" style="flex-shrink: 0;">Set up</a>
+      </div>
+    </div>
+
+    <!-- WEAK SPOT INSIGHT -->
+    <div class="card">
+      <div style="display: flex; gap: 14px; align-items: flex-start;">
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: #fffbeb; color: #d97706; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #fde68a;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div>
+          <h4 class="font-display" style="margin: 0 0 4px; font-weight: 700; font-size: 15px;">Heads up — Sarah missed 2 of 3 questions on "yielding to pedestrians".</h4>
+          <p style="margin: 0; font-size: 13px; color: var(--ink-700); line-height: 1.55;">When you're next in the car together, look for a controlled intersection with crosswalks. Ask her who has right of way — green light vs. pedestrian already in the crosswalk.</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="app.js"></script>
+<script>
+  const s = APEX.guard();
+  if (s) {
+    document.getElementById('topbar').innerHTML = APEX_TOPBAR(
+      'Hi, ' + (s.user || 'Parent') + '.',
+      "Here's what your teen has been up to."
+    );
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>APEX — Drivers Ed teens don't try to bypass</title>
+<meta name="description" content="State-approved drivers ed built like a game, not a slideshow. No fake timers. No surprise charges. Real scenarios, real progress, real parent dashboard." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+          display: ['Space Grotesk', 'Inter', 'sans-serif'],
+        },
+        colors: {
+          paper: { 50: '#ffffff', 100: '#fafaf9', 200: '#f5f5f4', 300: '#e7e5e4' },
+          ink: { 950: '#0a0a0a', 900: '#18181b', 700: '#3f3f46', 500: '#71717a', 400: '#a1a1aa' },
+          racing: { 50: '#fff1f0', 100: '#ffe1de', 400: '#ff5a4a', 500: '#ef2b1d', 600: '#d11f12', 700: '#a3160c' },
+          ember: { 400: '#ff8a3c', 500: '#f97316', 600: '#ea580c' },
+        },
+        animation: {
+          'gradient-x': 'gradient-x 15s ease infinite',
+          'fade-up': 'fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        },
+        keyframes: {
+          'gradient-x': { '0%, 100%': { 'background-position': '0% 50%' }, '50%': { 'background-position': '100% 50%' } },
+          'fade-up': { '0%': { opacity: 0, transform: 'translateY(24px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+        },
+      },
+    },
+  };
+</script>
+<style>
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; background: #ffffff; color: #18181b; }
+  .font-display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.02em; }
+  .grain::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; opacity: 0.025; z-index: 1;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .text-gradient { background: linear-gradient(120deg, #ef2b1d 0%, #f97316 50%, #ef2b1d 100%); -webkit-background-clip: text; background-clip: text; color: transparent; background-size: 200% auto; animation: gradient-x 8s linear infinite; }
+  @keyframes gradient-x { 0% { background-position: 0% center; } 100% { background-position: 200% center; } }
+  .glow { box-shadow: 0 10px 40px -10px rgba(239, 43, 29, 0.45), 0 20px 60px -20px rgba(249, 115, 22, 0.25); }
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1); }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+  .marquee { animation: marquee 40s linear infinite; }
+  @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  .grid-bg { background-image: linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px); background-size: 48px 48px; }
+  .radial-fade { mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%); -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%); }
+  .card { background: #ffffff; border: 1px solid #e7e5e4; transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s; }
+  .card:hover { border-color: #ef2b1d; transform: translateY(-2px); box-shadow: 0 20px 40px -20px rgba(239,43,29,0.25); }
+  .stripe-bg { background: linear-gradient(135deg, #fff1f0 0%, #ffffff 50%, #fff7ed 100%); }
+  .race-stripe { background: repeating-linear-gradient(90deg, #ef2b1d 0 12px, transparent 12px 24px); height: 4px; }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  details[open] summary .chev { transform: rotate(180deg); }
+  .chev { transition: transform 0.3s; }
+
+  /* === Gamified race track === */
+  .road {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 78px;
+    background: linear-gradient(180deg, #1c1917 0%, #0c0a09 100%);
+    overflow: hidden; z-index: 5;
+  }
+  .road::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent 0%, #ef2b1d 25%, #f97316 50%, #ef2b1d 75%, transparent 100%);
+    box-shadow: 0 0 14px rgba(249,115,22,0.6);
+  }
+  .road-dashes {
+    position: absolute; left: 0; right: 0; top: 36px; height: 5px;
+    background: repeating-linear-gradient(90deg, #fef3c7 0 34px, transparent 34px 72px);
+    animation: scroll-road 0.5s linear infinite;
+    opacity: 0.9;
+  }
+  @keyframes scroll-road { from { background-position: 0 0; } to { background-position: -72px 0; } }
+
+  .car-track {
+    position: absolute; bottom: 14px; left: 0;
+    animation: drive 14s linear infinite;
+    filter: drop-shadow(0 8px 10px rgba(0,0,0,0.55));
+    z-index: 6;
+  }
+  @keyframes drive {
+    0%   { transform: translateX(-180px); }
+    100% { transform: translateX(calc(100vw + 60px)); }
+  }
+  .wheel-spin { transform-box: fill-box; transform-origin: center; animation: spin 0.3s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .exhaust {
+    position: absolute; bottom: 30px; left: 0;
+    animation: drive 14s linear infinite;
+    z-index: 5; pointer-events: none;
+  }
+  .exhaust-puff {
+    position: absolute; width: 14px; height: 14px; border-radius: 50%;
+    background: rgba(255,255,255,0.55);
+    animation: puff 1.4s ease-out infinite;
+    opacity: 0;
+  }
+  .exhaust-puff:nth-child(1) { animation-delay: 0s; }
+  .exhaust-puff:nth-child(2) { animation-delay: 0.45s; left: -10px; }
+  .exhaust-puff:nth-child(3) { animation-delay: 0.9s; left: -20px; }
+  @keyframes puff {
+    0%   { transform: scale(0.3) translateX(0); opacity: 0; }
+    25%  { opacity: 0.65; }
+    100% { transform: scale(2.2) translateX(-32px); opacity: 0; }
+  }
+
+  /* Speed lines */
+  .speed-line {
+    position: absolute; height: 2px; border-radius: 2px;
+    background: linear-gradient(90deg, transparent, #f97316);
+    animation: speed 0.7s ease-out infinite;
+    opacity: 0;
+  }
+  @keyframes speed {
+    0%   { transform: translateX(8px); opacity: 0; }
+    30%  { opacity: 1; }
+    100% { transform: translateX(-40px); opacity: 0; }
+  }
+
+  /* Floating gamified pickups */
+  .pickup {
+    position: absolute; pointer-events: none; z-index: 4;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px;
+    padding: 6px 12px; border-radius: 999px; white-space: nowrap;
+    background: linear-gradient(135deg, #ef2b1d 0%, #f97316 100%);
+    color: #fff;
+    box-shadow: 0 10px 28px rgba(239,43,29,0.35);
+    animation: pickup-float 5s ease-out infinite;
+    opacity: 0;
+  }
+  .pickup.alt { background: linear-gradient(135deg, #18181b 0%, #3f3f46 100%); border: 1px solid #f97316; }
+  .pickup-1 { left: 8%;  bottom: 35%; animation-delay: 0.4s; }
+  .pickup-2 { right: 9%; bottom: 48%; animation-delay: 2.1s; }
+  .pickup-3 { left: 16%; top: 30%;    animation-delay: 3.4s; }
+  .pickup-4 { right: 18%; top: 24%;   animation-delay: 1.2s; }
+  @keyframes pickup-float {
+    0%   { transform: translateY(20px) scale(0.6); opacity: 0; }
+    15%  { transform: translateY(0)    scale(1);   opacity: 1; }
+    65%  { transform: translateY(-26px) scale(1);  opacity: 1; }
+    100% { transform: translateY(-58px) scale(0.85); opacity: 0; }
+  }
+
+  /* Drifting ambient cars */
+  .drift-car {
+    position: absolute; opacity: 0.07; pointer-events: none;
+    animation: drift 28s linear infinite;
+  }
+  @keyframes drift {
+    0%   { transform: translateX(-180px); }
+    100% { transform: translateX(calc(100vw + 60px)); }
+  }
+</style>
+</head>
+<body class="grain antialiased">
+
+<!-- PROTOTYPE BANNER -->
+<a href="signup.html" class="block bg-ink-950 text-white text-center text-xs sm:text-sm py-2.5 hover:bg-ink-900 transition relative z-50">
+  <span class="inline-flex items-center gap-2">
+    <span class="w-1.5 h-1.5 rounded-full bg-lime-400 animate-pulse"></span>
+    <strong class="font-semibold">Live prototype available</strong>
+    <span class="text-white/70 hidden sm:inline">— click around the dashboard, take a real lesson, see the parent view</span>
+    <span class="text-racing-400">→</span>
+  </span>
+</a>
+
+<!-- NAV -->
+<header class="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-white/80 border-b border-stone-200">
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="#" class="flex items-center gap-2 group">
+      <div class="w-8 h-8 rounded-lg bg-racing-500 flex items-center justify-center font-display font-bold text-white text-lg group-hover:rotate-12 transition-transform glow">A</div>
+      <span class="font-display font-bold text-lg tracking-tight text-ink-950">APEX</span>
+    </a>
+    <nav class="hidden md:flex items-center gap-8 text-sm text-ink-500">
+      <a href="#how" class="hover:text-ink-950 transition">How it works</a>
+      <a href="#vs" class="hover:text-ink-950 transition">Comparison</a>
+      <a href="#pricing" class="hover:text-ink-950 transition">Pricing</a>
+      <a href="compliance.html" class="hover:text-ink-950 transition">Compliance</a>
+      <a href="#faq" class="hover:text-ink-950 transition">FAQ</a>
+    </nav>
+    <a href="signup.html" class="bg-racing-500 hover:bg-racing-600 text-white font-semibold text-sm px-4 py-2 rounded-lg transition">Try the prototype →</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="relative pt-32 pb-24 overflow-hidden stripe-bg">
+  <div class="absolute inset-0 grid-bg radial-fade opacity-50"></div>
+  <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-racing-400/20 blur-[120px] rounded-full"></div>
+  <div class="absolute top-1/3 right-1/4 w-[400px] h-[300px] bg-ember-400/20 blur-[100px] rounded-full"></div>
+
+  <div class="max-w-6xl mx-auto px-6 relative">
+    <div class="reveal flex justify-center mb-6">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-stone-200 text-xs text-ink-700 shadow-sm">
+        <span class="w-1.5 h-1.5 rounded-full bg-racing-500 animate-pulse"></span>
+        TDLR-track approval in progress · Texas first
+      </div>
+    </div>
+
+    <h1 class="reveal font-display text-5xl md:text-7xl lg:text-8xl font-bold text-center leading-[0.95] tracking-tight text-ink-950">
+      Drivers Ed<br />
+      teens <span class="text-gradient italic">don't</span> try<br class="hidden md:block" />
+      to bypass.
+    </h1>
+
+    <p class="reveal mt-8 text-lg md:text-xl text-ink-500 max-w-2xl mx-auto text-center leading-relaxed">
+      State-approved. Built like a game, not a slideshow. <span class="text-ink-950 font-medium">No fake timers. No surprise charges.</span> Real scenarios, real progress, and a parent dashboard that actually works.
+    </p>
+
+    <div class="reveal mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+      <a href="signup.html" class="bg-racing-500 hover:bg-racing-600 text-white font-semibold px-8 py-4 rounded-xl transition glow">
+        Launch the prototype →
+      </a>
+      <a href="#how" class="text-ink-700 hover:text-ink-950 font-medium px-6 py-4 transition flex items-center gap-2">
+        See how it works
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </a>
+    </div>
+
+    <div class="reveal mt-16 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm text-ink-500">
+      <div class="flex items-center gap-2"><span class="text-racing-500">★★★★★</span> Built with teen creators</div>
+      <div class="hidden sm:block w-1 h-1 rounded-full bg-ink-400"></div>
+      <div>One price. No subscriptions.</div>
+      <div class="hidden sm:block w-1 h-1 rounded-full bg-ink-400"></div>
+      <div>Mastery-based. Not time-locked.</div>
+    </div>
+  </div>
+
+  <!-- Floating gamified pickups -->
+  <div class="pickup pickup-1">+25 XP</div>
+  <div class="pickup pickup-2 alt">STREAK +1</div>
+  <div class="pickup pickup-3">+10 XP</div>
+  <div class="pickup pickup-4 alt">LEVEL UP!</div>
+
+  <!-- Race track + driving car -->
+  <div class="road" aria-hidden="true">
+    <div class="road-dashes"></div>
+
+    <!-- Exhaust puffs (rides along with the car) -->
+    <div class="exhaust" style="left: 90px;">
+      <div class="exhaust-puff"></div>
+      <div class="exhaust-puff"></div>
+      <div class="exhaust-puff"></div>
+    </div>
+
+    <!-- Race car -->
+    <svg class="car-track" viewBox="0 0 140 60" width="140" height="60" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="carBody" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stop-color="#ff7a6a"/>
+          <stop offset="55%" stop-color="#ef2b1d"/>
+          <stop offset="100%" stop-color="#7c0a05"/>
+        </linearGradient>
+        <linearGradient id="windowGlass" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stop-color="#bae6fd" stop-opacity="0.85"/>
+          <stop offset="100%" stop-color="#0c4a6e" stop-opacity="0.7"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Speed lines -->
+      <g>
+        <rect class="speed-line" x="-8" y="22" width="22" height="2" style="animation-delay: 0s;"/>
+        <rect class="speed-line" x="-8" y="30" width="34" height="2" style="animation-delay: 0.2s;"/>
+        <rect class="speed-line" x="-8" y="38" width="26" height="2" style="animation-delay: 0.4s;"/>
+      </g>
+
+      <!-- Shadow -->
+      <ellipse cx="70" cy="52" rx="58" ry="3" fill="#000" opacity="0.35"/>
+
+      <!-- Body -->
+      <path d="M8 40 L18 32 L30 22 L55 18 L82 18 L100 22 L122 28 L132 34 L132 44 L8 44 Z"
+            fill="url(#carBody)" stroke="#5c0703" stroke-width="0.6"/>
+
+      <!-- Cabin frame -->
+      <path d="M33 22 L56 18 L82 18 L94 22 L92 30 L34 30 Z" fill="#0a0a0a"/>
+      <!-- Windshield/window glass -->
+      <path d="M36 23 L57 19 L80 19 L88 23 L86 28 L37 28 Z" fill="url(#windowGlass)"/>
+      <!-- B-pillar -->
+      <line x1="68" y1="19" x2="68" y2="28" stroke="#0a0a0a" stroke-width="1.5"/>
+      <!-- Door cut -->
+      <line x1="68" y1="30" x2="68" y2="42" stroke="#7c0a05" stroke-width="0.6"/>
+
+      <!-- Racing stripe -->
+      <rect x="20" y="34" width="100" height="1.5" fill="#fef3c7" opacity="0.7"/>
+
+      <!-- Number 01 decal -->
+      <circle cx="55" cy="36" r="5" fill="#ffffff"/>
+      <text x="55" y="38.6" text-anchor="middle" font-size="6.5" font-weight="900" fill="#ef2b1d" font-family="Space Grotesk, sans-serif">01</text>
+
+      <!-- Spoiler -->
+      <path d="M125 26 L132 26 L132 30 L125 30 Z" fill="#5c0703"/>
+      <!-- Headlight glow -->
+      <circle cx="128" cy="36" r="3.6" fill="#fef3c7" opacity="0.35"/>
+      <circle cx="128" cy="36" r="2.2" fill="#fef9c3"/>
+
+      <!-- Front wheel (tire) -->
+      <circle cx="35" cy="44" r="8" fill="#0a0a0a"/>
+      <g class="wheel-spin">
+        <circle cx="35" cy="44" r="5" fill="#3f3f46"/>
+        <circle cx="35" cy="44" r="1.5" fill="#a1a1aa"/>
+        <line x1="35" y1="40" x2="35" y2="48" stroke="#a1a1aa" stroke-width="1.2"/>
+        <line x1="31" y1="44" x2="39" y2="44" stroke="#a1a1aa" stroke-width="1.2"/>
+        <line x1="32" y1="41" x2="38" y2="47" stroke="#a1a1aa" stroke-width="1"/>
+        <line x1="38" y1="41" x2="32" y2="47" stroke="#a1a1aa" stroke-width="1"/>
+      </g>
+
+      <!-- Rear wheel (tire) -->
+      <circle cx="105" cy="44" r="8" fill="#0a0a0a"/>
+      <g class="wheel-spin">
+        <circle cx="105" cy="44" r="5" fill="#3f3f46"/>
+        <circle cx="105" cy="44" r="1.5" fill="#a1a1aa"/>
+        <line x1="105" y1="40" x2="105" y2="48" stroke="#a1a1aa" stroke-width="1.2"/>
+        <line x1="101" y1="44" x2="109" y2="44" stroke="#a1a1aa" stroke-width="1.2"/>
+        <line x1="102" y1="41" x2="108" y2="47" stroke="#a1a1aa" stroke-width="1"/>
+        <line x1="108" y1="41" x2="102" y2="47" stroke="#a1a1aa" stroke-width="1"/>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- PROBLEM PROOF -->
+<section class="relative py-20 border-y border-stone-200 bg-stone-50">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="reveal text-center mb-12">
+      <p class="text-xs font-semibold tracking-[0.2em] text-racing-500 uppercase">The problem nobody's fixing</p>
+      <h2 class="font-display text-3xl md:text-5xl font-bold mt-3 text-ink-950">Teens are literally Googling how to bypass it.</h2>
+      <p class="mt-4 text-ink-500 max-w-2xl mx-auto">Every traditional online drivers ed has a forced timer that locks each slide for 60–90 seconds. The result? An entire YouTube and TikTok economy dedicated to skipping past it.</p>
+    </div>
+
+    <div class="overflow-hidden relative">
+      <div class="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-stone-50 to-transparent z-10"></div>
+      <div class="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-stone-50 to-transparent z-10"></div>
+      <div class="marquee flex gap-4 whitespace-nowrap">
+        <div class="flex gap-4">
+          <span class="card px-5 py-3 rounded-full text-sm">"How to bypass DriversEd timer"</span>
+          <span class="card px-5 py-3 rounded-full text-sm">"Skip iDriveSafely countdown"</span>
+          <span class="card px-5 py-3 rounded-full text-sm">"Drivers ed timer hack 2024"</span>
+          <span class="card px-5 py-3 rounded-full text-sm">"The course is so boring I'm dying"</span>
+          <span class="card px-5 py-3 rounded-full text-sm">"Why is it 30 hours of nothing?"</span>
+          <span class="card px-5 py-3 rounded-full text-sm">"Aceable charged me $5/mo I never signed up for"</span>
+          <span class="card px-5 py-3 rounded-full text-sm">"Videos repeat the same thing 6 times"</span>
+        </div>
+        <div class="flex gap-4" aria-hidden="true">
+          <span class="card px-5 py-3 rounded-full text-sm">"How to bypass DriversEd timer"</span>
+          <span class="card px-5 py-3 rounded-full text-sm">"Skip iDriveSafely countdown"</span>
+          <span class="card px-5 py-3 rounded-full text-sm">"Drivers ed timer hack 2024"</span>
+          <span class="card px-5 py-3 rounded-full text-sm">"The course is so boring I'm dying"</span>
+          <span class="card px-5 py-3 rounded-full text-sm">"Why is it 30 hours of nothing?"</span>
+          <span class="card px-5 py-3 rounded-full text-sm">"Aceable charged me $5/mo I never signed up for"</span>
+          <span class="card px-5 py-3 rounded-full text-sm">"Videos repeat the same thing 6 times"</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-center text-ink-400 text-sm mt-8">Real complaints sourced from Trustpilot, BBB, App Store reviews & forum threads.</p>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="py-28 relative">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="reveal text-center mb-16">
+      <p class="text-xs font-semibold tracking-[0.2em] text-racing-500 uppercase">How APEX works</p>
+      <h2 class="font-display text-3xl md:text-5xl font-bold mt-3 max-w-3xl mx-auto text-ink-950">A driving course built the way teens actually learn.</h2>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="reveal card rounded-2xl p-8">
+        <div class="w-12 h-12 rounded-xl bg-racing-50 border border-racing-100 flex items-center justify-center mb-6">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef2b1d" stroke-width="2"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+        </div>
+        <p class="text-xs font-mono text-racing-500 mb-2">01 / SCENARIO FIRST</p>
+        <h3 class="font-display text-2xl font-bold mb-3 text-ink-950">See the moment, then learn the rule.</h3>
+        <p class="text-ink-500 leading-relaxed">Every lesson opens with a real driving scenario. You make the call before we teach the theory — so the rule actually means something.</p>
+      </div>
+
+      <div class="reveal card rounded-2xl p-8">
+        <div class="w-12 h-12 rounded-xl bg-racing-50 border border-racing-100 flex items-center justify-center mb-6">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef2b1d" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <p class="text-xs font-mono text-racing-500 mb-2">02 / MASTERY GATES</p>
+        <h3 class="font-display text-2xl font-bold mb-3 text-ink-950">No fake timers. Prove you know it, move on.</h3>
+        <p class="text-ink-500 leading-relaxed">State hours come from actual interaction — scenarios, decisions, quizzes — not from staring at a slide while a timer ticks down.</p>
+      </div>
+
+      <div class="reveal card rounded-2xl p-8">
+        <div class="w-12 h-12 rounded-xl bg-racing-50 border border-racing-100 flex items-center justify-center mb-6">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef2b1d" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <p class="text-xs font-mono text-racing-500 mb-2">03 / PARENT MODE</p>
+        <h3 class="font-display text-2xl font-bold mb-3 text-ink-950">A dashboard parents actually use.</h3>
+        <p class="text-ink-500 leading-relaxed">Live progress, behind-the-wheel logbook, daily scenario prompts to use during real drives. The first drivers ed that turns parents into co-pilots.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section id="vs" class="py-28 relative bg-stone-50 border-y border-stone-200 overflow-hidden">
+  <!-- Ambient drifting car -->
+  <svg class="drift-car" style="top: 32px; animation-delay: -8s;" width="100" height="42" viewBox="0 0 140 60" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="70" cy="52" rx="58" ry="3" fill="#000" opacity="0.4"/>
+    <path d="M8 40 L18 32 L30 22 L55 18 L82 18 L100 22 L122 28 L132 34 L132 44 L8 44 Z" fill="#18181b"/>
+    <path d="M33 22 L56 18 L82 18 L94 22 L92 30 L34 30 Z" fill="#0a0a0a"/>
+    <circle cx="35" cy="44" r="8" fill="#0a0a0a"/>
+    <circle cx="35" cy="44" r="3" fill="#3f3f46"/>
+    <circle cx="105" cy="44" r="8" fill="#0a0a0a"/>
+    <circle cx="105" cy="44" r="3" fill="#3f3f46"/>
+  </svg>
+  <div class="max-w-5xl mx-auto px-6 relative">
+    <div class="reveal text-center mb-12">
+      <p class="text-xs font-semibold tracking-[0.2em] text-racing-500 uppercase">vs. the incumbents</p>
+      <h2 class="font-display text-3xl md:text-5xl font-bold mt-3 text-ink-950">Everyone else picks one.<br/>We do all three.</h2>
+    </div>
+
+    <div class="reveal card rounded-2xl overflow-hidden">
+      <div class="grid grid-cols-5 text-sm">
+        <div class="p-4 md:p-6 border-b border-r border-stone-200"></div>
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 text-center text-ink-500 font-medium">Aceable</div>
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 text-center text-ink-500 font-medium">Zutobi</div>
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 text-center text-ink-500 font-medium">A Auto / iDS</div>
+        <div class="p-4 md:p-6 border-b border-stone-200 text-center font-display font-bold text-racing-500">APEX</div>
+
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 font-medium text-ink-900">State-certified</div>
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 text-center text-emerald-600">✓</div>
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 text-center text-racing-500">✗</div>
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 text-center text-emerald-600">✓</div>
+        <div class="p-4 md:p-6 border-b border-stone-200 text-center text-racing-500 font-bold">✓</div>
+
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 font-medium text-ink-900">Real game mechanics</div>
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 text-center text-amber-500">~</div>
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 text-center text-emerald-600">✓</div>
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 text-center text-racing-500">✗</div>
+        <div class="p-4 md:p-6 border-b border-stone-200 text-center text-racing-500 font-bold">✓</div>
+
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 font-medium text-ink-900">No forced timers</div>
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 text-center text-racing-500">✗</div>
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 text-center text-amber-500">~</div>
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 text-center text-racing-500">✗</div>
+        <div class="p-4 md:p-6 border-b border-stone-200 text-center text-racing-500 font-bold">✓</div>
+
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 font-medium text-ink-900">Parent dashboard</div>
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 text-center text-racing-500">✗</div>
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 text-center text-racing-500">✗</div>
+        <div class="p-4 md:p-6 border-b border-r border-stone-200 text-center text-racing-500">✗</div>
+        <div class="p-4 md:p-6 border-b border-stone-200 text-center text-racing-500 font-bold">✓</div>
+
+        <div class="p-4 md:p-6 border-r border-stone-200 font-medium text-ink-900">No surprise charges</div>
+        <div class="p-4 md:p-6 border-r border-stone-200 text-center text-racing-500">✗</div>
+        <div class="p-4 md:p-6 border-r border-stone-200 text-center text-amber-500">~</div>
+        <div class="p-4 md:p-6 border-r border-stone-200 text-center text-emerald-600">✓</div>
+        <div class="p-4 md:p-6 text-center text-racing-500 font-bold">✓</div>
+      </div>
+    </div>
+    <p class="text-xs text-ink-400 mt-4 text-center">Based on public reviews, BBB filings & app store complaints.</p>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" class="py-28 relative">
+  <div class="max-w-5xl mx-auto px-6">
+    <div class="reveal text-center mb-14">
+      <p class="text-xs font-semibold tracking-[0.2em] text-racing-500 uppercase">Pricing</p>
+      <h2 class="font-display text-3xl md:text-5xl font-bold mt-3 text-ink-950">One price. No tricks.</h2>
+      <p class="mt-4 text-ink-500">No subscriptions, no auto-enrolled add-ons, no $5/mo "roadside" charges nobody asked for.</p>
+      <a href="compliance.html" class="reveal inline-flex items-center gap-2 mt-4 text-sm text-racing-500 font-semibold hover:text-racing-700">
+        See our compliance commitments →
+      </a>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="reveal card rounded-2xl p-8 relative overflow-hidden">
+        <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-racing-500 to-ember-500"></div>
+        <p class="text-sm text-ink-500">Teen Drivers Ed</p>
+        <p class="font-display text-5xl font-bold mt-2 text-ink-950">$59<span class="text-base font-medium text-ink-400">.00</span></p>
+        <p class="text-sm text-ink-400 mt-1">one-time · TDLR-approved (TX) · lifetime access</p>
+        <ul class="mt-6 space-y-3 text-sm text-ink-700">
+          <li class="flex gap-3"><span class="text-racing-500 font-bold">✓</span> Full state-approved course (24 hrs teen · 32 hrs parent-taught)</li>
+          <li class="flex gap-3"><span class="text-racing-500 font-bold">✓</span> Scenario-based lessons + mastery quizzes</li>
+          <li class="flex gap-3"><span class="text-racing-500 font-bold">✓</span> Daily hazard-perception drill</li>
+          <li class="flex gap-3"><span class="text-racing-500 font-bold">✓</span> Streaks, XP, friend leaderboard</li>
+          <li class="flex gap-3"><span class="text-racing-500 font-bold">✓</span> Parent dashboard included</li>
+          <li class="flex gap-3"><span class="text-racing-500 font-bold">✓</span> 14-day refund · no add-ons · no expiration</li>
+        </ul>
+        <a href="signup.html" class="mt-8 inline-block w-full text-center bg-racing-500 hover:bg-racing-600 text-white font-semibold py-3 rounded-xl transition">Get the course</a>
+      </div>
+
+      <div class="reveal card rounded-2xl p-8 relative overflow-hidden">
+        <div class="absolute top-4 right-4 text-xs font-mono uppercase tracking-wider px-2 py-1 rounded bg-stone-100 text-ink-700 border border-stone-200">Coming soon</div>
+        <p class="text-sm text-ink-500">Defensive Driving (ticket dismissal)</p>
+        <p class="font-display text-5xl font-bold mt-2 text-ink-950">$29</p>
+        <p class="text-sm text-ink-400 mt-1">one-time · 6-hour course</p>
+        <ul class="mt-6 space-y-3 text-sm text-ink-700">
+          <li class="flex gap-3"><span class="text-racing-500 font-bold">✓</span> Court-accepted statewide</li>
+          <li class="flex gap-3"><span class="text-racing-500 font-bold">✓</span> Insurance discount eligible</li>
+          <li class="flex gap-3"><span class="text-racing-500 font-bold">✓</span> Finish in a single sitting</li>
+          <li class="flex gap-3"><span class="text-racing-500 font-bold">✓</span> Same engaging format</li>
+        </ul>
+        <a href="#cta" class="mt-8 inline-block w-full text-center bg-stone-100 hover:bg-stone-200 text-ink-900 font-semibold py-3 rounded-xl transition border border-stone-200">Notify me</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="py-28 bg-stone-50 border-y border-stone-200">
+  <div class="max-w-3xl mx-auto px-6">
+    <div class="reveal text-center mb-12">
+      <p class="text-xs font-semibold tracking-[0.2em] text-racing-500 uppercase">FAQ</p>
+      <h2 class="font-display text-3xl md:text-5xl font-bold mt-3 text-ink-950">Questions parents ask first.</h2>
+    </div>
+
+    <div class="space-y-3">
+      <details class="reveal card rounded-xl p-5 group">
+        <summary class="flex items-center justify-between font-medium text-ink-950">
+          Is APEX state-approved?
+          <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <p class="mt-3 text-ink-500 text-sm leading-relaxed">We're in the TDLR approval track for Texas (the largest single drivers-ed market in the US). Adjacent states follow. We will never market a course as state-approved before it actually is.</p>
+      </details>
+
+      <details class="reveal card rounded-xl p-5 group">
+        <summary class="flex items-center justify-between font-medium text-ink-950">
+          How does "no timers" work if my state requires X hours?
+          <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <p class="mt-3 text-ink-500 text-sm leading-relaxed">Texas law (TDLR Rule 84) requires minimum total course hours, <strong>not</strong> per-page timers — that's a competitor convention, not a state mandate. We track cumulative active engagement: scenarios, decisions, quizzes, live-driving footage. Idle time pauses the clock. Total time-on-task always meets state minimums (24 hours teen · 32 hours parent-taught · 6 hours adult). One TDLR "instructional hour" = 55 minutes.</p>
+      </details>
+
+      <details class="reveal card rounded-xl p-5 group">
+        <summary class="flex items-center justify-between font-medium text-ink-950">
+          Will my teen actually use this?
+          <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <p class="mt-3 text-ink-500 text-sm leading-relaxed">Streaks, XP, friend leaderboards, and bite-sized lessons mean APEX gets opened the way Duolingo gets opened. The Duolingo retention model lifted user retention from 12% → 55%. We're applying the same framework.</p>
+      </details>
+
+      <details class="reveal card rounded-xl p-5 group">
+        <summary class="flex items-center justify-between font-medium text-ink-950">
+          Does this replace behind-the-wheel hours?
+          <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <p class="mt-3 text-ink-500 text-sm leading-relaxed">No course can. APEX covers the full theoretical/classroom requirement and gives parents a behind-the-wheel companion: drive logging, daily scenario prompts to use in the car, and a progress dashboard. Real road time still happens with you.</p>
+      </details>
+
+      <details class="reveal card rounded-xl p-5 group">
+        <summary class="flex items-center justify-between font-medium text-ink-950">
+          What's the catch on the price?
+          <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <p class="mt-3 text-ink-500 text-sm leading-relaxed">There isn't one. One charge. No subscriptions. No auto-enrolled add-ons. No surprise roadside-assistance subscriptions like a competitor's BBB record will show. If we ever change pricing, current students pay nothing more.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta" class="py-28 relative overflow-hidden stripe-bg">
+  <div class="absolute inset-0 grid-bg radial-fade opacity-30"></div>
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-racing-400/30 blur-[100px] rounded-full"></div>
+  <div class="absolute top-1/2 right-1/4 w-[400px] h-[300px] bg-ember-400/20 blur-[100px] rounded-full"></div>
+
+  <div class="max-w-3xl mx-auto px-6 relative text-center">
+    <h2 class="reveal font-display text-4xl md:text-6xl font-bold leading-tight text-ink-950">
+      Be first in line<br/>when we open Texas.
+    </h2>
+    <p class="reveal mt-6 text-ink-700 text-lg">Drop your email. We'll send a free sample chapter the day it ships and a 25% founding-member discount when the course launches.</p>
+
+    <form class="reveal mt-10 flex flex-col sm:flex-row gap-3 max-w-lg mx-auto" onsubmit="event.preventDefault(); document.getElementById('thanks').classList.remove('hidden'); this.style.display='none';">
+      <input type="email" required placeholder="you@example.com" class="flex-1 bg-white border border-stone-300 rounded-xl px-5 py-4 text-ink-950 placeholder:text-ink-400 focus:outline-none focus:border-racing-500 focus:ring-2 focus:ring-racing-500/20 transition" />
+      <button class="bg-racing-500 hover:bg-racing-600 text-white font-semibold px-6 py-4 rounded-xl transition glow">Get early access</button>
+    </form>
+    <p id="thanks" class="hidden mt-6 text-racing-500 font-semibold">You're on the list. Sample chapter incoming.</p>
+
+    <p class="reveal mt-6 text-xs text-ink-400">No spam. We email when there's something real to share.</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="border-t border-stone-200 py-10 bg-white">
+  <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-ink-500">
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-6 rounded bg-racing-500 flex items-center justify-center font-display font-bold text-white text-sm">A</div>
+      <span class="font-display font-bold text-ink-950">APEX</span>
+      <span>· © 2026 · Drivers Ed teens don't try to bypass.</span>
+    </div>
+    <div class="flex gap-6">
+      <a href="#" class="hover:text-ink-950">Privacy</a>
+      <a href="#" class="hover:text-ink-950">Terms</a>
+      <a href="#" class="hover:text-ink-950">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+</script>
+
+</body>
+</html>

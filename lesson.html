@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>APEX — Chapter 1.3: The Pedestrian Pop-Up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="app.css" />
+<style>
+  body { background: var(--paper-2); }
+  .lesson-frame { max-width: 720px; margin: 0 auto; padding: 28px 20px 80px; }
+  .lesson-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .back-link { color: var(--ink-500); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+  .back-link:hover { color: var(--ink-900); }
+  .lesson-title { font-family: 'Space Grotesk'; font-size: 24px; font-weight: 700; margin: 14px 0 6px; letter-spacing: -0.02em; }
+  .lesson-sub { color: var(--ink-500); font-size: 14px; margin: 0 0 24px; }
+
+  .step { display: none; }
+  .step.active { display: block; }
+
+  .question { font-family: 'Space Grotesk'; font-size: 22px; font-weight: 700; margin: 24px 0 18px; letter-spacing: -0.02em; }
+  .lesson-actions { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+
+  .feedback {
+    padding: 18px; border-radius: 14px; margin-top: 20px;
+    border: 1px solid; display: flex; gap: 14px; align-items: flex-start;
+  }
+  .feedback.good { background: #f0fdf4; border-color: #bbf7d0; color: #14532d; }
+  .feedback.bad  { background: var(--racing-50); border-color: #fecaca; color: var(--racing-dark); }
+  .feedback-icon { width: 36px; height: 36px; flex-shrink: 0; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  .feedback.good .feedback-icon { background: #16a34a; color: white; }
+  .feedback.bad .feedback-icon  { background: var(--racing); color: white; }
+
+  .rule-card { background: linear-gradient(135deg, var(--racing-50), var(--ember-50)); border: 1px solid #fecaca; border-radius: 16px; padding: 24px; margin: 22px 0; }
+  .rule-tag { display: inline-block; background: var(--racing); color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 12px; }
+  .rule-stat { background: white; border: 1px solid var(--stone-200); border-radius: 12px; padding: 14px; margin-top: 16px; display: flex; align-items: center; gap: 14px; }
+  .rule-stat-num { font-family: 'Space Grotesk'; font-size: 32px; font-weight: 800; color: var(--racing); line-height: 1; }
+
+  .complete-frame { text-align: center; padding: 40px 0; }
+  .complete-circle { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--racing), var(--ember)); margin: 0 auto 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 20px 50px -10px rgba(239,43,29,0.5); animation: pop 0.6s cubic-bezier(0.16,1,0.3,1); }
+  @keyframes pop { 0% { transform: scale(0); } 60% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+  .reward-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 24px 0; }
+  .reward { background: white; border: 1px solid var(--stone-200); border-radius: 12px; padding: 16px; text-align: center; }
+  .reward .num { font-family: 'Space Grotesk'; font-size: 26px; font-weight: 800; color: var(--racing); }
+  .reward .lbl { font-size: 11px; color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="lesson-frame">
+
+  <div class="lesson-header">
+    <a href="dashboard.html" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to dashboard
+    </a>
+    <div style="font-size: 12px; font-weight: 700; color: var(--ink-500); letter-spacing: 0.08em;">CHAPTER <span id="chapNum">1.3</span></div>
+  </div>
+
+  <h1 class="lesson-title">The Pedestrian Pop-Up</h1>
+  <p class="lesson-sub">A real-world scenario · Should take about 7 minutes · Mastery required to advance</p>
+
+  <div class="steps" id="steps">
+    <div class="step-dot current"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+  </div>
+
+  <!-- STEP 1: SCENARIO -->
+  <section class="step active" data-step="1">
+    <div class="scenario-stage" style="margin-top: 22px;">
+      <span class="scenario-tag">SCENARIO 01</span>
+      <div class="scenario-meta">
+        <span class="scenario-meta-pill">35 mph</span>
+        <span class="scenario-meta-pill">Dusk</span>
+      </div>
+      <!-- Stylized scene: car POV approaching intersection with parked van -->
+      <svg viewBox="0 0 600 280" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style="position: absolute; inset: 0;">
+        <!-- sky already from gradient -->
+        <!-- Buildings silhouette -->
+        <path d="M0 180 L40 180 L40 130 L80 130 L80 160 L130 160 L130 110 L180 110 L180 150 L230 150 L230 120 L280 120 L280 170 L330 170 L330 100 L380 100 L380 140 L420 140 L420 165 L470 165 L470 130 L520 130 L520 175 L560 175 L600 175 L600 200 L0 200 Z" fill="#1f2937" opacity="0.85"/>
+        <!-- Sun -->
+        <circle cx="450" cy="80" r="32" fill="#fde047" opacity="0.9"/>
+        <circle cx="450" cy="80" r="50" fill="#fde047" opacity="0.25"/>
+        <!-- Traffic light -->
+        <rect x="285" y="60" width="14" height="38" rx="3" fill="#1f2937"/>
+        <circle cx="292" cy="78" r="5" fill="#16a34a"/>
+        <line x1="292" y1="60" x2="292" y2="40" stroke="#1f2937" stroke-width="2"/>
+        <line x1="270" y1="40" x2="320" y2="40" stroke="#1f2937" stroke-width="2"/>
+        <!-- Parked van on right -->
+        <rect x="430" y="155" width="120" height="50" rx="6" fill="#94a3b8"/>
+        <rect x="438" y="162" width="35" height="22" fill="#1e293b" opacity="0.7"/>
+        <circle cx="455" cy="208" r="8" fill="#0a0a0a"/>
+        <circle cx="535" cy="208" r="8" fill="#0a0a0a"/>
+        <text x="490" y="190" text-anchor="middle" font-size="9" fill="#1e293b" font-weight="700" font-family="Space Grotesk">DELIVERY</text>
+        <!-- Hidden pedestrian (subtle hint) -->
+        <g opacity="0.3">
+          <circle cx="555" cy="178" r="4" fill="#fff"/>
+          <rect x="551" y="183" width="8" height="14" fill="#fff"/>
+        </g>
+      </svg>
+      <div class="scenario-road"></div>
+    </div>
+
+    <p class="question">You're approaching a green light. A delivery van is parked on the right and your view of the sidewalk past it is blocked. What's your move?</p>
+
+    <p style="color: var(--ink-500); font-size: 13px; margin: -10px 0 18px;">Pick the response a defensive driver would make. Don't worry about being wrong — that's how you learn.</p>
+
+    <div class="lesson-actions">
+      <button class="btn btn-primary btn-lg" onclick="goStep(2)">See my options →</button>
+    </div>
+  </section>
+
+  <!-- STEP 2: CHOICE -->
+  <section class="step" data-step="2">
+    <p class="question">Pick one:</p>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <button class="choice" onclick="pickChoice('A')">
+        <span class="choice-letter">A</span>
+        Maintain speed — the light is green and I have right of way.
+      </button>
+      <button class="choice" onclick="pickChoice('B')">
+        <span class="choice-letter">B</span>
+        Cover the brake, ease off the gas, and scan past the van.
+      </button>
+      <button class="choice" onclick="pickChoice('C')">
+        <span class="choice-letter">C</span>
+        Speed up to clear the intersection faster.
+      </button>
+    </div>
+  </section>
+
+  <!-- STEP 3: CONSEQUENCE -->
+  <section class="step" data-step="3">
+    <h2 class="font-display" style="font-size: 22px; font-weight: 700; margin: 18px 0 10px;">Here's what happens.</h2>
+
+    <div id="consequence"></div>
+
+    <div class="lesson-actions">
+      <button class="btn btn-primary btn-lg" onclick="goStep(4)">Why? Show me the rule →</button>
+    </div>
+  </section>
+
+  <!-- STEP 4: RULE -->
+  <section class="step" data-step="4">
+    <div class="rule-card">
+      <span class="rule-tag">SMITH SYSTEM #2</span>
+      <h2 class="font-display" style="font-size: 24px; font-weight: 700; margin: 0 0 10px;">Get the big picture.</h2>
+      <p style="margin: 0; line-height: 1.6; color: var(--ink-700);">
+        Anything that blocks your view — a parked van, a hedge, an SUV in the lane next to you — could be hiding a hazard. When you can't see, you must <strong>act as if there's something to see</strong>. Cover the brake. Reduce speed. Scan for movement at edges (between vehicles, next to curbs).
+      </p>
+
+      <div class="rule-stat">
+        <div class="rule-stat-num">23%</div>
+        <div style="font-size: 13px; color: var(--ink-700);">of urban pedestrian collisions involve vehicles where the driver's sight line was blocked by a parked vehicle. The fix is mostly about scanning, not braking.</div>
+      </div>
+    </div>
+
+    <p style="font-size: 13px; color: var(--ink-500); margin-top: 16px;">Quick mastery quiz next — 3 questions. Get all 3 right and Chapter 1.3 is yours.</p>
+
+    <div class="lesson-actions">
+      <button class="btn btn-primary btn-lg" onclick="goStep(5)">Take the quiz →</button>
+    </div>
+  </section>
+
+  <!-- STEP 5: QUIZ -->
+  <section class="step" data-step="5">
+    <h2 class="font-display" style="font-size: 22px; font-weight: 700; margin: 18px 0 4px;">Mastery quiz · <span id="qNum">1</span>/3</h2>
+    <p style="color: var(--ink-500); font-size: 13px; margin: 0 0 22px;">Get all three right to pass. Wrong answers loop back. No fake timers.</p>
+
+    <div id="quizContent"></div>
+  </section>
+
+  <!-- STEP 6: COMPLETE -->
+  <section class="step" data-step="6">
+    <div class="complete-frame">
+      <div class="complete-circle">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h2 class="font-display" style="font-size: 32px; font-weight: 800; margin: 0 0 8px; letter-spacing: -0.02em;">Chapter 1.3 mastered.</h2>
+      <p style="color: var(--ink-500); margin: 0 0 8px;">You'd handle that scenario better than 60% of new drivers.</p>
+
+      <div class="reward-row">
+        <div class="reward">
+          <div class="num">+50</div>
+          <div class="lbl">XP earned</div>
+        </div>
+        <div class="reward">
+          <div class="num">+1</div>
+          <div class="lbl">Streak day</div>
+        </div>
+        <div class="reward">
+          <div class="num">3/12</div>
+          <div class="lbl">Chapters</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: center; margin-top: 24px;">
+        <a href="dashboard.html" class="btn btn-secondary btn-lg">Back to dashboard</a>
+        <a href="soon.html?f=Chapter%201.4&d=Chapter%201.4%20%E2%80%94%20%22The%20Late%20Yellow%22%20%E2%80%94%20is%20queued.%20The%20full%2032-chapter%20course%20rolls%20out%20alongside%20state%20approval." class="btn btn-primary btn-lg">Next chapter →</a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="app.js"></script>
+<script>
+  const s = APEX.guard();
+
+  let currentStep = 1;
+  let chosen = null;
+
+  const consequences = {
+    A: {
+      good: false,
+      title: "Bad call. A pedestrian steps out from behind the van.",
+      body: "You hadn't reduced speed and your sight line was blocked. At 35 mph on dry pavement, your stopping distance is ~120 ft. You don't have it. This is the most common type of urban pedestrian collision."
+    },
+    B: {
+      good: true,
+      title: "Right call. You're already slowing as the pedestrian appears.",
+      body: "By covering the brake before you needed it, your reaction time effectively dropped from 1.5 seconds to 0.3. You stop with room to spare. That van wasn't a problem — your sight line was."
+    },
+    C: {
+      good: false,
+      title: "Worse call. Speeding up reduces your reaction window.",
+      body: "Higher speed means more energy on impact AND less time to scan. Even with the green light, the legal right of way doesn't outrun physics. This is how serious crashes happen at intersections that 'looked clear.'"
+    }
+  };
+
+  const quiz = [
+    {
+      q: "When a parked van blocks your view of the sidewalk, the safest move is to…",
+      options: [
+        "Honk so anyone behind it knows you're coming.",
+        "Maintain speed since you have right of way.",
+        "Cover the brake, reduce speed, and scan for movement at edges.",
+        "Swerve into the next lane to get past."
+      ],
+      correct: 2,
+      why: "Covering the brake cuts your reaction time in half. Reducing speed gives you stopping distance. Scanning at edges (curbs, between cars) is where pedestrians appear from."
+    },
+    {
+      q: "True or false: A green light gives you legal right of way over pedestrians.",
+      options: [
+        "True — pedestrians must yield to a green light.",
+        "False — pedestrians legally in a crosswalk always have right of way."
+      ],
+      correct: 1,
+      why: "In every US state, a pedestrian already in a crosswalk has right of way regardless of signal. A driver who hits one cannot use 'I had the green' as a defense."
+    },
+    {
+      q: "Which best describes the Smith System rule \"Get the big picture\"?",
+      options: [
+        "Always look 12–15 seconds ahead and scan the full scene, including blocked sight lines.",
+        "Use your peripheral vision only when changing lanes.",
+        "Focus on the car directly in front of you.",
+        "Check your speedometer every 10 seconds."
+      ],
+      correct: 0,
+      why: "The full rule is: look far ahead, scan side-to-side, and treat anything that blocks your view as a potential hazard until proven otherwise."
+    }
+  ];
+
+  let qIndex = 0;
+  let wrongOnce = false;
+
+  function setStep(n) {
+    currentStep = n;
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.querySelector('.step[data-step="' + n + '"]').classList.add('active');
+    const dots = document.querySelectorAll('#steps .step-dot');
+    dots.forEach((d, i) => {
+      d.classList.remove('done', 'current');
+      if (i + 1 < n) d.classList.add('done');
+      if (i + 1 === n) d.classList.add('current');
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function goStep(n) { setStep(n); }
+
+  function pickChoice(letter) {
+    chosen = letter;
+    document.querySelectorAll('.choice').forEach(c => c.disabled = true);
+    const c = consequences[letter];
+    const html = `
+      <div class="feedback ${c.good ? 'good' : 'bad'}">
+        <div class="feedback-icon">
+          ${c.good
+            ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+            : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+          }
+        </div>
+        <div>
+          <div style="font-weight: 700; margin-bottom: 6px;">${c.title}</div>
+          <div style="font-size: 14px; line-height: 1.55;">${c.body}</div>
+        </div>
+      </div>
+    `;
+    document.getElementById('consequence').innerHTML = html;
+    setTimeout(() => goStep(3), 350);
+  }
+
+  function renderQuiz() {
+    const q = quiz[qIndex];
+    document.getElementById('qNum').textContent = (qIndex + 1);
+    let html = `
+      <p class="question" style="font-size: 18px;">${q.q}</p>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        ${q.options.map((opt, i) => `
+          <button class="choice" data-i="${i}" onclick="answerQuiz(${i})">
+            <span class="choice-letter">${String.fromCharCode(65 + i)}</span>
+            ${opt}
+          </button>
+        `).join('')}
+      </div>
+      <div id="quizFeedback"></div>
+    `;
+    document.getElementById('quizContent').innerHTML = html;
+  }
+
+  function answerQuiz(picked) {
+    const q = quiz[qIndex];
+    document.querySelectorAll('#quizContent .choice').forEach(c => c.disabled = true);
+    const correct = picked === q.correct;
+    const pickedBtn = document.querySelector('#quizContent .choice[data-i="' + picked + '"]');
+    pickedBtn.classList.add(correct ? 'correct' : 'wrong');
+    if (!correct) {
+      const correctBtn = document.querySelector('#quizContent .choice[data-i="' + q.correct + '"]');
+      correctBtn.classList.add('correct');
+      wrongOnce = true;
+    }
+
+    const fb = document.getElementById('quizFeedback');
+    fb.innerHTML = `
+      <div class="feedback ${correct ? 'good' : 'bad'}" style="margin-top: 18px;">
+        <div class="feedback-icon">
+          ${correct
+            ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
+            : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+          }
+        </div>
+        <div>
+          <div style="font-weight: 700; margin-bottom: 6px;">${correct ? 'Nailed it.' : "Not quite — let's lock this one in."}</div>
+          <div style="font-size: 14px; line-height: 1.55;">${q.why}</div>
+        </div>
+      </div>
+      <div class="lesson-actions">
+        <button class="btn btn-primary btn-lg" onclick="nextQuiz()">${qIndex < quiz.length - 1 ? 'Next question →' : (wrongOnce ? 'Retry the missed ones →' : 'Finish chapter →')}</button>
+      </div>
+    `;
+  }
+
+  function nextQuiz() {
+    if (qIndex < quiz.length - 1) {
+      qIndex++;
+      renderQuiz();
+    } else {
+      if (wrongOnce) {
+        // Retry mode — reset the wrongOnce flag and re-shuffle: simplest = restart all 3 to drill mastery
+        qIndex = 0;
+        wrongOnce = false;
+        renderQuiz();
+      } else {
+        finishLesson();
+      }
+    }
+  }
+
+  function finishLesson() {
+    APEX.awardXP(50);
+    APEX.bumpStreak();
+    APEX.completeLesson('1.3');
+    goStep(6);
+    fireXpBurst(50);
+    fireConfetti(120);
+  }
+
+  // Init
+  renderQuiz();
+</script>
+</body>
+</html>
