@@ -80,13 +80,21 @@
       </div>
 
       <div style="margin-bottom: 14px;">
+        <label>Date of birth</label>
+        <input type="date" id="dob" required />
+        <div style="font-size: 11.5px; color: var(--ink-500); margin-top: 4px; line-height: 1.4;">
+          Required by Texas. Teen driver ed starts at 14. We never display or sell this.
+        </div>
+      </div>
+
+      <div style="margin-bottom: 14px;">
         <label>Email</label>
         <input type="email" id="email" placeholder="you@example.com" required />
       </div>
 
       <div style="margin-bottom: 18px;">
         <label>Password</label>
-        <input type="password" id="password" placeholder="At least 8 characters" required minlength="8" />
+        <input type="password" id="password" placeholder="At least 10 characters" required minlength="10" />
       </div>
 
       <label style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 18px; font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.5; color: var(--ink-300); text-transform: none; letter-spacing: 0; font-weight: 400; cursor: pointer;">
@@ -137,9 +145,15 @@
       const name = document.getElementById('name').value.trim();
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
+      const dob = document.getElementById('dob').value;  // YYYY-MM-DD or ''
       const agreed = document.getElementById('agreeChk').checked;
       if (!agreed) {
         errEl.textContent = '▸ YOU MUST ACCEPT THE USER AGREEMENT TO CONTINUE.';
+        errEl.style.display = 'block';
+        return;
+      }
+      if (!dob) {
+        errEl.textContent = '▸ DATE OF BIRTH IS REQUIRED.';
         errEl.style.display = 'block';
         return;
       }
@@ -160,7 +174,7 @@
         // onto 'teen' for backend purposes; the localStorage flag carries the
         // actual track choice.
         const backendRole = (courseMode === 'parent') ? 'parent' : (role === 'parent' ? 'parent' : 'teen');
-        await APEX.signup({ email, password, name, role: backendRole, language: 'en' });
+        await APEX.signup({ email, password, name, role: backendRole, language: 'en', date_of_birth: dob });
         // New flow: account created → checkout (grants the PTDE entitlement) →
         // identity-setup → dashboard. checkout.html bounces already-entitled users
         // straight to their dashboard.

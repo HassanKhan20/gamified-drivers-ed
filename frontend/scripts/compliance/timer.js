@@ -88,16 +88,25 @@ async function flush() {
   if (!_state) return;
   const seconds = _state.pendingSeconds;
   if (seconds <= 0) return;
+  // Zero optimistically. If the server doesn't accept the tick (network drop
+  // OR any non-2xx response — 429 rate limit, 500 server error, 401 session
+  // expired), we re-credit so the next flush carries the time forward. The
+  // server's PER_TICK_CAP_SECONDS=120 still caps each individual tick, so
+  // even a long outage can't be used to claim more than 2 min per call.
   _state.pendingSeconds = 0;
   try {
-    await fetch('/api/compliance/timer/tick', {
+    const r = await fetch('/api/compliance/timer/tick', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ lesson_id: _state.lessonId, seconds, signals: [] }),
     });
+    if (!r.ok) {
+      // Server rejected; carry the seconds forward for retry next interval.
+      _state.pendingSeconds += seconds;
+    }
   } catch (_) {
-    // Re-credit pending seconds for retry on next interval
+    // Network drop; carry the seconds forward for retry next interval.
     _state.pendingSeconds += seconds;
   }
 }

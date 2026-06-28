@@ -74,9 +74,9 @@ window.APEX = {
     }
   },
 
-  async signup({ email, password, name, role, language }) {
+  async signup({ email, password, name, role, language, date_of_birth }) {
     if (!window.APEX_API) throw new Error('API unavailable');
-    const out = await APEX_API.signup({ email, password, name, role, language });
+    const out = await APEX_API.signup({ email, password, name, role, language, date_of_birth });
     await this.refresh();
     return out;
   },

@@ -35,8 +35,8 @@ window.APEX_API = (function () {
 
   return {
     health: () => req('/api/health'),
-    signup: ({ email, password, name, role, language }) =>
-      req('/api/signup', { method: 'POST', body: JSON.stringify({ email, password, name, role, language }) }),
+    signup: ({ email, password, name, role, language, date_of_birth }) =>
+      req('/api/signup', { method: 'POST', body: JSON.stringify({ email, password, name, role, language, date_of_birth }) }),
     login: ({ email, password }) =>
       req('/api/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
     logout: () => req('/api/logout', { method: 'POST' }),

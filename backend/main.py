@@ -14,7 +14,7 @@ import os
 import secrets
 import sqlite3
 import time
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
 
@@ -141,9 +141,17 @@ SECURE_COOKIE = os.environ.get("APEX_SECURE_COOKIE") == "1"
 # ---------- DB ----------
 
 def db() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
+    # 5-second timeout: if another writer holds the lock, wait instead of
+    # returning "database is locked" immediately. Combined with WAL mode this
+    # raises practical concurrency from ~1 writer at a time to hundreds of
+    # readers + 1 writer with no contention, which is what we actually have
+    # (heartbeat ticks are tiny writes; everything else is reads).
+    conn = sqlite3.connect(DB_PATH, timeout=5.0, isolation_level=None)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode = WAL")     # readers don't block writers
+    conn.execute("PRAGMA synchronous = NORMAL")   # safe with WAL, ~3x faster
+    conn.execute("PRAGMA busy_timeout = 5000")    # 5s instead of failing fast
     return conn
 
 
@@ -160,6 +168,7 @@ def init_db() -> None:
                 role TEXT DEFAULT 'teen',
                 language TEXT DEFAULT 'en',
                 state TEXT DEFAULT 'TX',
+                date_of_birth TEXT,  -- ISO YYYY-MM-DD; required for new signups; nullable for legacy rows
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
             CREATE TABLE IF NOT EXISTS sessions (
@@ -274,6 +283,15 @@ def init_db() -> None:
             CREATE INDEX IF NOT EXISTS idx_topic_progress_user ON topic_progress(user_id);
             """
         )
+        # Idempotent column adds for users created before the schema change.
+        # Safe to re-run: ALTER TABLE ADD COLUMN raises if the column exists,
+        # we swallow that case. New databases already have the column from
+        # the CREATE TABLE above.
+        try:
+            c.execute("ALTER TABLE users ADD COLUMN date_of_birth TEXT")
+        except sqlite3.OperationalError:
+            pass
+
         # Compliance engine schemas (each module owns its own init function).
         from backend.compliance.audit import init_audit_schema
         from backend.compliance.timer import init_timer_schema
@@ -405,6 +423,7 @@ class SignupIn(BaseModel):
     name: Optional[str] = Field(default=None, max_length=80)
     role: Optional[str] = Field(default="teen", pattern="^(teen|parent)$")
     language: Optional[str] = Field(default="en", pattern="^(en|es)$")
+    date_of_birth: date  # COPPA + TX teen-ed age gate; required on every new account.
 
 
 class PasswordChangeIn(BaseModel):
@@ -556,6 +575,28 @@ def signup(payload: SignupIn, request: Request, response: Response):
     pw_err = _password_check(payload.password)
     if pw_err:
         raise HTTPException(status_code=422, detail=pw_err)
+
+    # COPPA + TX teen-ed age gate. Reject under-13 always (COPPA); reject
+    # under-14 teen-ed signups (TX eligibility floor). Parents have no
+    # age floor on their own account — they may be supervising a teen.
+    today = datetime.utcnow().date()
+    dob = payload.date_of_birth
+    if dob > today:
+        raise HTTPException(status_code=422, detail="Date of birth cannot be in the future.")
+    age_yrs = (today - dob).days // 365
+    if age_yrs < 13:
+        # Hard-decline. Goodlane does not collect or process data for under-13.
+        raise HTTPException(
+            status_code=422,
+            detail="Goodlane is not available for users under 13.",
+        )
+    if age_yrs < 14 and (payload.role or "teen") == "teen":
+        raise HTTPException(
+            status_code=422,
+            detail="Texas teen driver education requires you to be at least 14. "
+                   "Please come back on your 14th birthday.",
+        )
+
     # Normalize email (case-insensitive lookups)
     email = payload.email.lower().strip()
     with db() as c:
@@ -564,8 +605,10 @@ def signup(payload: SignupIn, request: Request, response: Response):
             # Generic message, not "email taken" — reduces account enumeration.
             raise HTTPException(status_code=409, detail="Could not create account.")
         cur = c.execute(
-            "INSERT INTO users (email, password_hash, name, role, language) VALUES (?, ?, ?, ?, ?)",
-            (email, hash_password(payload.password), payload.name, payload.role or "teen", payload.language or "en"),
+            "INSERT INTO users (email, password_hash, name, role, language, date_of_birth) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (email, hash_password(payload.password), payload.name,
+             payload.role or "teen", payload.language or "en", dob.isoformat()),
         )
         user_id = cur.lastrowid
         c.execute("INSERT INTO progress (user_id) VALUES (?)", (user_id,))

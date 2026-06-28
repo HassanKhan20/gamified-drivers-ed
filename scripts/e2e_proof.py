@@ -37,7 +37,7 @@ def check(label, cond):
 print("=== APEX End-to-End Proof ===\n")
 
 # 1. Signup
-r = client.post("/api/signup", json={"email": "proof@example.com", "password": "correcthorse1", "name": "Proof", "role": "teen", "language": "en"})
+r = client.post("/api/signup", json={"email": "proof@example.com", "password": "correcthorse1", "name": "Proof", "role": "teen", "language": "en", "date_of_birth": "2008-01-01"})
 check("signup returns 200", r.status_code == 200)
 check("signup returns user + progress", "user" in r.json() and "progress" in r.json())
 

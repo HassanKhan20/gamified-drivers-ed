@@ -42,6 +42,7 @@ def signed_up_client(client):
         "name": "Test Teen",
         "role": "teen",
         "language": "en",
+        "date_of_birth": "2008-01-01",  # >14 yrs old, clears COPPA + TX teen-ed gates
     })
     assert r.status_code == 200, r.text
     c = client.post("/api/checkout", json={"sku": "ptde"})
@@ -58,6 +59,7 @@ def unpaid_client(client):
         "name": "Unpaid",
         "role": "teen",
         "language": "en",
+        "date_of_birth": "2008-01-01",
     })
     assert r.status_code == 200, r.text
     return client
