@@ -1,0 +1,39 @@
+# SECURITY: never commit the SQLite DB — it contains password hashes,
+# session tokens, GPS coordinates from BTW logs, and PII.
+backend/apex.db
+backend/apex.db-journal
+backend/apex.db-wal
+backend/apex.db-shm
+backend/*.sqlite
+backend/*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+.env
+.env.*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Build / runtime artefacts
+*.log
+*.pid
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Backups / dumps
+*.bak
+*.dump
+backend/db_backups/

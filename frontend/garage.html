@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — Garage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/app.css" />
+<style>
+  .garage-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 24px; }
+  @media (min-width: 720px) { .garage-grid { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1100px) { .garage-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .car-card {
+    position: relative; padding: 22px;
+    background: var(--bg-2); border: 1px solid var(--hairline); border-radius: 14px;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden; transition: all 0.18s;
+    display: flex; flex-direction: column;
+  }
+  .car-card:hover { border-color: rgba(29,78,216,0.35); transform: translateY(-2px); box-shadow: var(--shadow); }
+  .car-card.locked { opacity: 0.65; }
+  .car-card.selected { border-color: var(--signal); background: var(--bg-2); box-shadow: var(--shadow-primary); }
+  .car-card.selected::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--signal); }
+
+  .car-tag { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; color: var(--ink-500); letter-spacing: 0.18em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .car-tag .pill { padding: 3px 8px; border-radius: 5px; background: var(--bg-2); border: 1px solid var(--hairline); font-weight: 700; font-size: 10px; letter-spacing: 0.16em; }
+  .car-tag .pill.signal { color: var(--signal); border-color: rgba(0,245,160,0.30); background: var(--signal-bg); }
+  .car-tag .pill.locked { color: var(--ink-700); }
+
+  .car-name { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -0.02em; color: var(--ink-50); margin-bottom: 4px; }
+  .car-tagline { color: var(--ink-500); font-size: 13px; min-height: 18px; margin-bottom: 16px; }
+
+  .car-canvas-wrap {
+    position: relative; height: 170px; border-radius: 10px;
+    background: linear-gradient(180deg, #d6e4ee 0%, #ede4d0 100%);
+    border: 1px solid var(--hairline); overflow: hidden;
+  }
+  .car-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+  .lock-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(245,241,232,0.78); backdrop-filter: blur(2px); }
+  .lock-overlay .lock {
+    font-family: 'Inter', system-ui, sans-serif; font-size: 12px; color: var(--ink-300);
+    padding: 8px 14px; border-radius: 7px; background: var(--bg-2); border: 1px solid var(--hairline);
+    letter-spacing: 0.16em; box-shadow: var(--shadow-sm);
+  }
+
+  .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 16px 0; }
+  .stat { padding: 10px; border-radius: 8px; background: var(--bg-3); border: 1px solid var(--hairline); text-align: center; }
+  .stat .num { font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 16px; color: var(--ink-50); }
+  .stat .lbl { font-family: 'Inter', system-ui, sans-serif; font-size: 9px; color: var(--ink-500); letter-spacing: 0.14em; text-transform: uppercase; margin-top: 4px; }
+
+  .car-cta { display: block; width: 100%; padding: 11px; border-radius: 9px; text-align: center; font-family: 'Inter', system-ui, sans-serif; font-weight: 600; font-size: 13.5px; transition: all 0.15s; cursor: pointer; border: 0; font-family: 'Inter', system-ui, sans-serif; }
+  .car-cta.primary { background: var(--signal); color: #ffffff; box-shadow: var(--shadow-primary); }
+  .car-cta.primary:hover { background: var(--signal-deep); transform: translateY(-1px); }
+  .car-cta.ghost { background: var(--bg-2); color: var(--ink-100); border: 1px solid var(--hairline); box-shadow: var(--shadow-sm); }
+  .car-cta.ghost:hover { background: var(--bg-3); }
+  .car-cta.locked { background: var(--bg-3); color: var(--ink-700); cursor: not-allowed; border: 1px solid var(--hairline); }
+
+  .level-bar { display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: var(--bg-2); border: 1px solid var(--hairline); border-radius: 10px; box-shadow: var(--shadow-sm); margin-top: 14px; }
+  .level-bar .lvl-num { font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 24px; color: var(--signal); letter-spacing: -0.02em; }
+  .level-bar .lvl-meta { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--ink-500); letter-spacing: 0.10em; }
+</style>
+</head>
+<body>
+<div class="app-layout">
+
+  <aside class="sidebar">
+    <a href="dashboard.html" class="sidebar-logo">
+      <div class="sidebar-logo-mark" style="background:#ffffff;border:1px solid var(--hairline);box-shadow:var(--shadow-sm);"><svg viewBox="0 0 32 32" fill="none" width="22" height="22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g stroke="#1d4ed8" stroke-width="2.4" stroke-linecap="round"><path d="M 14 4 C 6 12, 22 18, 12 24 C 6 28, 16 30, 14 30"/><path d="M 20 4 C 28 12, 12 18, 22 24 C 28 28, 18 30, 20 30"/></g></svg></div>
+      <span class="sidebar-logo-text"><span style="color:#1d4ed8;">Good</span><span style="color:#f59e0b;">Lane</span></span>
+    </a>
+    <div class="nav-section-label">Learn</div>
+    <a class="nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4v-7H10v7H6a2 2 0 0 1-2-2V9z"/></svg><span data-i18n="nav.dashboard">Dashboard</span></a>
+    <a class="nav-item" href="roadmap.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l-6 6 6 6M9 5h6a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4H9"/></svg><span data-i18n="nav.your_path">Your Path</span></a>
+    <a class="nav-item" href="shorts.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><line x1="11" y1="6" x2="13" y2="6"/></svg><span data-i18n="nav.shorts">Shorts</span></a>
+    <a class="nav-item" href="drive.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="2"/><circle cx="18" cy="17" r="2"/><path d="M3 17V9l2-5h14l2 5v8h-3M16 17H8"/></svg><span data-i18n="nav.free_drive">Free Drive</span></a>
+    <a class="nav-item active" href="garage.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M3 13h18"/><circle cx="8" cy="17" r="1"/><circle cx="16" cy="17" r="1"/></svg><span data-i18n="nav.garage">Garage</span></a>
+    <div class="nav-section-label">Trust</div>
+    <a class="nav-item" href="compliance.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span data-i18n="nav.compliance">Compliance</span></a>
+    <button class="signout" onclick="signOut()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span data-i18n="nav.signout">Sign out</span></button>
+  </aside>
+
+  <main class="main">
+    <div id="topbar"></div>
+    <div class="topbar" style="margin-bottom: 4px;">
+      <div>
+        <h1>Garage</h1>
+        <p>Six cars. Unlock by leveling up. Selected car is the one you drive in <a href="drive.html" style="color:var(--signal);">/drive</a>.</p>
+      </div>
+    </div>
+
+    <div class="level-bar">
+      <span class="lvl-num" id="curLvl">1</span>
+      <div>
+        <div class="lvl-meta">YOUR LEVEL · <span id="curXp">0 XP</span></div>
+        <div style="font-size: 13px; color: var(--ink-300); margin-top: 2px;" id="nextUnlock">Next unlock at level 5 — Vector Coupe</div>
+      </div>
+    </div>
+
+    <div class="garage-grid" id="grid"></div>
+  </main>
+</div>
+
+<script src="scripts/api.js"></script>
+<script src="scripts/app.js"></script>
+<script src="scripts/cars.js"></script>
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+  import * as THREE from 'three';
+
+  (async () => { try { await APEX.refresh(); } catch (e) {} init(); })();
+
+  async function init() {
+    const s = APEX.guard(); if (!s) return;
+    document.getElementById('topbar').innerHTML = APEX_TOPBAR(
+      'Garage',
+      'One car selected at a time. Test drive any unlocked car in /drive.'
+    );
+    document.getElementById('curLvl').textContent = s.level;
+    document.getElementById('curXp').textContent = s.xp + ' XP';
+
+    let serverData = null;
+    try { serverData = await fetch('/api/cars/owned', { credentials: 'include' }).then(r => r.ok ? r.json() : null); } catch (e) {}
+    const level = (serverData && serverData.level) || s.level || 1;
+    const selected = (serverData && serverData.selected) || 'sedan-base';
+    renderCars(level, selected);
+  }
+
+  function nextUnlockFor(level) {
+    const next = window.APEX_CARS.find(c => c.level > level);
+    return next ? `Next unlock at level ${next.level} — ${next.name}` : 'All cars unlocked. You\'re free.';
+  }
+
+  function renderCars(level, selectedId) {
+    document.getElementById('nextUnlock').textContent = nextUnlockFor(level);
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    window.APEX_CARS.forEach(car => {
+      const owned = level >= car.level;
+      const isSelected = car.id === selectedId;
+      const card = document.createElement('div');
+      card.className = 'car-card' + (owned ? '' : ' locked') + (isSelected ? ' selected' : '');
+      card.innerHTML = `
+        <div class="car-tag">
+          <span>CLASS ${car.class} · LVL ${car.level}</span>
+          <span class="pill ${isSelected ? 'signal' : (owned ? '' : 'locked')}">${isSelected ? 'SELECTED' : (owned ? 'OWNED' : 'LOCKED')}</span>
+        </div>
+        <div class="car-name">${car.name}</div>
+        <div class="car-tagline">${car.tagline}</div>
+        <div class="car-canvas-wrap">
+          <canvas id="cv-${car.id}"></canvas>
+          ${owned ? '' : '<div class="lock-overlay"><div class="lock">🔒 UNLOCK AT LEVEL ' + car.level + '</div></div>'}
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="num">${car.topSpeed}</div><div class="lbl">Top mph</div></div>
+          <div class="stat"><div class="num">${car.accel}s</div><div class="lbl">0–60</div></div>
+          <div class="stat"><div class="num">${car.class}</div><div class="lbl">Class</div></div>
+        </div>
+        ${
+          isSelected
+          ? '<a class="car-cta primary" href="drive.html">DRIVE NOW →</a>'
+          : owned
+            ? '<button class="car-cta ghost" data-car="' + car.id + '">SELECT THIS CAR</button>'
+            : '<button class="car-cta locked" disabled>Reach Level ' + car.level + '</button>'
+        }
+      `;
+      grid.appendChild(card);
+      // Render the 3D preview into the canvas
+      requestAnimationFrame(() => renderCarPreview('cv-' + car.id, car, owned));
+    });
+
+    // Bind select buttons
+    grid.querySelectorAll('button[data-car]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        try {
+          await fetch('/api/cars/select', {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ car_id: btn.dataset.car })
+          });
+          location.reload();
+        } catch (e) {}
+      });
+    });
+  }
+
+  function renderCarPreview(canvasId, def, lit) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const w = canvas.clientWidth, h = canvas.clientHeight || 160;
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(w, h, false);
+    renderer.setClearColor(0x000000, 0);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(35, w / h, 0.1, 50);
+    camera.position.set(6, 3.2, 7); camera.lookAt(0, 0.7, 0);
+
+    scene.add(new THREE.HemisphereLight(0xc8dff5, 0x6e7461, 0.95));
+    const sun = new THREE.DirectionalLight(0xfff4d6, 0.85);
+    sun.position.set(5, 10, 7);
+    scene.add(sun);
+
+    // Build car model (same shape as drive.html)
+    const grp = buildCarMesh(def);
+    if (!lit) {
+      // desaturated stone for locked
+      grp.traverse(o => { if (o.material) {
+        if (o.material.color) o.material.color.setHex(0x9aa0a8);
+        if (o.material.emissive) o.material.emissiveIntensity = 0;
+      }});
+    }
+    scene.add(grp);
+
+    // soft circular shadow disc
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(3.6, 32), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.10 }));
+    disc.rotation.x = -Math.PI / 2;
+    disc.position.y = 0.001;
+    scene.add(disc);
+
+    let t = 0;
+    function loop() {
+      t += 0.012;
+      grp.rotation.y = t;
+      renderer.render(scene, camera);
+      requestAnimationFrame(loop);
+    }
+    loop();
+  }
+
+  function buildCarMesh(def) {
+    const grp = new THREE.Group();
+    const { length, width, height, hood, trunk, cabinHeight } = def.body;
+    const chassisMat = new THREE.MeshStandardMaterial({ color: def.color, roughness: 0.3, metalness: 0.65 });
+    const lower = new THREE.Mesh(new THREE.BoxGeometry(width, height * 0.55, length), chassisMat);
+    lower.position.y = height * 0.55 / 2 + 0.32;
+    grp.add(lower);
+
+    const cabinW = width * 0.85;
+    const cabinL = length - hood - trunk;
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(cabinW, height * cabinHeight, cabinL), new THREE.MeshStandardMaterial({ color: 0x222831, roughness: 0.22, metalness: 0.12 }));
+    cabin.position.set(0, lower.position.y + lower.geometry.parameters.height / 2 + (height * cabinHeight) / 2 - 0.05, (trunk - hood) / 2);
+    grp.add(cabin);
+
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(width * 0.16, height * 0.6, length * 1.001), new THREE.MeshStandardMaterial({ color: def.accentColor, emissive: def.accentColor, emissiveIntensity: 0.3 }));
+    stripe.position.y = lower.position.y;
+    grp.add(stripe);
+
+    const wheelGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.28, 16); wheelGeo.rotateZ(Math.PI / 2);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1a1d24, roughness: 0.8 });
+    [
+      [-width/2 - 0.05,  length/2 - 0.7],
+      [ width/2 + 0.05,  length/2 - 0.7],
+      [-width/2 - 0.05, -length/2 + 0.7],
+      [ width/2 + 0.05, -length/2 + 0.7],
+    ].forEach(([x, z]) => {
+      const w = new THREE.Mesh(wheelGeo, wheelMat);
+      w.position.set(x, 0.36, z);
+      grp.add(w);
+    });
+
+    return grp;
+  }
+
+  async function signOut() { try { await APEX.logout(); } catch (e) {} location.href = 'index.html'; }
+  window.signOut = signOut;
+</script>
+<script src="scripts/i18n.js"></script>
+<script src="scripts/lang-toggle.js"></script>
+<script type="module" src="scripts/compliance/bootstrap.js"></script>
+<script>if(window.APEX&&APEX.requireTrack)APEX.requireTrack("teen");</script>
+</body>
+</html>

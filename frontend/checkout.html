@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Enroll · Goodlane</title>
+<link rel="stylesheet" href="styles/app.css" />
+<style>
+  body { background: var(--paper-2, #faf6ec); }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 56px 20px; }
+  .card { background: #fff; border: 1px solid var(--hairline, #e6dfcc); border-radius: 18px;
+          padding: 28px; box-shadow: 0 12px 40px -20px rgba(15,17,22,.18); }
+  .plan-name { font-family: 'Inter', system-ui, sans-serif, system-ui, sans-serif; font-weight: 800; font-size: 24px; margin: 0 0 6px; }
+  .price { font-size: 44px; font-weight: 800; letter-spacing: -.02em; margin: 12px 0 2px; }
+  .price .c { font-size: 22px; vertical-align: super; color: var(--ink-500, #5d6776); }
+  .blurb { color: var(--ink-500, #5d6776); line-height: 1.55; margin: 8px 0 20px; }
+  ul.feat { list-style: none; padding: 0; margin: 0 0 22px; }
+  ul.feat li { padding: 8px 0 8px 26px; position: relative; border-bottom: 1px solid var(--hairline,#e6dfcc); }
+  ul.feat li:before { content: '✓'; position: absolute; left: 0; color: #1d4ed8; font-weight: 800; }
+  .btn-go { display: block; width: 100%; padding: 15px; border: 0; border-radius: 12px;
+            background: #1d4ed8; color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; }
+  .btn-go:disabled { background: #a4b8b0; cursor: default; }
+  .proto { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; letter-spacing: .1em;
+           text-transform: uppercase; color: #f59e0b; text-align: center; margin-top: 14px; }
+  .err { color: #b91c1c; min-height: 1.2em; margin-top: 10px; text-align: center; }
+  .muted { color: var(--ink-500, #5d6776); font-size: 13px; text-align: center; margin-top: 18px; }
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="card">
+      <p style="font-family: 'Inter', system-ui, sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#5d6776;margin:0 0 10px;" id="eyebrow">Enroll</p>
+      <h1 class="plan-name" id="planName">Parent-Taught Teen Driver Ed</h1>
+      <p class="blurb" id="blurb"></p>
+      <div class="price"><span class="c">$</span><span id="price">29</span></div>
+      <p style="color:var(--ink-500,#5d6776);font-size:12.5px;margin:0 0 18px;" id="oneTime">One-time · no auto-renew</p>
+      <ul class="feat" id="feat"></ul>
+      <button class="btn-go" id="go" disabled>…</button>
+      <p class="err" id="err"></p>
+      <p class="proto" id="proto">Secure one-time enrollment · No subscriptions</p>
+      <p class="muted"><a href="dashboard.html" id="later" style="color:#1d4ed8;">Maybe later</a></p>
+    </div>
+  </main>
+
+  <script src="scripts/api.js"></script>
+  <script src="scripts/app.js"></script>
+  <script>
+  (function () {
+    function lang() { try { const v = localStorage.getItem('apex_lang'); if (v==='es'||v==='en') return v; } catch(e){} return 'en'; }
+    function T(en, es) { return lang() === 'es' ? es : en; }
+
+    const goBtn = document.getElementById('go');
+    const errEl = document.getElementById('err');
+
+    // Localize static chrome.
+    document.getElementById('eyebrow').textContent = T('Enroll', 'Inscríbete');
+    document.getElementById('oneTime').textContent = T('One-time · no auto-renew', 'Pago único · sin renovación automática');
+    document.getElementById('proto').textContent = T('Secure one-time enrollment · No subscriptions', 'Inscripción única segura · Sin suscripciones');
+    document.getElementById('later').textContent = T('Maybe later', 'Quizás después');
+    document.title = T('Enroll · Goodlane', 'Inscríbete · Goodlane');
+
+    async function init() {
+      // Must be signed in.
+      const me = await APEX.refresh();
+      if (!me || !me.user) { location.href = 'login.html'; return; }
+      // Already entitled → straight to dashboard.
+      if (Array.isArray(me.allowedTracks) && me.allowedTracks.includes('teen')) {
+        location.href = 'dashboard.html'; return;
+      }
+      // Load the PTDE plan from the catalog.
+      let plan = null;
+      try {
+        const r = await fetch('/api/plans');
+        const { plans } = await r.json();
+        plan = (plans || []).find(p => p.sku === 'ptde');
+      } catch (e) {}
+      if (plan) {
+        document.getElementById('planName').textContent = plan.name;
+        document.getElementById('price').textContent = Math.round(plan.price_cents / 100);
+        document.getElementById('blurb').textContent = T(
+          'The full 32-hour Texas teen course, taught parent-supervised — curriculum, parent track, and BTW logbook.',
+          'El curso completo de 32 horas para adolescentes de Texas, con supervisión de un padre — currículo, módulo para padres y bitácora de manejo.'
+        );
+      }
+      document.getElementById('feat').innerHTML = [
+        T('All 12 modules · 2,055 minutes of interactive content', 'Los 12 módulos · 2,055 minutos de contenido interactivo'),
+        T('3D drive simulator, mini-games & hazard drills', 'Simulador de manejo 3D, minijuegos y prácticas de peligros'),
+        T('Parent track + behind-the-wheel logbook (DE-964 export)', 'Módulo para padres + bitácora de manejo (exporta DE-964)'),
+        T('English & Spanish', 'Inglés y español'),
+      ].map(f => `<li>${f}</li>`).join('');
+
+      goBtn.disabled = false;
+      goBtn.textContent = T('Complete enrollment →', 'Completar inscripción →');
+    }
+
+    goBtn.addEventListener('click', async () => {
+      goBtn.disabled = true; goBtn.textContent = T('Enrolling…', 'Inscribiendo…'); errEl.textContent = '';
+      try {
+        await APEX.checkout('ptde');
+        location.href = 'identity-setup.html';
+      } catch (e) {
+        errEl.textContent = (e && e.status === 401)
+          ? T('Please sign in first.', 'Primero inicia sesión.')
+          : T('Enrollment failed — please retry.', 'La inscripción falló — intenta de nuevo.');
+        goBtn.disabled = false; goBtn.textContent = T('Complete enrollment →', 'Completar inscripción →');
+        if (e && e.status === 401) setTimeout(() => location.href = 'login.html', 1200);
+      }
+    });
+
+    init();
+  })();
+  </script>
+  <script src="scripts/i18n.js"></script>
+  <script src="scripts/lang-toggle.js"></script>
+</body>
+</html>

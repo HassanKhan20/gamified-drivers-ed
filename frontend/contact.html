@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — Contact &amp; Refund Policy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/app.css" />
+<style>
+  body { padding: 0; }
+  .container { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+  .container.wide { max-width: 1180px; }
+
+  .top-strip { background: var(--ink-50); border-bottom: 1px solid var(--ink-50); color: #f5f1e8; font-family: 'Inter', system-ui, sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; padding: 9px 0; text-align: center; position: relative; z-index: 60; }
+  .top-strip a { color: var(--signal-soft); }
+  .top-strip .pulse { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--signal-soft); margin-right: 8px; vertical-align: middle; animation: tspulse 1.6s ease-in-out infinite; }
+  @keyframes tspulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .nav-wrap { position: sticky; top: 0; z-index: 50; background: rgba(251,250,246,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--hairline); }
+  .nav { height: 64px; display: flex; align-items: center; justify-content: space-between; }
+  .nav-logo { display: flex; align-items: center; gap: 10px; }
+  .nav-logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--signal); color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 17px; box-shadow: var(--shadow-primary); }
+  .nav-logo-text { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 17px; }
+  .nav-links { display: none; gap: 28px; font-size: 13.5px; color: var(--ink-500); }
+  @media (min-width: 768px) { .nav-links { display: flex; } }
+  .nav-links a { color: var(--ink-500); }
+  .nav-links a.active { color: var(--signal); }
+  .nav-cta { background: var(--signal); color: #ffffff; font-family: 'Inter', system-ui, sans-serif; font-weight: 600; font-size: 13px; padding: 10px 16px; border-radius: 8px; box-shadow: var(--shadow-primary); }
+
+  .hero { padding: 80px 0 30px; }
+  h1 { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: clamp(34px, 5vw, 54px); letter-spacing: -0.03em; line-height: 1.05; color: var(--ink-50); margin-bottom: 16px; }
+  h2 { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -0.02em; color: var(--ink-50); margin: 32px 0 10px; }
+  h3 { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 16px; color: var(--ink-50); margin: 18px 0 6px; }
+  p.lead { color: var(--ink-300); font-size: 17px; line-height: 1.6; max-width: 620px; }
+  p { color: var(--ink-500); line-height: 1.65; font-size: 14.5px; }
+  p strong { color: var(--ink-100); }
+  .eyebrow { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; letter-spacing: 0.20em; text-transform: uppercase; color: var(--signal); margin-bottom: 18px; }
+
+  .contact-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 32px; }
+  @media (min-width: 700px) { .contact-grid { grid-template-columns: 1fr 1fr; } }
+  .contact-card {
+    padding: 24px; border-radius: 12px;
+    background: var(--bg-2); border: 1px solid var(--hairline);
+    box-shadow: var(--shadow-sm);
+  }
+  .contact-card .lbl { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-700); margin-bottom: 10px; }
+  .contact-card .val { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 22px; color: var(--ink-50); letter-spacing: -0.01em; word-break: break-all; }
+  .contact-card .val.signal { color: var(--signal); }
+  .contact-card .sub { font-size: 13px; color: var(--ink-500); margin-top: 8px; line-height: 1.5; }
+  .contact-card a { color: var(--signal); }
+
+  .refund {
+    margin-top: 60px; padding: 36px;
+    border: 1px solid var(--signal);
+    background: var(--signal-bg);
+    border-radius: 14px;
+    box-shadow: var(--shadow-sm);
+  }
+  .refund h2 { margin-top: 0; }
+  .refund ul { padding-left: 20px; color: var(--ink-300); font-size: 14.5px; line-height: 1.7; }
+  .refund ul li { margin-bottom: 6px; }
+  .refund ul li strong { color: var(--ink-50); }
+
+  .form-card {
+    margin-top: 40px; padding: 32px;
+    background: var(--bg-2); border: 1px solid var(--hairline);
+    border-radius: 14px; box-shadow: var(--shadow-sm);
+  }
+  .form-row { display: grid; gap: 14px; margin-bottom: 14px; }
+  @media (min-width: 600px) { .form-row.two { grid-template-columns: 1fr 1fr; } }
+  label { display: block; font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-500); margin-bottom: 6px; }
+  textarea { min-height: 120px; resize: vertical; }
+  .form-card button {
+    background: var(--signal); color: #ffffff;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 600; font-size: 14px;
+    padding: 13px 22px; border-radius: 10px; border: 0; cursor: pointer;
+    box-shadow: var(--shadow-primary);
+    margin-top: 6px;
+  }
+  .form-card button:hover { background: var(--signal-deep); transform: translateY(-1px); }
+
+  footer { padding: 40px 0 60px; border-top: 1px solid var(--hairline); margin-top: 60px; }
+</style>
+</head>
+<body>
+
+<div class="top-strip">
+  <span class="pulse"></span>
+  <span>Real humans. Real refund window.</span>
+</div>
+
+<div class="nav-wrap">
+  <div class="container wide nav">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-mark">A</div>
+      <span class="nav-logo-text">Goodlane</span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html#how">How it works</a>
+      <a href="plans.html">Plans</a>
+      <a href="about.html">About</a>
+      <a href="compliance.html">Compliance</a>
+      <a href="contact.html" class="active">Contact</a>
+    </nav>
+    <a href="login.html" style="font-size:13.5px;font-weight:600;color:var(--ink-500,#5d6776);padding:8px 12px;text-decoration:none;">Sign in</a>
+      <a href="plans.html" class="nav-cta">Get started</a>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="container">
+    <div class="eyebrow">/ Contact &amp; refund policy</div>
+    <h1>Talk to a human.<br/>Cancel like one too.</h1>
+    <p class="lead">A Auto Driving School publishes their phone, email, and Irving address — that's the right move for a TDLR-licensed school. We do the same. And we publish the refund policy in writing instead of burying it three menus deep.</p>
+
+    <div class="contact-grid">
+      <div class="contact-card">
+        <div class="lbl">Phone</div>
+        <div class="val signal">Pending launch</div>
+        <div class="sub">Live phone support opens at TX public launch. Until then we answer email within one business day.</div>
+      </div>
+      <div class="contact-card">
+        <div class="lbl">Email</div>
+        <div class="val"><a href="mailto:hello@apexdriving.co">hello@apexdriving.co</a></div>
+        <div class="sub">Owner reads every email. No ticket queue, no offshore tier-1 deflection.</div>
+      </div>
+      <div class="contact-card">
+        <div class="lbl">Mailing address</div>
+        <div class="val" style="font-size: 16px;">Pending TDLR filing</div>
+        <div class="sub">Texas school address will be published once the TDLR provider application clears.</div>
+      </div>
+      <div class="contact-card">
+        <div class="lbl">TDLR regulator</div>
+        <div class="val signal">Direct line</div>
+        <div class="sub">If we're not solving your problem, file a complaint at <a href="https://www.tdlr.texas.gov/complaints/" target="_blank" rel="noopener">tdlr.texas.gov/complaints</a>. We will not retaliate. We will fix it.</div>
+      </div>
+    </div>
+
+    <!-- REFUND -->
+    <div class="refund">
+      <h2>The refund policy. In writing.</h2>
+      <ul>
+        <li><strong>14-day full refund.</strong> Inside 14 days of purchase, request a refund by email — we issue 100% back to your original payment method, typically within 3 business days. We do not require an explanation.</li>
+        <li><strong>No restocking fee.</strong> No "non-refundable processing charge." No partial refunds. The full amount comes back.</li>
+        <li><strong>No clawback if you complete the course.</strong> If you finish the course inside the refund window and pass, the certificate is yours to keep — we still refund. We're betting that doesn't happen often, and even if it does, the brand is worth more than $59.</li>
+        <li><strong>No surprise re-bills.</strong> One charge, ever. We do not bundle "free roadside assistance" trials that auto-renew at $5/mo. We do not enroll you in anything you didn't pick.</li>
+        <li><strong>Chargeback?</strong> If your bank reverses a charge, we don't deactivate your course access while we sort it out. The student is who matters; the payment dispute can wait.</li>
+        <li><strong>Past 14 days?</strong> Email us. If you have a real reason — duplicate purchase, wrong course, illness — we still refund.</li>
+      </ul>
+    </div>
+
+    <!-- CONTACT FORM -->
+    <div class="form-card">
+      <h2 style="margin-top: 0;">Send us anything.</h2>
+      <p style="margin-bottom: 22px;">Refund request, course question, parent question, regulatory question, or just a "hey, your competitor is doing X." All of it lands in the founder's inbox.</p>
+
+      <form onsubmit="event.preventDefault(); document.getElementById('thx').style.display='block'; this.style.display='none';">
+        <div class="form-row two">
+          <div>
+            <label for="cname">Your name</label>
+            <input id="cname" name="name" type="text" required style="width: 100%;" />
+          </div>
+          <div>
+            <label for="cemail">Email</label>
+            <input id="cemail" name="email" type="email" required style="width: 100%;" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="ctopic">What's this about?</label>
+            <select id="ctopic" name="topic" style="width: 100%;">
+              <option>Refund request</option>
+              <option>Course question</option>
+              <option>Parent question</option>
+              <option>Regulatory / TDLR</option>
+              <option>Press / partnership</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="cmsg">Message</label>
+            <textarea id="cmsg" name="message" required style="width: 100%;"></textarea>
+          </div>
+        </div>
+        <button type="submit">Send</button>
+      </form>
+      <p id="thx" style="display: none; margin-top: 18px; color: var(--signal); font-family: 'Inter', system-ui, sans-serif; font-size: 13px; letter-spacing: 0.10em;">▸ GOT IT. WE'LL REPLY WITHIN ONE BUSINESS DAY.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container wide" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; color: var(--ink-700); font-size: 13px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 24px; height: 24px; border-radius: 6px; background: linear-gradient(135deg, var(--signal), var(--cyan)); display: flex; align-items: center; justify-content: center; color: var(--bg-0); font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 13px;">A</div>
+      <span class="font-display" style="font-weight: 700; color: var(--ink-100);">Goodlane</span>
+      <span>© 2026</span>
+    </div>
+    <div style="display: flex; gap: 24px;">
+      <a href="plans.html" style="color: var(--ink-500);">Plans</a>
+      <a href="about.html" style="color: var(--ink-500);">About</a>
+      <a href="compliance.html" style="color: var(--ink-500);">Compliance</a>
+    </div>
+  </div>
+</footer>
+
+<script src="scripts/i18n.js"></script>
+<script src="scripts/lang-toggle.js"></script>
+</body>
+</html>

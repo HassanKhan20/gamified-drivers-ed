@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Identity setup · Goodlane</title>
+  <link rel="stylesheet" href="styles/app.css">
+  <style>
+    .setup-wrap { max-width: 640px; margin: 0 auto; padding: 48px 20px; }
+    .prompt-row { display: flex; flex-direction: column; padding: 12px 14px; border: 1px solid #e5e0d4;
+                  border-radius: 10px; margin: 10px 0; background: white; }
+    .prompt-row label { display: flex; align-items: center; gap: 10px; font-weight: 500; cursor: pointer; }
+    .prompt-row input[type="text"] { margin-top: 8px; padding: 9px 10px; border: 1px solid #d4ccba;
+                                     border-radius: 8px; font: inherit; }
+    .prompt-row input[type="text"]:disabled { background: #f4f0e6; color: #9a9180; }
+    .count-pill { display: inline-block; padding: 2px 10px; background: #1d4ed8; color: white;
+                  border-radius: 999px; font-size: 13px; font-weight: 600; }
+    .small { color: #5d6776; font-size: 14px; }
+    .err { color: #b91c1c; min-height: 1.2em; margin-top: 8px; }
+    .btn.primary { display: inline-block; padding: 12px 22px; background: #1d4ed8; color: white;
+                   border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
+    .btn.primary:disabled { background: #a4b8b0; cursor: default; }
+  </style>
+</head>
+<body>
+  <main class="setup-wrap">
+    <h1 id="hdr" style="margin:0 0 8px;">One quick setup step</h1>
+    <p class="small" id="intro">
+      Texas <strong>16 TAC §84.501</strong> requires us to periodically verify that the same person
+      registered for the course is the one taking it. Pick <strong>5–10</strong> of these questions
+      and answer each with something only you would know. We'll ask one occasionally during lessons.
+    </p>
+    <p style="margin: 14px 0;"><span id="selLabel">Selected:</span> <span id="counter" class="count-pill">0 / 5+</span></p>
+
+    <form id="identity-form">
+      <div id="prompts-list"></div>
+      <p id="err" class="err"></p>
+      <button id="submit-btn" type="submit" class="btn primary" disabled>Save and continue</button>
+    </form>
+  </main>
+
+  <script type="module">
+    // Language (same persisted key the rest of the app uses).
+    function lang() { try { const v = localStorage.getItem('apex_lang'); if (v === 'es' || v === 'en') return v; } catch (_) {} return 'en'; }
+    function T(en, es) { return lang() === 'es' ? es : en; }
+    // Spanish for the 25 curated identity prompts, keyed by their API id.
+    const PROMPT_ES = {
+      favorite_color: '¿Cuál es tu color favorito?',
+      first_pet: '¿Cómo se llamaba tu primera mascota?',
+      city_of_birth: '¿En qué ciudad naciste?',
+      elementary_school: '¿Cómo se llama tu escuela primaria?',
+      favorite_teacher: '¿Cuál era el apellido de tu maestro/a favorito/a?',
+      best_friend_4th: '¿Quién era tu mejor amigo/a en 4º grado?',
+      family_car_make: '¿De qué marca es el carro de tu familia?',
+      childhood_street: '¿En qué calle creciste?',
+      favorite_food_child: '¿Cuál era tu comida favorita de niño/a?',
+      favorite_cartoon: '¿Cuál era tu caricatura favorita de niño/a?',
+      family_nickname: '¿Qué apodo te dice tu familia?',
+      mothers_maiden: '¿Cuál es el apellido de soltera de tu mamá?',
+      first_concert: '¿Cuál fue el primer concierto al que fuiste?',
+      first_phone: '¿De qué marca fue tu primer teléfono?',
+      favorite_book_child: '¿Cuál era tu libro favorito de niño/a?',
+      favorite_video_game: '¿Cuál es tu videojuego favorito?',
+      first_job: '¿Cuál fue tu primer trabajo?',
+      favorite_sports_team: '¿Cuál es tu equipo deportivo favorito?',
+      city_grew_up: '¿En qué ciudad creciste?',
+      favorite_subject: '¿Cuál es tu materia escolar favorita?',
+      favorite_movie: '¿Cuál es tu película favorita?',
+      favorite_song: '¿Cuál es tu canción favorita?',
+      second_color: '¿Cuál es tu segundo color favorito?',
+      first_car: '¿Cuál fue el primer carro que manejaste?',
+      best_friend_now: '¿Quién es tu mejor amigo/a?',
+    };
+
+    // Localize the static page chrome.
+    document.getElementById('hdr').textContent = T('One quick setup step', 'Un paso rápido de configuración');
+    document.getElementById('intro').innerHTML = T(
+      'Texas <strong>16 TAC §84.501</strong> requires us to periodically verify that the same person registered for the course is the one taking it. Pick <strong>5–10</strong> of these questions and answer each with something only you would know. We\'ll ask one occasionally during lessons.',
+      'La regla de Texas <strong>16 TAC §84.501</strong> nos exige verificar periódicamente que la misma persona inscrita en el curso es la que lo está tomando. Elige <strong>5–10</strong> de estas preguntas y responde cada una con algo que solo tú sabrías. Te preguntaremos una de vez en cuando durante las lecciones.'
+    );
+    document.getElementById('selLabel').textContent = T('Selected:', 'Seleccionadas:');
+    document.getElementById('submit-btn').textContent = T('Save and continue', 'Guardar y continuar');
+
+    const promptsList = document.getElementById('prompts-list');
+    const errEl = document.getElementById('err');
+    const form = document.getElementById('identity-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const counterEl = document.getElementById('counter');
+
+    function updateCounter() {
+      const n = promptsList.querySelectorAll('input[type="checkbox"]:checked').length;
+      counterEl.textContent = `${n} / 5+`;
+      submitBtn.disabled = (n < 5 || n > 10);
+      counterEl.style.background = (n >= 5 && n <= 10) ? '#1d4ed8' : '#f59e0b';
+    }
+
+    async function load() {
+      const r = await fetch('/api/compliance/identity/prompts');
+      const { prompts } = await r.json();
+      promptsList.innerHTML = prompts.map(p => `
+        <div class="prompt-row">
+          <label>
+            <input type="checkbox" name="prompt" value="${p.id}">
+            ${(lang() === 'es' && PROMPT_ES[p.id]) || p.prompt}
+          </label>
+          <input type="text" name="answer_${p.id}" placeholder="${T('Your answer', 'Tu respuesta')}" disabled autocomplete="off">
+        </div>
+      `).join('');
+      promptsList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const ans = cb.closest('.prompt-row').querySelector('input[type="text"]');
+          ans.disabled = !cb.checked;
+          if (!cb.checked) ans.value = '';
+          else ans.focus();
+          updateCounter();
+        });
+      });
+    }
+    load();
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      errEl.textContent = '';
+      const answers = [];
+      promptsList.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+        const txt = cb.closest('.prompt-row').querySelector('input[type="text"]').value.trim();
+        if (txt) answers.push({ prompt: cb.value, answer: txt });
+      });
+      if (answers.length < 5) {
+        errEl.textContent = T('Pick at least 5 questions and answer each.', 'Elige al menos 5 preguntas y responde cada una.');
+        return;
+      }
+      if (answers.length > 10) {
+        errEl.textContent = T('At most 10 questions.', 'Máximo 10 preguntas.');
+        return;
+      }
+      submitBtn.disabled = true; submitBtn.textContent = T('Saving…', 'Guardando…');
+      const r = await fetch('/api/compliance/identity/seed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ answers }),
+      });
+      if (!r.ok) {
+        errEl.textContent = T('Save failed — please retry.', 'No se pudo guardar — intenta de nuevo.');
+        submitBtn.disabled = false; submitBtn.textContent = T('Save and continue', 'Guardar y continuar');
+        return;
+      }
+      // Route to the right landing for this course mode.
+      const mode = (localStorage.getItem('apex_course_mode') || 'teen');
+      const landing = {
+        teen:      'dashboard.html',
+        adult:     'adult_learn.html',
+        defensive: 'defensive_learn.html',
+        parent:    'parent_learn.html',
+      }[mode] || 'dashboard.html';
+      location.href = landing;
+    });
+  </script>
+</body>
+</html>

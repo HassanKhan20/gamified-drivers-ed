@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — Pick your course</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/app.css" />
+<style>
+  body { background: var(--paper-2, #faf6ec); padding: 0; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 18px 100px; }
+
+  .back { color: var(--ink-500); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 7px; }
+  .back:hover { background: var(--bg-3); color: var(--ink-50); }
+
+  h1 { font-family: 'Inter', system-ui, sans-serif; font-size: 36px; font-weight: 800; font-style: italic; letter-spacing: -0.025em; color: var(--ink-50); margin: 18px 0 8px; }
+  .lede { color: var(--ink-500); font-size: 15px; line-height: 1.55; margin: 0 0 28px; max-width: 640px; }
+
+  .grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  @media (min-width: 720px) { .grid { grid-template-columns: 1fr 1fr; } }
+
+  .course {
+    position: relative; display: flex; flex-direction: column;
+    background: var(--bg-2); border: 1px solid var(--hairline); border-radius: 18px;
+    padding: 24px; min-height: 230px;
+    text-decoration: none; color: inherit;
+    transition: all 0.18s; overflow: hidden;
+  }
+  .course:hover { transform: translateY(-2px); box-shadow: 0 18px 36px -16px rgba(15,17,22,0.18); }
+  .course::before {
+    content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 6px;
+    background: repeating-linear-gradient(180deg, #15191f 0 12px, #faf6ec 12px 24px);
+  }
+  .course .eyebrow { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 8px; }
+  .course h2 { font-family: 'Inter', system-ui, sans-serif; font-size: 22px; font-weight: 800; font-style: italic; letter-spacing: -0.02em; margin: 0 0 8px; color: var(--ink-50); }
+  .course p { color: var(--ink-500); font-size: 14px; line-height: 1.5; margin: 0; }
+  .course .pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+  .course .pill {
+    padding: 4px 9px; border-radius: 999px;
+    background: var(--bg-3); border: 1px solid var(--hairline);
+    font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.10em; color: var(--ink-300);
+  }
+  .course .cta {
+    margin-top: auto; padding-top: 18px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .course .cta .arrow {
+    font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.18em; color: var(--ink-50);
+  }
+
+  /* Per-course accents */
+  .course.teen      .eyebrow { color: #1e3a8a; }
+  .course.adult     .eyebrow { color: #3b82f6; }
+  .course.defensive .eyebrow { color: #f59e0b; }
+  .course.parent    .eyebrow { color: #fbbf24; }
+  .course.teen      { border-color: #b9e0cf; }
+  .course.adult     { border-color: #b9e0cf; }
+  .course.defensive { border-color: #f3d7b1; }
+  .course.parent    { border-color: var(--hairline); background: linear-gradient(135deg, #15191f, #1f242c); color: #faf6ec; }
+  .course.parent .eyebrow { color: #fbbf24; }
+  .course.parent h2 { color: #faf6ec; }
+  .course.parent p { color: rgba(250,246,236,0.78); }
+  .course.parent .pill { background: rgba(250,246,236,0.10); border-color: rgba(250,246,236,0.20); color: #faf6ec; }
+  .course.parent .cta .arrow { color: #fbbf24; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="dashboard.html">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    <span>Dashboard</span>
+  </a>
+
+  <h1>Pick your course.</h1>
+  <p class="lede">Four TDLR-aligned tracks under one roof. Whichever you pick, your engagement minutes count toward the legal hour requirement and we issue the certificate the day you finish.</p>
+
+  <div class="grid">
+    <a href="roadmap.html" class="course teen">
+      <div class="eyebrow">TEEN · 32 HOURS · TDLR-APPROVED</div>
+      <h2>Teen Driver Education</h2>
+      <p>The full TX teen course. 42 connected topics, behind-the-wheel logbook, parent co-sign, road-test simulator, and the DPS permit-test path. Ages 14–17.</p>
+      <div class="pills"><span class="pill">42 TOPICS</span><span class="pill">SIM + BTW</span><span class="pill">~32 HRS</span></div>
+      <div class="cta"><span></span><span class="arrow">START →</span></div>
+    </a>
+
+    <a href="adult_learn.html" class="course adult">
+      <div class="eyebrow">ADULT · 6 HOURS · TDLR-APPROVED</div>
+      <h2>Adult Driver Education</h2>
+      <p>For first-time license applicants 18–24 who skipped teen ed. 10 topics, no simulator, no logbook — just the law and the habits you need to pass the DPS test.</p>
+      <div class="pills"><span class="pill">10 TOPICS</span><span class="pill">SHORTS-FIRST</span><span class="pill">~6 HRS</span></div>
+      <div class="cta"><span></span><span class="arrow">START →</span></div>
+    </a>
+
+    <a href="defensive_learn.html" class="course defensive">
+      <div class="eyebrow">DEFENSIVE · 6 HOURS · COURT-APPROVED</div>
+      <h2>Defensive Driving (DDC)</h2>
+      <p>Dismiss one moving violation per 12 months — or qualify for a 10% TX auto-insurance discount for 3 years. 8 topics, no simulator, fully self-paced.</p>
+      <div class="pills"><span class="pill">8 TOPICS</span><span class="pill">DISMISS / DISCOUNT</span><span class="pill">~6 HRS</span></div>
+      <div class="cta"><span></span><span class="arrow">START →</span></div>
+    </a>
+
+    <a href="parent_learn.html" class="course parent">
+      <div class="eyebrow">PARENT TRACK · 50 MIN · NO CERT</div>
+      <h2>Parent Supervisor Track</h2>
+      <p>Free crash-course for parents supervising a teen's BTW practice. GDL rules, road-test grading, insurance, when to revoke keys, crash protocol. Optional but strongly recommended.</p>
+      <div class="pills"><span class="pill">8 TOPICS</span><span class="pill">SHORTS-ONLY</span><span class="pill">~50 MIN</span></div>
+      <div class="cta"><span></span><span class="arrow">OPEN →</span></div>
+    </a>
+  </div>
+</div>
+<script src="scripts/i18n.js"></script>
+<script src="scripts/lang-toggle.js"></script>
+</body>
+</html>

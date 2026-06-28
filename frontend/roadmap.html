@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — Your Path</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/app.css" />
+
+<style>
+  body { padding: 0; overflow-x: hidden; }
+
+  /* ---------- LAYOUT ---------- */
+  .map-shell { position: relative; min-height: 100vh; }
+
+  /* ---------- AMBIENT SKY ---------- */
+  .sky {
+    position: fixed; inset: 0; z-index: -2; pointer-events: none;
+    background:
+      linear-gradient(180deg, #d6e4ee 0%, #ede4d0 65%, #f0d8ba 100%);
+  }
+  .sky-clouds, .sky-clouds-2 {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    opacity: 0.55;
+  }
+  .cloud {
+    position: absolute; opacity: 0; animation: drift 38s linear infinite;
+  }
+  .sky-clouds .cloud:nth-child(1) { top: 8%;  left: -20%; animation-delay: 0s;   }
+  .sky-clouds .cloud:nth-child(2) { top: 22%; left: -30%; animation-delay: -14s; }
+  .sky-clouds .cloud:nth-child(3) { top: 38%; left: -25%; animation-delay: -25s; }
+  .sky-clouds-2 .cloud:nth-child(1) { top: 14%; left: -18%; animation-delay: -8s;  animation-duration: 56s; opacity: 0.6; }
+  .sky-clouds-2 .cloud:nth-child(2) { top: 30%; left: -28%; animation-delay: -32s; animation-duration: 56s; opacity: 0.45; }
+  @keyframes drift {
+    0%   { transform: translateX(0)      translateY(0) scale(1); opacity: 0; }
+    8%   { opacity: 0.85; }
+    92%  { opacity: 0.85; }
+    100% { transform: translateX(140vw) translateY(-20px) scale(1.05); opacity: 0; }
+  }
+
+  /* ---------- HUD STRIP ---------- */
+  .hud {
+    position: sticky; top: 0; z-index: 30;
+    background: rgba(251,250,246,0.85);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--hairline);
+    padding: 10px 16px;
+  }
+  .hud-inner { max-width: 980px; margin: 0 auto; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .hud-back { color: var(--ink-500); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 7px; }
+  .hud-back:hover { color: var(--ink-50); background: var(--bg-3); }
+  .hud-progress { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px; }
+  .hud-progress .top { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; }
+  .hud-progress .lbl { font-family: 'Inter', system-ui, sans-serif; color: var(--ink-700); letter-spacing: 0.16em; text-transform: uppercase; font-size: 10.5px; }
+  .hud-progress .pct { font-family: 'Inter', system-ui, sans-serif; font-weight: 800; color: var(--signal-deep); font-size: 14px; }
+  .hud-progress .bar { height: 8px; border-radius: 999px; background: var(--bg-3); border: 1px solid var(--hairline); overflow: hidden; }
+  .hud-progress .bar > div { height: 100%; background: linear-gradient(90deg, var(--signal) 0%, var(--signal-soft) 100%); border-radius: 999px; transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
+  .hud-stats { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .hud-stat {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 11px; border-radius: 999px;
+    background: var(--bg-2); border: 1px solid var(--hairline);
+    font-family: 'Inter', system-ui, sans-serif; font-size: 11.5px; font-weight: 700;
+    color: var(--ink-300); letter-spacing: 0.04em;
+    box-shadow: var(--shadow-sm);
+  }
+  .hud-stat.streak { color: var(--cyan); border-color: #f3d7b1; background: var(--ember-50); }
+  .hud-stat.xp { color: var(--signal-deep); border-color: #b9e0cf; background: var(--signal-bg); }
+  .hud-stat.level { color: var(--ink-50); }
+  .hud-flame { animation: flameflick 2.4s ease-in-out infinite; display: inline-block; }
+  @keyframes flameflick { 0%,100% { transform: scale(1) rotate(-3deg); } 50% { transform: scale(1.08) rotate(3deg); } }
+
+  /* ---------- WHAT'S NEXT BANNER ---------- */
+  .next-banner {
+    max-width: 720px; margin: 24px auto 12px; padding: 18px 22px;
+    background: var(--bg-2); border: 1px solid var(--signal); border-radius: 16px;
+    box-shadow: var(--shadow);
+    display: flex; gap: 16px; align-items: center;
+    position: relative; overflow: hidden;
+  }
+  .next-banner::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--signal); }
+  .next-banner h3 { font-family: 'Inter', system-ui, sans-serif; font-size: 20px; font-weight: 700; color: var(--ink-50); margin: 0 0 2px; letter-spacing: -0.02em; }
+  .next-banner .sub { color: var(--ink-500); font-size: 13.5px; }
+  .next-banner .cta {
+    background: var(--signal); color: #ffffff; padding: 12px 18px; border-radius: 10px;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 14px;
+    box-shadow: var(--shadow-primary); display: inline-flex; align-items: center; gap: 8px;
+    transition: all 0.18s; flex-shrink: 0;
+  }
+  .next-banner .cta:hover { background: var(--signal-deep); transform: translateY(-1px); }
+  .next-banner-icon {
+    width: 56px; height: 56px; border-radius: 14px;
+    background: var(--signal); color: #ffffff;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; box-shadow: var(--shadow-primary);
+  }
+
+  /* ---------- PATH ---------- */
+  .path-wrap { position: relative; max-width: 720px; margin: 32px auto 80px; padding: 0 16px 60px; }
+
+  /* SVG path drawn first, behind nodes */
+  .path-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+  .path-line-bg { stroke: #d6cfbd; stroke-width: 14; fill: none; stroke-linecap: round; stroke-dasharray: 2 14; }
+  .path-line-fg { stroke: url(#pathGrad); stroke-width: 12; fill: none; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+
+  /* Module headers float across the path */
+  .module-header {
+    position: relative; z-index: 5;
+    margin: 36px auto 14px;
+    padding: 12px 22px; border-radius: 999px;
+    background: var(--bg-2); border: 1px solid var(--hairline-strong);
+    box-shadow: var(--shadow-sm);
+    display: inline-flex; align-items: center; gap: 12px;
+    text-align: left;
+  }
+  .module-header .num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--signal); color: #ffffff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 13px;
+  }
+  .module-header .title { font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 700; color: var(--ink-50); letter-spacing: -0.01em; }
+  .module-header .meta { font-family: 'Inter', system-ui, sans-serif; font-size: 10px; color: var(--ink-700); letter-spacing: 0.14em; text-transform: uppercase; }
+
+  .module-section { position: relative; }
+  .module-row { display: flex; justify-content: center; padding: 10px 0; position: relative; z-index: 5; }
+
+  /* ---------- NODES ---------- */
+  .node {
+    position: relative;
+    width: 84px; height: 84px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: transform 0.2s cubic-bezier(0.16,1,0.3,1);
+    border: 0; padding: 0; font-family: inherit;
+    background: transparent;
+  }
+  .node:hover:not(.locked) { transform: translateY(-3px) scale(1.04); }
+  .node-circle {
+    position: absolute; inset: 0; border-radius: 50%;
+    box-shadow: 0 8px 24px -8px rgba(15,17,22,0.20), inset 0 -4px 0 rgba(0,0,0,0.10);
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    color: #ffffff;
+  }
+  .node-circle svg { width: 30px; height: 30px; }
+
+  .node.done .node-circle      { background: linear-gradient(180deg, var(--signal-soft), var(--signal-deep)); }
+  .node.current .node-circle   { background: linear-gradient(180deg, #ffffff, #f5f3ee); color: var(--signal-deep); border: 2px solid var(--signal); }
+  .node.available .node-circle { background: linear-gradient(180deg, #ffffff, #f5f3ee); color: var(--signal-deep); border: 1.5px solid var(--signal-soft); }
+  .node.locked .node-circle    { background: linear-gradient(180deg, #cdc6b8, #a39e91); color: #f5f1e8; opacity: 0.8; }
+
+  /* Type stripe (a small chip showing what the node is) */
+  .node-type {
+    position: absolute; left: -6px; top: -6px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--bg-2); border: 1px solid var(--hairline-strong);
+    box-shadow: var(--shadow-sm);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-300);
+    z-index: 2;
+  }
+  .node-type svg { width: 14px; height: 14px; }
+  .node.done .node-type { background: var(--signal); color: #ffffff; border-color: var(--signal); }
+  .node.current .node-type { background: var(--signal); color: #ffffff; border-color: var(--signal); }
+  .node.available .node-type { background: var(--signal-bg); color: var(--signal-deep); border-color: var(--signal); }
+
+  /* Pulsing halo on the current node */
+  .node.current .pulse {
+    position: absolute; inset: -10px; border-radius: 50%;
+    border: 2px solid var(--signal);
+    animation: pulse-ring 2s ease-out infinite;
+  }
+  .node.current .pulse-2 { animation-delay: 1s; }
+  @keyframes pulse-ring {
+    0%   { transform: scale(0.85); opacity: 0.85; }
+    100% { transform: scale(1.45); opacity: 0; }
+  }
+
+  /* Locked nodes — chain icon */
+  .node.locked .node-circle::after {
+    content: ''; display: block; width: 24px; height: 24px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23f5f1e8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='11' width='18' height='11' rx='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E");
+    background-size: contain;
+  }
+  .node.locked .node-circle svg { display: none; }
+  .node.locked .node-type svg { opacity: 0.5; }
+  .node.locked:hover .node-circle { animation: shake 0.4s ease-in-out; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  /* Node tooltip on hover */
+  .node-tooltip {
+    position: absolute; top: calc(100% + 12px); left: 50%; transform: translateX(-50%);
+    background: var(--ink-50); color: #f5f1e8;
+    padding: 10px 14px; border-radius: 10px;
+    font-size: 12.5px; font-family: 'Inter', system-ui, sans-serif; font-weight: 600;
+    white-space: nowrap; max-width: 260px;
+    pointer-events: none; opacity: 0; transition: opacity 0.15s, transform 0.15s;
+    box-shadow: 0 12px 32px -12px rgba(15,17,22,0.45);
+    z-index: 10;
+  }
+  .node-tooltip::before {
+    content: ''; position: absolute; top: -5px; left: 50%; transform: translateX(-50%) rotate(45deg);
+    width: 10px; height: 10px; background: var(--ink-50);
+  }
+  .node-tooltip .meta { font-family: 'Inter', system-ui, sans-serif; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(245,241,232,0.6); margin-top: 2px; font-weight: 400; }
+  .node:hover .node-tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .node:not(:hover) .node-tooltip { transform: translateX(-50%) translateY(-4px); }
+
+  /* Done — small particle floating up occasionally */
+  .node.done::after {
+    content: ''; position: absolute; top: 8px; left: 50%; width: 4px; height: 4px;
+    border-radius: 50%; background: var(--signal-soft); opacity: 0;
+    animation: float-up 4s ease-in-out infinite;
+  }
+  @keyframes float-up {
+    0%   { opacity: 0; transform: translate(-50%, 0); }
+    20%  { opacity: 0.9; }
+    100% { opacity: 0; transform: translate(-50%, -36px); }
+  }
+
+  /* ---------- CAR AVATAR (Three.js) ---------- */
+  .car-avatar {
+    position: absolute; width: 100px; height: 100px; pointer-events: none;
+    transition: top 0.6s cubic-bezier(0.16,1,0.3,1), left 0.6s cubic-bezier(0.16,1,0.3,1);
+    z-index: 4;
+  }
+  .car-avatar canvas { width: 100%; height: 100%; display: block; }
+
+  /* ---------- FINAL NODE ---------- */
+  .final-section {
+    margin: 60px auto 30px; max-width: 720px; padding: 36px 28px;
+    background: linear-gradient(135deg, #fef3c7 0%, var(--bg-2) 70%);
+    border: 1px solid #f3d7b1; border-radius: 18px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .final-section::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.3;
+    background:
+      radial-gradient(circle at 30% 0%, rgba(245,158,11,0.15), transparent 50%),
+      radial-gradient(circle at 70% 100%, rgba(29,78,216,0.10), transparent 50%);
+  }
+  .final-section .trophy {
+    width: 100px; height: 100px; margin: 0 auto 18px;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 6px var(--bg-2), 0 18px 40px -8px rgba(245,158,11,0.40);
+    color: #ffffff;
+    animation: trophyfloat 3.5s ease-in-out infinite;
+  }
+  .final-section.locked .trophy { background: linear-gradient(135deg, #cdc6b8, #a39e91); box-shadow: 0 0 0 6px var(--bg-2), 0 12px 30px -8px rgba(15,17,22,0.20); animation: none; }
+  @keyframes trophyfloat {
+    0%,100% { transform: translateY(0) rotate(-2deg); }
+    50%     { transform: translateY(-8px) rotate(2deg); }
+  }
+  .final-section h2 { font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 32px; letter-spacing: -0.025em; margin: 0 0 6px; color: var(--ink-50); }
+  .final-section p { color: var(--ink-500); margin: 0 auto 20px; max-width: 420px; line-height: 1.55; }
+
+  /* ---------- BACK NAV ---------- */
+  .nav-rail {
+    position: fixed; left: 22px; top: 50%; transform: translateY(-50%); z-index: 20;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 10px 8px;
+    background: rgba(251,250,246,0.9);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-sm);
+  }
+  @media (max-width: 1100px) { .nav-rail { display: none; } }
+  .nav-rail a {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-500); transition: all 0.15s;
+  }
+  .nav-rail a:hover { background: var(--bg-3); color: var(--ink-50); }
+  .nav-rail a.active { background: var(--signal); color: #ffffff; box-shadow: var(--shadow-primary); }
+
+  /* ---------- WELCOME MAT (locked-everything fallback) ---------- */
+  .welcome-mat {
+    display: none; max-width: 520px; margin: 80px auto;
+    background: var(--bg-2); border: 1px solid var(--hairline); border-radius: 16px;
+    padding: 32px; text-align: center; box-shadow: var(--shadow-sm);
+  }
+  .welcome-mat.show { display: block; }
+
+  /* ---------- CONFETTI BURST ---------- */
+  .burst-particle {
+    position: fixed; width: 8px; height: 12px; border-radius: 2px;
+    pointer-events: none; z-index: 9999; opacity: 0;
+    animation: burst 1.6s cubic-bezier(0.16,1,0.3,1) forwards;
+  }
+  @keyframes burst {
+    0%   { transform: translate(0,0) rotate(0deg) scale(0.5); opacity: 0; }
+    20%  { opacity: 1; }
+    100% { transform: var(--burst-end) rotate(720deg) scale(1); opacity: 0; }
+  }
+</style>
+</head>
+
+<body>
+
+<!-- ATMOSPHERE -->
+<div class="sky"></div>
+<div class="sky-clouds" id="clouds1">
+  <svg class="cloud" width="220" height="80" viewBox="0 0 220 80" fill="none"><ellipse cx="60" cy="46" rx="50" ry="22" fill="#ffffff"/><ellipse cx="120" cy="40" rx="60" ry="28" fill="#ffffff"/><ellipse cx="170" cy="48" rx="44" ry="20" fill="#ffffff"/></svg>
+  <svg class="cloud" width="280" height="90" viewBox="0 0 280 90" fill="none"><ellipse cx="60" cy="50" rx="55" ry="24" fill="#ffffff" opacity="0.92"/><ellipse cx="140" cy="44" rx="70" ry="32" fill="#ffffff" opacity="0.92"/><ellipse cx="220" cy="52" rx="50" ry="22" fill="#ffffff" opacity="0.92"/></svg>
+  <svg class="cloud" width="180" height="70" viewBox="0 0 180 70" fill="none"><ellipse cx="50" cy="40" rx="42" ry="20" fill="#ffffff" opacity="0.85"/><ellipse cx="110" cy="34" rx="55" ry="26" fill="#ffffff" opacity="0.85"/><ellipse cx="150" cy="42" rx="35" ry="18" fill="#ffffff" opacity="0.85"/></svg>
+</div>
+<div class="sky-clouds-2" id="clouds2">
+  <svg class="cloud" width="160" height="60" viewBox="0 0 160 60" fill="none"><ellipse cx="40" cy="34" rx="38" ry="18" fill="#ffffff"/><ellipse cx="100" cy="30" rx="50" ry="22" fill="#ffffff"/></svg>
+  <svg class="cloud" width="200" height="70" viewBox="0 0 200 70" fill="none"><ellipse cx="50" cy="38" rx="46" ry="22" fill="#ffffff"/><ellipse cx="130" cy="34" rx="58" ry="26" fill="#ffffff"/></svg>
+</div>
+
+<!-- HUD -->
+<div class="hud">
+  <div class="hud-inner">
+    <a href="dashboard.html" class="hud-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Dashboard
+    </a>
+    <div class="hud-progress">
+      <div class="top">
+        <span class="lbl">Your Path · <span id="hudCarName">Loading…</span></span>
+        <span class="pct" id="hudPct">0%</span>
+      </div>
+      <div class="bar"><div id="hudBar" style="width: 0%;"></div></div>
+    </div>
+    <div class="hud-stats">
+      <span class="hud-stat level"><span style="color: var(--ink-700); font-weight: 600;">LVL</span> <span id="hudLvl">1</span></span>
+      <span class="hud-stat xp">⚡ <span id="hudXp">0</span> XP</span>
+      <span class="hud-stat streak"><span class="hud-flame">🔥</span> <span id="hudStreak">0</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- LEFT NAV RAIL -->
+<div class="nav-rail">
+  <a href="dashboard.html" title="Dashboard">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4v-7H10v7H6a2 2 0 0 1-2-2V9z"/></svg>
+  </a>
+  <a href="roadmap.html" class="active" title="Path">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l-6 6 6 6M9 5h6a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4H9"/></svg>
+  </a>
+  <a href="parent.html" title="Parent">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V8l9-5 9 5v13"/><path d="M3 13h18"/></svg>
+  </a>
+  <a href="dmv-test.html" title="DMV Day">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="17" r="2"/><circle cx="18" cy="17" r="2"/><path d="M3 17V9l2-5h14l2 5v8h-3M16 17H8"/></svg>
+  </a>
+</div>
+
+<!-- WHAT'S NEXT -->
+<div class="next-banner" id="nextBanner" style="display: none;">
+  <div class="next-banner-icon" id="nextIcon"></div>
+  <div style="flex: 1; min-width: 0;">
+    <div style="font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; color: var(--signal-deep); letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">▸ Up next</div>
+    <h3 id="nextTitle">—</h3>
+    <div class="sub" id="nextSub">—</div>
+  </div>
+  <a href="#" class="cta" id="nextCta">
+    Resume
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+  </a>
+</div>
+
+<!-- THE PATH -->
+<div class="path-wrap" id="pathWrap">
+  <svg class="path-svg" id="pathSvg" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="pathGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#3b82f6"/>
+        <stop offset="100%" stop-color="#1e3a8a"/>
+      </linearGradient>
+    </defs>
+  </svg>
+  <div id="pathContent"></div>
+  <!-- 3D car avatar gets injected here -->
+  <div class="car-avatar" id="carAvatar"></div>
+</div>
+
+<!-- WELCOME (very first time) -->
+<div class="welcome-mat" id="welcomeMat">
+  <h2 class="font-display" style="font-size: 26px; margin: 0 0 8px; font-weight: 800;">Welcome to your path.</h2>
+  <p style="color: var(--ink-500); font-size: 15px; line-height: 1.55;">50+ stops between here and your DMV permit test. Lessons, scenarios, games, and real driving practice — one road, one route.</p>
+</div>
+
+<script src="scripts/api.js"></script>
+<script src="scripts/app.js"></script>
+<script src="scripts/curriculum.js"></script>
+<script src="scripts/curriculum_es.js"></script>
+<script src="scripts/shorts.js"></script>
+<script src="scripts/cars.js"></script>
+<script src="scripts/topics.js"></script>
+<script src="scripts/journey.js"></script>
+
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+
+<script type="module">
+  import * as THREE from 'three';
+
+  // ---------- Hydrate state ----------
+  let state = window.Goodlane ? APEX.load() : {};
+  try { if (window.Goodlane) await APEX.refresh(); state = APEX.load(); } catch (e) {}
+
+  // Pull selected car + game/drive completion from server
+  let carDef = window.APEX_CAR_BY_ID['sedan-base'];
+  let gameBest = {};
+  let driveScenariosCompleted = [];
+  let hazardsCompleted = 0;
+  try {
+    const owned = await fetch('/api/cars/owned', { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+    if (owned) carDef = window.APEX_CAR_BY_ID[owned.selected] || carDef;
+  } catch (e) {}
+  try {
+    const gs = await fetch('/api/games/signs/best', { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+    if (gs && gs.best) gameBest['signs'] = gs.best;
+  } catch (e) {}
+  try {
+    const gs = await fetch('/api/games/rightofway/best', { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+    if (gs && gs.best) gameBest['rightofway'] = gs.best;
+  } catch (e) {}
+  try {
+    const ds = await fetch('/api/drives/recent?limit=20', { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+    if (Array.isArray(ds)) driveScenariosCompleted = [...new Set(ds.map(d => d.scenario))];
+  } catch (e) {}
+  let shortsWatched = [];
+  try {
+    const sw = await fetch('/api/shorts/watched', { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+    if (Array.isArray(sw)) shortsWatched = sw;
+  } catch (e) {}
+  // localStorage fallback (so it works without server)
+  try {
+    const local = JSON.parse(localStorage.getItem('apex_watched_shorts') || '[]');
+    shortsWatched = [...new Set([...shortsWatched, ...local])];
+  } catch (e) {}
+
+  // Augment state with practice-node completion data
+  const fullState = Object.assign({}, state, {
+    gameBest, driveScenariosCompleted, shortsWatched,
+    hazardsCompleted: state.hazardsCompleted || 0,
+  });
+
+  // ---------- HUD numbers ----------
+  document.getElementById('hudCarName').textContent = carDef.name;
+  document.getElementById('hudLvl').textContent = state.level || 1;
+  document.getElementById('hudXp').textContent = state.xp || 0;
+  document.getElementById('hudStreak').textContent = state.streak || 0;
+
+  // ---------- TOPIC-FIRST PATH ----------
+  // Every node on the path is now ONE topic. Click → topic.html. Practice
+  // assets (shorts/games/drives) live inside the topic, not as orphan nodes.
+  const T = window.APEX_TOPICS;
+  // Sync server topic-progress into localStorage before computing the path.
+  try { await T.refreshFromServer(); } catch (e) {}
+  const tp = T.loadProgress();
+  const TOPICS = T.list;
+
+  // Build groups: one per module (collapsed final node lives separately).
+  const groupsByModule = {};
+  TOPICS.forEach(t => {
+    const k = t.moduleId;
+    if (!groupsByModule[k]) groupsByModule[k] = { moduleId: t.moduleId, moduleNum: t.moduleNum, moduleTitle: t.moduleTitle, nodes: [] };
+    groupsByModule[k].nodes.push(t);
+  });
+  const J_GROUPS = Object.values(groupsByModule).sort((a, b) => a.moduleNum - b.moduleNum);
+
+  const totalNodes = TOPICS.length;
+  const doneCount = TOPICS.filter(t => T.topicCompleted(t, tp)).length;
+  const pct = Math.round((doneCount / totalNodes) * 100);
+  document.getElementById('hudPct').textContent = pct + '%';
+  setTimeout(() => { document.getElementById('hudBar').style.width = pct + '%'; }, 80);
+
+  // ---------- Type-icon SVGs ----------
+  const ICONS = {
+    book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+    play: '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"/></svg>',
+    flag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4M4 5h12l-2 4 2 4H4"/></svg>',
+    puzzle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12a2 2 0 0 0-2 2v3h-3v-3a2 2 0 0 0-4 0v3h-3v-3a2 2 0 0 0-2 2 2 2 0 0 0 2 2h3v3a2 2 0 0 0 2-2 2 2 0 0 0 2 2v-3h3v3a2 2 0 0 0 2-2 2 2 0 0 0-2-2h-3v-3a2 2 0 0 0 4 0Z"/></svg>',
+    car: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="2"/><circle cx="18" cy="17" r="2"/><path d="M3 17V9l2-5h14l2 5v8h-3M16 17H8"/></svg>',
+    alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 22h20L12 2z"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="18" r="0.8" fill="currentColor"/></svg>',
+    phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><line x1="11" y1="6" x2="13" y2="6"/></svg>',
+    badge: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 1-4.5 4.4 1.1 6.6L12 17l-5.6 3 1.1-6.6L3 9l6-1z"/></svg>',
+    trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1h3M18 9h2a2 2 0 0 0 2-2V6a1 1 0 0 0-1-1h-3M6 9V3h12v6a6 6 0 0 1-12 0zM9 21h6M12 17v4"/></svg>',
+  };
+
+  // ---------- Build path nodes ----------
+  // Layout: each node sits in a row 110px tall with x offset oscillating left↔right.
+  const ROW_H = 130;
+  const AMP = 240; // horizontal swing in px (clamped by container width)
+  const pathContent = document.getElementById('pathContent');
+  const pathSvg = document.getElementById('pathSvg');
+
+  // Group nodes by module — render module headers as separators, nodes underneath.
+  let domIndex = 0;
+  const nodePositions = [];
+  const lang = T.lang();
+  const Tr = (en, es) => (lang === 'es' ? es : en);
+
+  // Topic icons by what assets are inside (richest signal first)
+  function topicIcon(t) {
+    if (t.assets.drive) return 'car';
+    if (t.assets.game)  return 'puzzle';
+    if (t.type === 'checkpoint') return 'flag';
+    if (t.type === 'scenario')   return 'play';
+    return 'book';
+  }
+  const TYPE_LABEL = {
+    book:   { en: 'Lesson',     es: 'Lección' },
+    play:   { en: 'Scenario',   es: 'Escenario' },
+    flag:   { en: 'Checkpoint', es: 'Examen' },
+    puzzle: { en: 'Game',       es: 'Juego' },
+    car:    { en: 'Drive',      es: 'Manejo' },
+  };
+
+  // Find first unlocked-but-uncompleted topic (the "current")
+  const currentTopic = T.currentTopic();
+
+  J_GROUPS.forEach((g, gi) => {
+    // Module header
+    const header = document.createElement('div');
+    header.style.cssText = 'text-align: center; margin: 30px 0 6px; position: relative; z-index: 6;';
+    header.innerHTML = `
+      <div class="module-header">
+        <div class="num">${g.moduleNum}</div>
+        <div>
+          <div class="title">${escapeHtml(g.moduleTitle)}</div>
+          <div class="meta">${g.nodes.length} ${Tr('topics', 'temas')}</div>
+        </div>
+      </div>
+    `;
+    pathContent.appendChild(header);
+
+    // Nodes
+    const section = document.createElement('div');
+    section.className = 'module-section';
+    pathContent.appendChild(section);
+    g.nodes.forEach((t, ni) => {
+      const isDone = T.topicCompleted(t, tp);
+      // A topic is unlocked iff every prerequisite is completed. Completion on
+      // the server requires the §84.501 time floor was met (see complete_lesson
+      // in backend/main.py), so "prereq completed" ≡ "legal time met + done".
+      const unlocked = T.topicUnlocked(t, tp);
+      const isCurrent = !isDone && unlocked && currentTopic && currentTopic.id === t.id;
+      const isLocked = !isDone && !unlocked;
+      const isAvailable = !isDone && unlocked && !isCurrent;
+
+      const iconKey = topicIcon(t);
+      const typeLabel = TYPE_LABEL[iconKey] || TYPE_LABEL.book;
+      const labelLocal = lang === 'es' ? typeLabel.es : typeLabel.en;
+      const title = T.t(t, 'title');
+
+      // Show what's inside as the tooltip detail (so the user knows what they're walking into)
+      const sts = T.steps(t);
+      const inside = sts.map(s => {
+        if (s.kind === 'shorts')  return s.count + ' ' + Tr('shorts', 'shorts');
+        if (s.kind === 'article') return Tr('article', 'artículo');
+        if (s.kind === 'quiz')    return s.qs + 'q ' + (s.type === 'exam' ? Tr('exam', 'examen') : Tr('quiz', 'cuestionario'));
+        if (s.kind === 'game')    return Tr('game', 'juego');
+        if (s.kind === 'drive')   return Tr('drive', 'manejo');
+        return '';
+      }).filter(Boolean).join(' · ');
+
+      const wrap = document.createElement('div');
+      wrap.className = 'module-row';
+      wrap.style.position = 'relative';
+
+      const offset = Math.sin((domIndex) * 0.7) * AMP;
+      const route = 'topic.html?id=' + encodeURIComponent(t.id);
+      const stateClass = isDone ? 'done' : isCurrent ? 'current' : isAvailable ? 'available' : 'locked';
+      const tooltipSuffix = isDone
+        ? ' · ✓ ' + Tr('done', 'hecho')
+        : isCurrent
+        ? ' · ▸ ' + Tr('tap to start', 'tócalo para empezar')
+        : isAvailable
+        ? ' · ▸ ' + Tr('open', 'abrir')
+        : ' · 🔒 ' + Tr('locked', 'bloqueado');
+      wrap.innerHTML = `
+        <button class="node ${stateClass}"
+                style="transform: translateX(${offset}px);"
+                data-route="${route}" data-locked="${isLocked ? '1' : '0'}"
+                aria-label="${escapeHtml(title)}">
+          ${isCurrent ? '<span class="pulse"></span><span class="pulse pulse-2"></span>' : ''}
+          <span class="node-circle">${ICONS[iconKey] || ICONS.book}</span>
+          <span class="node-type" title="${labelLocal}">${ICONS[iconKey] || ICONS.book}</span>
+          <div class="node-tooltip">
+            ${escapeHtml(title)}
+            <div class="meta">${labelLocal} · ${escapeHtml(inside)}${tooltipSuffix}</div>
+          </div>
+        </button>
+      `;
+      section.appendChild(wrap);
+
+      nodePositions.push({ row: domIndex, offset, isDone, isCurrent, isLocked, ref: t });
+      domIndex += 1;
+    });
+  });
+
+  // Final node section — DMV simulated road test (after every topic done)
+  const finalUnlocked = doneCount >= totalNodes;
+  const finalDone = false; // user can replay anytime
+  const final = document.createElement('div');
+  final.className = 'final-section' + (finalUnlocked || finalDone ? '' : ' locked');
+  final.innerHTML = `
+    <div class="trophy">
+      <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 9H4a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1h3M18 9h2a2 2 0 0 0 2-2V6a1 1 0 0 0-1-1h-3M6 9V3h12v6a6 6 0 0 1-12 0zM9 21h6M12 17v4"/>
+      </svg>
+    </div>
+    <h2>${Tr('DMV Permit Test', 'Examen del DMV')}</h2>
+    <p>${finalUnlocked
+        ? Tr("Every topic is done. The graduation exam is yours to take.", "Cada tema está hecho. El examen de graduación es tuyo.")
+        : Tr("Clear every topic on the path above to unlock the final exam.", "Completa cada tema arriba para desbloquear el examen final.")}</p>
+    <a class="cta" href="${finalUnlocked ? 'dmv-test.html' : '#'}"
+       style="background: ${finalUnlocked ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : 'var(--bg-3)'};
+              color: ${finalUnlocked ? '#ffffff' : 'var(--ink-700)'};
+              padding: 14px 26px; border-radius: 12px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 15px;
+              display: inline-flex; align-items: center; gap: 8px;
+              box-shadow: ${finalUnlocked ? '0 14px 32px -10px rgba(245,158,11,0.40)' : 'none'};
+              ${finalUnlocked ? '' : 'pointer-events: none; opacity: 0.65;'}">
+      ${finalUnlocked ? Tr('Start the test', 'Iniciar el examen') : Tr('Locked', 'Bloqueado')} →
+    </a>
+  `;
+  pathContent.appendChild(final);
+
+  // ---------- Draw the SVG path through the nodes ----------
+  function drawPath() {
+    const wrap = document.getElementById('pathWrap');
+    const wrapRect = wrap.getBoundingClientRect();
+    const buttons = wrap.querySelectorAll('.node');
+    const pts = [];
+    buttons.forEach(btn => {
+      const r = btn.getBoundingClientRect();
+      pts.push({
+        x: r.left - wrapRect.left + r.width / 2,
+        y: r.top  - wrapRect.top  + r.height / 2,
+        done: btn.classList.contains('done'),
+        current: btn.classList.contains('current'),
+      });
+    });
+    if (pts.length === 0) return;
+
+    const svg = document.getElementById('pathSvg');
+    svg.setAttribute('viewBox', `0 0 ${wrap.clientWidth} ${wrap.clientHeight}`);
+    svg.setAttribute('width', wrap.clientWidth);
+    svg.setAttribute('height', wrap.clientHeight);
+
+    // Build smooth cubic curve between points
+    function pathStr(points) {
+      if (points.length < 2) return '';
+      let d = `M ${points[0].x} ${points[0].y}`;
+      for (let i = 1; i < points.length; i++) {
+        const p0 = points[i - 1], p1 = points[i];
+        const cp1x = p0.x;
+        const cp1y = p0.y + (p1.y - p0.y) * 0.5;
+        const cp2x = p1.x;
+        const cp2y = p0.y + (p1.y - p0.y) * 0.5;
+        d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
+      }
+      return d;
+    }
+
+    // Background full path (dashed warm gray)
+    const bgD = pathStr(pts);
+    let bg = svg.querySelector('.path-line-bg');
+    if (!bg) { bg = document.createElementNS('http://www.w3.org/2000/svg', 'path'); bg.setAttribute('class', 'path-line-bg'); svg.appendChild(bg); }
+    bg.setAttribute('d', bgD);
+
+    // Foreground "completed" path — up to the last done node + into current
+    const lastDoneIdx = pts.findIndex((p, i) => i + 1 < pts.length && pts[i + 1].current && !pts[i + 1].done);
+    let fgPts = [];
+    let endIdx = -1;
+    pts.forEach((p, i) => { if (p.done) endIdx = i; });
+    // include the segment up to (but not including) the current node when there is one
+    if (endIdx >= 0) {
+      fgPts = pts.slice(0, endIdx + 1);
+      // If current is right after the last done, draw a half-segment toward it
+      if (endIdx + 1 < pts.length && pts[endIdx + 1].current) {
+        const a = pts[endIdx], b = pts[endIdx + 1];
+        fgPts = [...fgPts, { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }];
+      }
+    }
+    let fg = svg.querySelector('.path-line-fg');
+    if (!fg) { fg = document.createElementNS('http://www.w3.org/2000/svg', 'path'); fg.setAttribute('class', 'path-line-fg'); svg.appendChild(fg); }
+    fg.setAttribute('d', fgPts.length >= 2 ? pathStr(fgPts) : '');
+
+    // Move car avatar to the active node (current, or last done if all done)
+    const targetIdx = pts.findIndex(p => p.current);
+    const fallback = endIdx >= 0 ? endIdx : 0;
+    const idx = targetIdx >= 0 ? targetIdx : fallback;
+    const t = pts[idx];
+    const avatar = document.getElementById('carAvatar');
+    avatar.style.left = (t.x - 50) + 'px';
+    avatar.style.top  = (t.y - 110) + 'px';
+  }
+
+  function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // ---------- Wire node clicks ----------
+  pathContent.addEventListener('click', (e) => {
+    const btn = e.target.closest('.node');
+    if (!btn) return;
+    if (btn.dataset.locked === '1') {
+      // shake animation handled in CSS
+      return;
+    }
+    const route = btn.dataset.route;
+    if (route) location.href = route;
+  });
+
+  // ---------- "What's next" banner ----------
+  if (currentTopic) {
+    const sts = T.steps(currentTopic);
+    const next = T.nextStep(currentTopic, tp);
+    const stepLabel = next ? ({
+      shorts:  Tr(next.count + ' shorts',          next.count + ' shorts cortos'),
+      article: Tr('Read article',                  'Leer artículo'),
+      quiz:    Tr('Quiz · ' + next.qs + ' Qs',     'Cuestionario · ' + next.qs + ' P'),
+      game:    Tr('Game',                          'Juego'),
+      drive:   Tr('Drive · guided sim',            'Manejo · sim guiado'),
+    })[next.kind] : Tr('Start topic', 'Iniciar tema');
+    const ic = topicIcon(currentTopic);
+    document.getElementById('nextBanner').style.display = 'flex';
+    document.getElementById('nextTitle').textContent = T.t(currentTopic, 'title');
+    document.getElementById('nextSub').textContent =
+      Tr('Module ', 'Módulo ') + currentTopic.moduleNum + ': ' + currentTopic.moduleTitle + ' · ' + stepLabel;
+    document.getElementById('nextCta').href = 'topic.html?id=' + encodeURIComponent(currentTopic.id);
+    document.getElementById('nextIcon').innerHTML = ICONS[ic] || ICONS.book;
+  }
+
+  // ---------- 3D car avatar — sculpted profile, not boxes ----------
+  function buildCarMesh(def) {
+    const grp = new THREE.Group();
+    const { length, width, height, hood, trunk, cabinHeight } = def.body;
+    const halfL = length / 2;
+    const lowerH = height * 0.55;
+    const cabinH = height * cabinHeight;
+    const ridgeH = lowerH + cabinH;
+
+    // Side profile shape (extruded across width for a continuous body silhouette)
+    const profile = new THREE.Shape();
+    profile.moveTo(-halfL,            0);
+    profile.lineTo( halfL,            0);
+    profile.lineTo( halfL,            lowerH * 0.78);
+    profile.bezierCurveTo(
+      halfL - hood * 0.35, lowerH * 1.15,
+      halfL - hood * 0.65, lowerH + cabinH * 0.55,
+      halfL - hood,        ridgeH
+    );
+    profile.lineTo(-halfL + trunk,    ridgeH);
+    profile.bezierCurveTo(
+      -halfL + trunk * 0.55, lowerH + cabinH * 0.55,
+      -halfL + trunk * 0.25, lowerH * 1.10,
+      -halfL,                lowerH * 0.78
+    );
+    profile.lineTo(-halfL,            0);
+    const bodyGeo = new THREE.ExtrudeGeometry(profile, {
+      steps: 1, depth: width, bevelEnabled: true,
+      bevelThickness: 0.10, bevelSize: 0.10, bevelSegments: 3,
+    });
+    bodyGeo.translate(0, 0, -width / 2);
+    bodyGeo.rotateY(Math.PI / 2);
+    const chassisMat = new THREE.MeshStandardMaterial({ color: def.color, roughness: 0.32, metalness: 0.55 });
+    const body = new THREE.Mesh(bodyGeo, chassisMat);
+    body.position.y = 0.32;
+    grp.add(body);
+
+    // Greenhouse cabin (dark inset)
+    const cabinW = width * 0.86;
+    const cabinL = length - hood - trunk;
+    const cabin = new THREE.Mesh(
+      new THREE.BoxGeometry(cabinW, cabinH * 0.92, cabinL),
+      new THREE.MeshStandardMaterial({ color: 0x161b25, roughness: 0.22 })
+    );
+    cabin.position.set(0, 0.32 + lowerH + (cabinH * 0.92) / 2 - 0.06, (trunk - hood) / 2);
+    grp.add(cabin);
+
+    // Glass (windshield + rear)
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0xa6c4d8, roughness: 0.06, metalness: 0.45, transparent: true, opacity: 0.62 });
+    const wsGeo = new THREE.PlaneGeometry(cabinW * 0.95, cabinH * 0.88);
+    const ws = new THREE.Mesh(wsGeo, glassMat);
+    ws.position.set(0, cabin.position.y, cabin.position.z + cabinL / 2 + 0.005);
+    ws.rotation.x = THREE.MathUtils.degToRad(-18);
+    grp.add(ws);
+    const rear = new THREE.Mesh(wsGeo, glassMat);
+    rear.position.set(0, cabin.position.y, cabin.position.z - cabinL / 2 - 0.005);
+    rear.rotation.y = Math.PI;
+    rear.rotation.x = THREE.MathUtils.degToRad(-18);
+    grp.add(rear);
+
+    // Painted accent stripe
+    const stripe = new THREE.Mesh(
+      new THREE.BoxGeometry(width * 1.005, height * 0.10, length * 0.92),
+      new THREE.MeshStandardMaterial({ color: def.accentColor, roughness: 0.45, metalness: 0.30 })
+    );
+    stripe.position.y = 0.32 + lowerH * 0.45;
+    grp.add(stripe);
+
+    // Wheels with alloy rim
+    const tireGeo = new THREE.CylinderGeometry(0.40, 0.40, 0.30, 18); tireGeo.rotateZ(Math.PI / 2);
+    const tireMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0d, roughness: 0.85 });
+    const rimGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.32, 12); rimGeo.rotateZ(Math.PI / 2);
+    const rimMat = new THREE.MeshStandardMaterial({ color: 0xb8bdc6, roughness: 0.35, metalness: 0.85 });
+    [
+      [-width/2 - 0.05,  length/2 - 0.7],
+      [ width/2 + 0.05,  length/2 - 0.7],
+      [-width/2 - 0.05, -length/2 + 0.7],
+      [ width/2 + 0.05, -length/2 + 0.7],
+    ].forEach(([x, z]) => {
+      const t = new THREE.Mesh(tireGeo, tireMat); t.position.set(x, 0.40, z); grp.add(t);
+      const r = new THREE.Mesh(rimGeo, rimMat); r.position.set(x, 0.40, z); grp.add(r);
+    });
+    return grp;
+  }
+
+  const av = document.getElementById('carAvatar');
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(100, 100, false);
+  renderer.setClearColor(0x000000, 0);
+  av.appendChild(renderer.domElement);
+  const aScene = new THREE.Scene();
+  const aCam = new THREE.PerspectiveCamera(35, 1, 0.1, 50);
+  aCam.position.set(5.2, 3.0, 5.6); aCam.lookAt(0, 0.7, 0);
+  aScene.add(new THREE.HemisphereLight(0xc8dff5, 0x6e7461, 0.95));
+  const aSun = new THREE.DirectionalLight(0xfff4d6, 0.9); aSun.position.set(5, 10, 7); aScene.add(aSun);
+  const aCar = buildCarMesh(carDef);
+  aScene.add(aCar);
+  // shadow disc
+  const aDisc = new THREE.Mesh(new THREE.CircleGeometry(2.4, 32), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.18 }));
+  aDisc.rotation.x = -Math.PI / 2; aDisc.position.y = 0.001; aScene.add(aDisc);
+  let aT = 0;
+  function avatarLoop() {
+    aT += 0.012;
+    aCar.rotation.y = aT;
+    renderer.render(aScene, aCam);
+    requestAnimationFrame(avatarLoop);
+  }
+  avatarLoop();
+
+  // ---------- Confetti on milestone ----------
+  function burst(x, y, count) {
+    const colors = ['#1d4ed8', '#3b82f6', '#f59e0b', '#fbbf24', '#15191f'];
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'burst-particle';
+      p.style.left = x + 'px';
+      p.style.top  = y + 'px';
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.4;
+      const dist = 90 + Math.random() * 120;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist + Math.random() * 60;
+      p.style.setProperty('--burst-end', `translate(${dx}px, ${dy}px)`);
+      p.style.animationDelay = (Math.random() * 0.2) + 's';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 1900);
+    }
+  }
+  // Trigger when the user just finished something — read a flag set by lesson/game pages
+  if (sessionStorage.getItem('apex_just_completed') === '1') {
+    sessionStorage.removeItem('apex_just_completed');
+    setTimeout(() => {
+      const r = av.getBoundingClientRect();
+      burst(r.left + r.width / 2, r.top + r.height / 2, 60);
+    }, 600);
+  }
+
+  // ---------- Layout passes ----------
+  drawPath();
+  // wait a frame for layout, then redraw to capture final node positions
+  requestAnimationFrame(() => requestAnimationFrame(drawPath));
+  window.addEventListener('resize', drawPath);
+
+  // Auto-scroll to the current node on load
+  setTimeout(() => {
+    const c = document.querySelector('.node.current');
+    if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 200);
+
+  // Show welcome if literally nothing done yet
+  if (doneCount === 0) {
+    // keep showing path so they see what's there; just don't show the redundant mat
+  }
+</script>
+<script src="scripts/i18n.js"></script>
+<script src="scripts/lang-toggle.js"></script>
+<script type="module" src="scripts/compliance/bootstrap.js"></script>
+<script>if(window.APEX&&APEX.requireTrack)APEX.requireTrack("teen");</script>
+</body>
+</html>

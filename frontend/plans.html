@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — Plans · 4 TDLR-track courses</title>
+<meta name="description" content="Pick your TDLR-track course. Teen Driver Ed, Parent-Taught Teen, Adult, or Defensive Driving — one price, no auto-renew, EN or ES." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/app.css" />
+<style>
+  body { padding: 0; }
+  .top-strip { background: var(--ink-50); border-bottom: 1px solid var(--ink-50); color: #f5f1e8; font-family: 'Inter', system-ui, sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; padding: 9px 0; text-align: center; position: relative; z-index: 60; }
+  .top-strip a { color: var(--signal-soft); }
+  .top-strip .pulse { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--signal-soft); margin-right: 8px; vertical-align: middle; animation: tspulse 1.6s ease-in-out infinite; }
+  @keyframes tspulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .nav-wrap { position: sticky; top: 0; z-index: 50; background: rgba(251,250,246,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--hairline); }
+  .container { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  .nav { height: 64px; display: flex; align-items: center; justify-content: space-between; }
+  .nav-logo { display: flex; align-items: center; gap: 10px; }
+  .nav-logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--signal); color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 17px; box-shadow: var(--shadow-primary); }
+  .nav-logo-text { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 17px; letter-spacing: -0.02em; color: var(--ink-50); }
+  .nav-links { display: none; gap: 28px; font-size: 13.5px; color: var(--ink-500); }
+  @media (min-width: 768px) { .nav-links { display: flex; } }
+  .nav-links a { color: var(--ink-500); }
+  .nav-links a:hover { color: var(--ink-50); }
+  .nav-links a.active { color: var(--signal); }
+  .nav-cta { background: var(--signal); color: #ffffff; font-family: 'Inter', system-ui, sans-serif; font-weight: 600; font-size: 13px; padding: 10px 16px; border-radius: 8px; box-shadow: var(--shadow-primary); }
+
+  .hero { padding: 80px 0 30px; }
+  .hero h1 { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: clamp(36px, 5.5vw, 64px); letter-spacing: -0.03em; line-height: 1.05; color: var(--ink-50); margin-bottom: 18px; }
+  .hero p.lead { color: var(--ink-500); font-size: 17px; max-width: 640px; line-height: 1.55; }
+
+  .lang-toggle { display: inline-flex; padding: 4px; border-radius: 8px; background: var(--glass); border: 1px solid var(--hairline); margin-bottom: 28px; }
+  .lang-toggle button { background: transparent; border: 0; color: var(--ink-500); font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; padding: 7px 14px; border-radius: 6px; cursor: pointer; }
+  .lang-toggle button.active { background: var(--signal-bg); color: var(--signal); border: 1px solid rgba(0,245,160,0.30); }
+
+  .plans-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin: 36px 0 60px; }
+  @media (min-width: 768px) { .plans-grid { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1100px) { .plans-grid { grid-template-columns: repeat(4, 1fr); } }
+
+  .plan {
+    position: relative; background: var(--bg-2); border: 1px solid var(--hairline);
+    border-radius: 14px; padding: 24px; box-shadow: var(--shadow-sm);
+    display: flex; flex-direction: column;
+    transition: all 0.18s;
+  }
+  .plan:hover { border-color: rgba(29,78,216,0.30); transform: translateY(-2px); box-shadow: var(--shadow); }
+  .plan.featured { border-color: var(--signal); box-shadow: var(--shadow-primary); }
+  .plan.featured::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--signal); }
+  .plan-tag { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; color: var(--ink-500); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+  .plan-tag .badge-best { font-family: 'Inter', system-ui, sans-serif; font-size: 9.5px; padding: 3px 8px; border-radius: 4px; background: var(--signal); color: #ffffff; letter-spacing: 0.12em; }
+  .plan-tag .badge-soon { font-family: 'Inter', system-ui, sans-serif; font-size: 9.5px; padding: 3px 8px; border-radius: 4px; background: var(--glass); color: var(--ink-500); border: 1px solid var(--hairline); letter-spacing: 0.12em; }
+  .plan-name { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 19px; color: var(--ink-50); letter-spacing: -0.015em; line-height: 1.25; margin-bottom: 4px; }
+  .plan-who { color: var(--ink-500); font-size: 12.5px; line-height: 1.5; min-height: 38px; }
+  .plan-price { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 44px; letter-spacing: -0.03em; color: var(--ink-50); margin: 18px 0 4px; line-height: 1; }
+  .plan-price .currency { font-size: 22px; vertical-align: super; color: var(--ink-500); margin-right: 4px; }
+  .plan-vs { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; color: var(--ink-700); letter-spacing: 0.10em; }
+  .plan-vs s { color: var(--ink-500); }
+  .plan-cert { margin: 14px 0; padding: 10px 12px; border-radius: 8px; background: var(--bg-2); border: 1px solid var(--hairline); font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--ink-300); letter-spacing: 0.05em; }
+  .plan-cert .label { color: var(--ink-700); display: block; margin-bottom: 2px; font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase; }
+  .plan-cert .value { color: var(--signal); font-weight: 700; }
+
+  .plan-list { list-style: none; padding: 0; margin: 14px 0 22px; flex: 1; display: flex; flex-direction: column; gap: 9px; }
+  .plan-list li { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--ink-300); line-height: 1.45; }
+  .plan-list li svg { flex-shrink: 0; color: var(--signal); margin-top: 3px; }
+  .plan-cta { display: block; width: 100%; padding: 13px; border-radius: 10px; text-align: center; font-family: 'Inter', system-ui, sans-serif; font-weight: 600; font-size: 13.5px; transition: all 0.15s; }
+  .plan-cta.primary { background: var(--signal); color: #ffffff; box-shadow: var(--shadow-primary); }
+  .plan-cta.primary:hover { background: var(--signal-deep); transform: translateY(-1px); }
+  .plan-cta.ghost { background: var(--bg-2); color: var(--ink-100); border: 1px solid var(--hairline); box-shadow: var(--shadow-sm); }
+  .plan-cta.ghost:hover { background: var(--bg-3); }
+  .plan-cta.locked { background: var(--bg-3); color: var(--ink-700); cursor: not-allowed; border: 1px solid var(--hairline); }
+
+  .compare-strip { padding: 60px 0; border-top: 1px solid var(--hairline); }
+  .compare-strip h2 { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: clamp(28px, 4vw, 44px); letter-spacing: -0.025em; color: var(--ink-50); margin-bottom: 14px; }
+  .compare-strip p { color: var(--ink-500); max-width: 560px; line-height: 1.55; margin-bottom: 28px; }
+  .vs-table { border: 1px solid var(--hairline); border-radius: 12px; background: var(--bg-2); overflow: hidden; box-shadow: var(--shadow-sm); }
+  .vs-row { display: grid; grid-template-columns: 1.6fr repeat(2, 1fr); border-bottom: 1px solid var(--hairline); font-size: 13px; }
+  .vs-row:last-child { border-bottom: 0; }
+  .vs-row.head { background: var(--bg-3); }
+  .vs-row > div { padding: 14px 14px; border-right: 1px solid var(--hairline); display: flex; align-items: center; }
+  .vs-row > div:last-child { border-right: 0; }
+  .vs-row .col-name { font-weight: 600; color: var(--ink-100); }
+  .vs-row .col-vendor { justify-content: center; color: var(--ink-500); font-family: 'Inter', system-ui, sans-serif; font-size: 11.5px; letter-spacing: 0.04em; }
+  .vs-row .col-vendor.us { color: var(--signal); font-weight: 700; }
+  .vs-row .check { justify-content: center; font-family: 'Inter', system-ui, sans-serif; font-size: 11px; letter-spacing: 0.10em; }
+  .vs-row .check.y { color: var(--signal); }
+  .vs-row .check.n { color: var(--danger); }
+  .vs-row .check.us { color: var(--signal); font-weight: 700; }
+
+  .trust-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 28px; }
+  .trust-item { padding: 18px; border-radius: 10px; background: var(--glass); border: 1px solid var(--hairline); }
+  .trust-item .lbl { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; color: var(--ink-700); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 6px; }
+  .trust-item .val { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 16px; color: var(--ink-50); letter-spacing: -0.01em; }
+  .trust-item .val.signal { color: var(--signal); }
+  .trust-item .sub { font-size: 12px; color: var(--ink-500); margin-top: 6px; }
+
+  footer { padding: 40px 0 60px; border-top: 1px solid var(--hairline); margin-top: 60px; }
+</style>
+</head>
+<body>
+
+<div class="top-strip">
+  <span class="pulse"></span>
+  <span>Parent-Taught Teen Driver Ed · $29 · One-time, no auto-renew</span>
+  <span style="color: var(--ink-700); margin: 0 12px;">·</span>
+  <a href="login.html">Sign in</a>
+</div>
+
+<div class="nav-wrap">
+  <div class="container nav">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-mark">A</div>
+      <span class="nav-logo-text">Goodlane</span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html#how">How it works</a>
+      <a href="plans.html" class="active">Plans</a>
+      <a href="about.html">About</a>
+      <a href="compliance.html">Compliance</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+    <a href="login.html" style="font-size:13.5px;font-weight:600;color:var(--ink-500,#5d6776);padding:8px 12px;text-decoration:none;">Sign in</a>
+      <a href="plans.html" class="nav-cta">Get started</a>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="container">
+    <h1 data-i18n="plans.title">Pick the course you actually need.</h1>
+    <p class="lead" data-i18n="plans.lead">Four TDLR-track courses, four real prices. Not a $5/mo "roadside" subscription you didn't ask for. Pay once, finish, get your certificate.</p>
+
+    <div class="lang-toggle" id="langToggle" style="margin-top: 22px;">
+      <button data-lang="en" class="active">EN</button>
+      <button data-lang="es">ES</button>
+    </div>
+
+    <div class="plans-grid">
+
+      <!-- 1: Teen Driver Ed (Instructor-Taught) — COMING SOON -->
+      <div class="plan">
+        <div class="plan-tag">
+          <span data-i18n="sku.teen.tag">Teen · Instructor-Taught</span>
+          <span class="badge-soon">COMING SOON</span>
+        </div>
+        <div class="plan-name" data-i18n="sku.teen.name">Teen Drivers Ed</div>
+        <div class="plan-who" data-i18n="sku.teen.who">Ages 14–17 · 32 hrs of TDLR-credited instruction · scenario-driven, mastery-gated.</div>
+        <div class="plan-price"><span class="currency">$</span>59</div>
+        <div class="plan-vs"><s>$89 ACEABLE · $99 DRIVERSED</s></div>
+        <div class="plan-cert">
+          <span class="label">Certificate</span>
+          <span class="value">DE-964 · TDLR-issued</span>
+        </div>
+        <ul class="plan-list">
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.teen.f1">42 chapter tree · 10 modules</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.teen.f2">Daily hazard-perception drill</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.teen.f3">Streaks, XP, friend leaderboard</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.teen.f4">Parent dashboard + drive logbook</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.teen.f5">14-day refund · no auto-renew</span></li>
+        </ul>
+        <a class="plan-cta locked" aria-disabled="true">Coming soon</a>
+      </div>
+
+      <!-- 2: Parent-Taught Teen Driver Ed — FEATURED / AVAILABLE -->
+      <div class="plan featured">
+        <div class="plan-tag">
+          <span data-i18n="sku.ptde.tag">Teen · Parent-Taught (PTDE)</span>
+          <span class="badge-best">AVAILABLE NOW</span>
+        </div>
+        <div class="plan-name" data-i18n="sku.ptde.name">Parent-Taught Teen Ed</div>
+        <div class="plan-who" data-i18n="sku.ptde.who">Ages 14–17 · 32 hrs classroom + 44 hrs behind-the-wheel with you. The cheaper path TX allows.</div>
+        <div class="plan-price"><span class="currency">$</span>29</div>
+        <div class="plan-vs"><s>$115 KAPLAN · $89 ACEABLE</s></div>
+        <div class="plan-cert">
+          <span class="label">Certificate</span>
+          <span class="value">DE-964E · TDLR-issued</span>
+        </div>
+        <ul class="plan-list">
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.ptde.f1">Classroom curriculum + parent toolkit</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.ptde.f2">Drive log auto-totaling 44 hr requirement</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.ptde.f3">Daily lesson prompts to coach during real drives</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.ptde.f4">PTDE packet ordering walkthrough</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.ptde.f5">14-day refund · no auto-renew</span></li>
+        </ul>
+        <a href="signup.html?sku=ptde" class="plan-cta primary">Get started · $29 →</a>
+      </div>
+
+      <!-- 3: Adult Driver Ed -->
+      <div class="plan">
+        <div class="plan-tag">
+          <span data-i18n="sku.adult.tag">Adult · 18–24</span>
+          <span class="badge-soon">COMING SOON</span>
+        </div>
+        <div class="plan-name" data-i18n="sku.adult.name">Adult Drivers Ed</div>
+        <div class="plan-who" data-i18n="sku.adult.who">Ages 18+ · 6 hrs · skip the DPS written test. Required if you're 18–24 and getting your first license.</div>
+        <div class="plan-price"><span class="currency">$</span>39</div>
+        <div class="plan-vs"><s>$39 A AUTO · $50 ACEABLE</s></div>
+        <div class="plan-cert">
+          <span class="label">Certificate</span>
+          <span class="value">ADE-1317 · TDLR-issued</span>
+        </div>
+        <ul class="plan-list">
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.adult.f1">6 hours, finish in one sitting</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.adult.f2">Same scenario engine — not slides</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.adult.f3">Instant ADE-1317 certificate download</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.adult.f4">EN + ES native voice</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.adult.f5">14-day refund · no auto-renew</span></li>
+        </ul>
+        <a class="plan-cta locked" aria-disabled="true">Coming soon</a>
+      </div>
+
+      <!-- 4: Defensive Driving / Ticket Dismissal -->
+      <div class="plan">
+        <div class="plan-tag">
+          <span data-i18n="sku.def.tag">Defensive Driving</span>
+          <span class="badge-soon">COMING SOON</span>
+        </div>
+        <div class="plan-name" data-i18n="sku.def.name">Ticket Dismissal</div>
+        <div class="plan-who" data-i18n="sku.def.who">6-hour TDLR Driving Safety course. Got a ticket? Dismiss it. Plus 5–10% insurance discount.</div>
+        <div class="plan-price"><span class="currency">$</span>29</div>
+        <div class="plan-vs"><s>$39 A AUTO · $89 KAPLAN</s></div>
+        <div class="plan-cert">
+          <span class="label">Certificate</span>
+          <span class="value">TDLR Driving Safety</span>
+        </div>
+        <ul class="plan-list">
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.def.f1">Court-accepted statewide</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.def.f2">Insurance-discount eligible</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.def.f3">Auto-submit certificate to your insurer</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.def.f4">Same scenario engine in 1 sitting</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="sku.def.f5">14-day refund · no auto-renew</span></li>
+        </ul>
+        <a class="plan-cta locked" aria-disabled="true">Coming soon</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON STRIP -->
+<section class="compare-strip">
+  <div class="container">
+    <h2 data-i18n="cmp.title">Same regulator. Better product.</h2>
+    <p data-i18n="cmp.lead">A Auto Driving School (TDLR #C3630) gets the basics right at $29–39. Goodlane matches every spec — and ships the things they can't: scenario-based mastery learning, parent dashboard, hazard drill, streak engine, no surprise charges.</p>
+
+    <div class="vs-table">
+      <div class="vs-row head">
+        <div class="col-name" style="color: var(--ink-500); font-family: 'Inter', system-ui, sans-serif; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;">Spec</div>
+        <div class="col-vendor">A Auto · C3630</div>
+        <div class="col-vendor us">Goodlane</div>
+      </div>
+      <div class="vs-row"><div class="col-name">TDLR-approved (TX)</div><div class="check y">YES</div><div class="check us">YES</div></div>
+      <div class="vs-row"><div class="col-name">Bilingual EN/ES</div><div class="check y">YES</div><div class="check us">YES — native voice</div></div>
+      <div class="vs-row"><div class="col-name">Mobile / tablet / desktop</div><div class="check y">YES</div><div class="check us">YES</div></div>
+      <div class="vs-row"><div class="col-name">Instant cert download</div><div class="check y">YES</div><div class="check us">YES</div></div>
+      <div class="vs-row"><div class="col-name">Scenario-driven engine</div><div class="check n">NO</div><div class="check us">YES</div></div>
+      <div class="vs-row"><div class="col-name">Daily hazard-perception drill</div><div class="check n">NO</div><div class="check us">YES</div></div>
+      <div class="vs-row"><div class="col-name">Streaks · XP · leagues</div><div class="check n">NO</div><div class="check us">YES</div></div>
+      <div class="vs-row"><div class="col-name">Parent dashboard + drive log</div><div class="check n">NO</div><div class="check us">YES</div></div>
+      <div class="vs-row"><div class="col-name">Engagement-based (no fake timers)</div><div class="check n">NO</div><div class="check us">YES</div></div>
+      <div class="vs-row"><div class="col-name">Pass Guarantee tier</div><div class="check n">NO</div><div class="check us">YES — $129</div></div>
+      <div class="vs-row"><div class="col-name">14-day refund · no auto-renew</div><div class="check n">UNCLEAR</div><div class="check us">YES — written</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST BLOCK -->
+<section class="compare-strip" style="border-top: 0; padding-top: 0;">
+  <div class="container">
+    <div class="trust-grid">
+      <div class="trust-item">
+        <div class="lbl">Regulator</div>
+        <div class="val">TX TDLR</div>
+        <div class="sub">License # pending issuance</div>
+      </div>
+      <div class="trust-item">
+        <div class="lbl">Pricing model</div>
+        <div class="val signal">One-time</div>
+        <div class="sub">No subscriptions. No add-ons.</div>
+      </div>
+      <div class="trust-item">
+        <div class="lbl">Refund window</div>
+        <div class="val">14 days</div>
+        <div class="sub">No questions, no clawback.</div>
+      </div>
+      <div class="trust-item">
+        <div class="lbl">Languages at launch</div>
+        <div class="val">EN · ES</div>
+        <div class="sub">Native voice tutor in both.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; color: var(--ink-700); font-size: 13px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 24px; height: 24px; border-radius: 6px; background: linear-gradient(135deg, var(--signal), var(--cyan)); display: flex; align-items: center; justify-content: center; color: var(--bg-0); font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 13px;">A</div>
+      <span class="font-display" style="font-weight: 700; color: var(--ink-100);">Goodlane</span>
+      <span>© 2026</span>
+    </div>
+    <div style="display: flex; gap: 24px;">
+      <a href="about.html" style="color: var(--ink-500);">About</a>
+      <a href="compliance.html" style="color: var(--ink-500);">Compliance</a>
+      <a href="contact.html" style="color: var(--ink-500);">Contact / Refund</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Minimal i18n stub — full translations live in i18n.js if/when we externalize.
+  const translations = {
+    en: {},
+    es: {
+      'plans.title': 'Elige el curso que realmente necesitas.',
+      'plans.lead': 'Cuatro cursos certificados por TDLR, cuatro precios reales. Sin suscripciones de "asistencia en carretera" que no pediste. Pagas una vez, terminas, recibes tu certificado.',
+      'sku.teen.tag': 'Adolescente · Con instructor',
+      'sku.teen.name': 'Curso para Adolescentes',
+      'sku.teen.who': '14–17 años · 32 horas de instrucción acreditada por TDLR · basado en escenarios reales.',
+      'sku.teen.f1': '42 capítulos · 10 módulos',
+      'sku.teen.f2': 'Práctica diaria de percepción de peligros',
+      'sku.teen.f3': 'Rachas, XP, tabla de amigos',
+      'sku.teen.f4': 'Panel para padres + bitácora',
+      'sku.teen.f5': '14 días de reembolso · sin renovación automática',
+      'sku.teen.cta': 'Abrir prototipo →',
+      'sku.ptde.tag': 'Adolescente · Enseñado por padres',
+      'sku.ptde.name': 'Curso PTDE',
+      'sku.ptde.who': '14–17 años · 32 horas de aula + 44 horas al volante contigo. La opción más económica que TX permite.',
+      'sku.ptde.f1': 'Currículo + kit para padres',
+      'sku.ptde.f2': 'Bitácora con totales automáticos de 44 hrs',
+      'sku.ptde.f3': 'Lecciones diarias para usar al manejar',
+      'sku.ptde.f4': 'Guía para pedir el paquete PTDE',
+      'sku.ptde.f5': '14 días de reembolso',
+      'sku.ptde.cta': 'Q2 — únete a la lista',
+      'sku.adult.tag': 'Adulto · 18–24',
+      'sku.adult.name': 'Educación para Adultos',
+      'sku.adult.who': '18+ · 6 horas · evita el examen escrito. Requerido si tienes 18–24 y es tu primera licencia.',
+      'sku.adult.f1': '6 horas, en una sola sesión',
+      'sku.adult.f2': 'Mismo motor de escenarios',
+      'sku.adult.f3': 'Certificado ADE-1317 al instante',
+      'sku.adult.f4': 'Voz nativa en EN + ES',
+      'sku.adult.f5': '14 días de reembolso',
+      'sku.adult.cta': 'Q2 — únete a la lista',
+      'sku.def.tag': 'Conducción Defensiva',
+      'sku.def.name': 'Quitar Multa',
+      'sku.def.who': 'Curso TDLR de 6 horas. ¿Tienes una multa? Bórrala. Más 5–10% de descuento en seguro.',
+      'sku.def.f1': 'Aceptado en cortes de todo Texas',
+      'sku.def.f2': 'Califica para descuento de seguro',
+      'sku.def.f3': 'Envío automático del certificado',
+      'sku.def.f4': 'Una sola sesión, mismo motor',
+      'sku.def.f5': '14 días de reembolso',
+      'sku.def.cta': 'Q3 — únete a la lista',
+      'cmp.title': 'Mismo regulador. Mejor producto.',
+      'cmp.lead': 'A Auto Driving School (TDLR #C3630) cumple lo básico a $29–39. Goodlane iguala cada especificación y entrega lo que ellos no: aprendizaje basado en escenarios, panel para padres, práctica de peligros, rachas, sin cargos sorpresa.'
+    }
+  };
+
+  const langButtons = document.querySelectorAll('#langToggle button');
+  function applyLang(lang) {
+    const dict = translations[lang] || {};
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (dict[key]) el.textContent = dict[key];
+    });
+    langButtons.forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+    localStorage.setItem('apex_lang', lang);
+  }
+  langButtons.forEach(b => b.addEventListener('click', () => applyLang(b.dataset.lang)));
+  applyLang(localStorage.getItem('apex_lang') || 'en');
+</script>
+<script src="scripts/i18n.js"></script>
+<script src="scripts/lang-toggle.js"></script>
+</body>
+</html>

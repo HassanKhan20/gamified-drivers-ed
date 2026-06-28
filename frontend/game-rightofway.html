@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — Right-of-Way Sequencer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/app.css" />
+<style>
+  body { padding: 0; background: var(--paper-2, #faf6ec); position: relative; min-height: 100vh; overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -1;
+    background: linear-gradient(180deg, #d6e4ee 0%, #ede4d0 65%, #f0d8ba 100%);
+  }
+  .frame { max-width: 880px; margin: 0 auto; padding: 22px 22px 80px; }
+  .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+  .back { color: var(--ink-500); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 7px; }
+  .back:hover { color: var(--ink-50); background: var(--bg-3); }
+  .hud-row { display: flex; gap: 8px; align-items: center; }
+  .hud-pill { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 999px; background: rgba(255,255,255,0.92); border: 1px solid var(--hairline); font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 700; color: var(--ink-300); letter-spacing: 0.10em; box-shadow: 0 2px 6px -2px rgba(15,17,22,0.10); }
+  .hud-pill.signal { color: var(--signal-deep); border-color: #b9e0cf; background: var(--signal-bg); }
+  .hud-pill.danger { color: var(--danger, #b34534); border-color: #f3c4b8; background: #fdeeee; }
+
+  h1 { font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 32px; letter-spacing: -0.025em; color: var(--ink-50); margin: 8px 0 4px; }
+  .sub { color: var(--ink-500); font-size: 14px; margin-bottom: 22px; }
+
+  .scenario {
+    position: relative; width: 100%; aspect-ratio: 1; max-width: 720px; margin: 0 auto;
+    background:
+      radial-gradient(circle at 50% 38%, #ede9d9 0%, #d8d2bf 70%);
+    border: 1px solid var(--hairline); border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 14px 36px -16px rgba(15,17,22,0.20);
+  }
+  .center-node {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 30%; height: 30%; border: 2px dashed rgba(29,78,216,0.50); border-radius: 12px;
+    background: rgba(255,255,255,0.45);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--signal-deep); letter-spacing: 0.16em; font-weight: 700;
+  }
+  /* Roads — asphalt look with painted lane lines */
+  .road-h, .road-v {
+    position: absolute;
+    background: linear-gradient(180deg, #4a5058 0%, #3a4148 100%);
+  }
+  .road-h { left: 0; right: 0; top: 35%; height: 30%; }
+  .road-v { top: 0; bottom: 0; left: 35%; width: 30%; }
+  .road-h::after {
+    content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 4px;
+    background: repeating-linear-gradient(90deg, #fde68a 0 32px, transparent 32px 64px);
+    transform: translateY(-50%);
+  }
+  .road-v::after {
+    content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 4px;
+    background: repeating-linear-gradient(180deg, #fde68a 0 32px, transparent 32px 64px);
+    transform: translateX(-50%);
+  }
+
+  .car {
+    position: absolute; width: 22%; aspect-ratio: 1.6;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .car:hover { transform: scale(1.05); filter: brightness(1.2); }
+  .car.picked { opacity: 0.4; transform: scale(0.85); cursor: default; }
+  .car.picked:hover { transform: scale(0.85); filter: none; }
+  .car .plate {
+    position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 3px;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 10px; color: #fff; letter-spacing: 0.10em;
+  }
+  .car .order {
+    position: absolute; top: 6px; right: 6px;
+    background: var(--signal); color: var(--bg-0);
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 12px;
+    box-shadow: 0 0 12px var(--signal-glow);
+  }
+  .car .stop-sign {
+    position: absolute;
+    width: 18px; height: 18px;
+    background: var(--danger); border: 1.5px solid #fff;
+    clip-path: polygon(30% 4%, 70% 4%, 96% 30%, 96% 70%, 70% 96%, 30% 96%, 4% 70%, 4% 30%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Inter'; font-weight: 800; font-size: 6px; color: #fff;
+  }
+
+  /* car positions: north (top), east (right), south (bottom), west (left) */
+  .car-N { top: 7%;  left: 50%; transform: translateX(-50%) rotate(180deg); }
+  .car-E { top: 50%; right: 7%; transform: translateY(-50%) rotate(270deg); }
+  .car-S { bottom: 7%; left: 50%; transform: translateX(-50%); }
+  .car-W { top: 50%; left: 7%; transform: translateY(-50%) rotate(90deg); }
+  .car-N.picked { transform: translateX(-50%) rotate(180deg) scale(0.85); }
+  .car-E.picked { transform: translateY(-50%) rotate(270deg) scale(0.85); }
+  .car-S.picked { transform: translateX(-50%) scale(0.85); }
+  .car-W.picked { transform: translateY(-50%) rotate(90deg) scale(0.85); }
+  .car-N:hover { transform: translateX(-50%) rotate(180deg) scale(1.05); }
+  .car-E:hover { transform: translateY(-50%) rotate(270deg) scale(1.05); }
+  .car-S:hover { transform: translateX(-50%) scale(1.05); }
+  .car-W:hover { transform: translateY(-50%) rotate(90deg) scale(1.05); }
+  .car .stop-sign {
+    /* Sit at top-left of body relative to forward direction */
+    top: 4px; left: 4px;
+  }
+
+  .prompt {
+    position: absolute; top: 14px; left: 14px;
+    padding: 8px 12px; border-radius: 999px;
+    background: rgba(255,255,255,0.92); backdrop-filter: blur(8px);
+    border: 1px solid #b9e0cf;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--signal-deep);
+    letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700;
+    z-index: 5; box-shadow: 0 2px 6px -2px rgba(15,17,22,0.10);
+  }
+  .arrival {
+    position: absolute; top: 14px; right: 14px;
+    padding: 8px 12px; border-radius: 999px;
+    background: rgba(255,255,255,0.92); backdrop-filter: blur(8px);
+    border: 1px solid var(--hairline);
+    font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; color: var(--ink-300);
+    letter-spacing: 0.10em; font-weight: 700;
+    z-index: 5; box-shadow: 0 2px 6px -2px rgba(15,17,22,0.10);
+  }
+
+  .feedback {
+    margin-top: 22px; padding: 14px 18px; border-radius: 12px;
+    background: rgba(255,255,255,0.95); border: 1px solid var(--hairline);
+    font-size: 14px; color: var(--ink-300); line-height: 1.5;
+    box-shadow: 0 6px 16px -8px rgba(15,17,22,0.10);
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.good { border-color: #b9e0cf; background: var(--signal-bg); color: var(--signal-deep); }
+  .feedback.bad  { border-color: #f3c4b8; background: #fdeeee; color: #8a3925; }
+
+  .end-screen { display: none; padding: 32px; background: linear-gradient(135deg, #fef3c7, var(--bg-2)); border: 1px solid #f3d7b1; border-radius: 18px; text-align: center; box-shadow: 0 18px 40px -12px rgba(15,17,22,0.18); margin-top: 24px; }
+  .end-screen.show { display: block; }
+  .end-circle { width: 84px; height: 84px; border-radius: 50%; background: var(--signal); margin: 0 auto 18px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-primary); }
+  .end-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 480px; margin: 22px auto 26px; }
+  .end-stat { padding: 14px; border-radius: 10px; background: var(--bg-2); border: 1px solid var(--hairline); }
+  .end-stat .num { font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 24px; color: var(--signal); }
+  .end-stat .lbl { font-family: 'Inter', system-ui, sans-serif; font-size: 10px; color: var(--ink-500); letter-spacing: 0.14em; text-transform: uppercase; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <div class="top">
+    <a href="roadmap.html" class="back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to path
+    </a>
+    <div class="hud-row">
+      <span class="hud-pill" id="round">ROUND 1 / 5</span>
+      <span class="hud-pill signal" id="score">000 PTS</span>
+    </div>
+  </div>
+
+  <h1>Right-of-Way Sequencer</h1>
+  <p class="sub">Four cars at a 4-way stop. Click them in correct departure order. <strong>Rule: whoever stopped FIRST goes first. If two cars stopped at the same time, the one on the RIGHT goes first</strong> (the other yields to the right). 100 pts per round, -25 per misclick.</p>
+  <details style="background: rgba(255,255,255,0.92); border: 1px solid var(--hairline); border-radius: 12px; padding: 12px 16px; margin-bottom: 22px; font-size: 13.5px;">
+    <summary style="cursor: pointer; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; color: var(--ink-50);">How to play (open me first)</summary>
+    <ol style="margin: 10px 0 4px 18px; line-height: 1.6; color: var(--ink-300);">
+      <li>Each car shows its <strong>arrival time</strong> in seconds when it stopped (smaller = arrived earlier).</li>
+      <li>Click the car that should go FIRST, then the next, etc.</li>
+      <li>Tie-breaker: if two cars arrived at the same second, the car on the RIGHT goes first. This is "yield to the right" — TX Transportation Code §545.151.</li>
+      <li>Right turns clear faster than straight or left turns when arrival times match.</li>
+    </ol>
+  </details>
+
+  <div class="scenario" id="scene">
+    <div class="prompt" id="prompt">▸ CLICK CARS IN DEPART ORDER</div>
+    <div class="arrival" id="arrival">—</div>
+    <div class="road-h"></div>
+    <div class="road-v"></div>
+    <div class="center-node">INTERSECTION</div>
+    <!-- Cars injected at runtime -->
+  </div>
+
+  <div class="feedback" id="feedback"></div>
+
+  <!-- END -->
+  <div class="end-screen" id="endScreen">
+    <div class="end-circle">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#050507" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2 class="font-display" style="font-size: 26px; font-weight: 800; margin: 0 0 6px; color: var(--ink-50);">Sequencer cleared.</h2>
+    <p style="color: var(--ink-500); margin: 0;" id="endBlurb">5 rounds · score logged.</p>
+    <div class="end-stats">
+      <div class="end-stat"><div class="num" id="endScore">0</div><div class="lbl">Final score</div></div>
+      <div class="end-stat"><div class="num" id="endAcc">0%</div><div class="lbl">Accuracy</div></div>
+      <div class="end-stat"><div class="num" id="endXp">+0</div><div class="lbl">XP earned</div></div>
+    </div>
+    <div style="display: flex; gap: 10px; justify-content: center;">
+      <button class="btn btn-secondary" onclick="location.reload()">Play again</button>
+      <a class="btn btn-primary" href="roadmap.html">Back to path →</a>
+    </div>
+  </div>
+</div>
+
+<script src="scripts/api.js"></script>
+<script src="scripts/app.js"></script>
+<script src="scripts/curriculum.js"></script>
+<script src="scripts/curriculum_es.js"></script>
+<script src="scripts/shorts.js"></script>
+<script src="scripts/topics.js"></script>
+<script>
+  // Each round: 4 cars at N/E/S/W with arrival-time t-values (lower = arrived earlier).
+  // Tie-breaker: right-most yields to right. Order from N is W, from E is N, from S is E, from W is S
+  // (i.e. the car whose right is occupied yields). We pre-compute the correct order per round.
+  const DIRS = ['N','E','S','W'];
+  const CAR_COLORS = ['#00f5a0','#00d4ff','#ffb020','#ff3b5c'];
+  const PLATES = ['HUE-203','MNT-417','TX-880','LXR-091','RGN-554','BNK-122','CYN-735','SYN-301'];
+
+  function rightOf(dir) { return ({N:'E',E:'S',S:'W',W:'N'})[dir]; }
+
+  // Compute correct departure order from arrivals (map dir -> arrival t)
+  function correctOrder(arrivals) {
+    const present = Object.keys(arrivals);
+    // Sort by arrival ascending. If tie, the car whose right is also tied yields to that car.
+    return present.slice().sort((a, b) => {
+      if (arrivals[a] !== arrivals[b]) return arrivals[a] - arrivals[b];
+      // Same arrival time. The car with another tied car on its right yields.
+      // i.e. if 'a's right (rightOf(a)) is also tied, a yields, so b first.
+      const aRight = rightOf(a);
+      const bRight = rightOf(b);
+      const aYields = present.includes(aRight) && arrivals[aRight] === arrivals[a];
+      const bYields = present.includes(bRight) && arrivals[bRight] === arrivals[b];
+      if (aYields && !bYields) return 1;
+      if (bYields && !aYields) return -1;
+      return 0;
+    });
+  }
+
+  // Round generators of escalating difficulty
+  function generateRounds() {
+    return [
+      // R1 — clean arrivals, 1s apart
+      { arrivals: { N: 1, E: 2, S: 3, W: 4 }, hint: 'All four arrive in sequence. First-in, first-out.' },
+      // R2 — two-way tie, simple yield-to-right
+      { arrivals: { N: 1, E: 1, S: 3, W: 4 }, hint: 'N and E arrive together. E is on N\'s right — N goes first.' },
+      // R3 — only 3 cars, with a tie
+      { arrivals: { N: 2, E: 2, W: 1 }, hint: '3 cars only. W arrived first; N and E tied.' },
+      // R4 — tricky 3-way tie
+      { arrivals: { N: 1, E: 1, W: 1 }, hint: 'All three arrive together — yield-to-right cascades.' },
+      // R5 — 4-way simultaneous (textbook deadlock; standard answer N → E → S → W by yielding right)
+      { arrivals: { N: 1, E: 1, S: 1, W: 1 }, hint: 'All four arrive at once. The textbook resolution: yield to your right, cascading clockwise from N.' },
+    ];
+  }
+
+  let rounds = generateRounds();
+  let roundIdx = 0;
+  let score = 0;
+  let totalAttempts = 0;
+  let totalHits = 0;
+  let pickedOrder = [];
+  let correctSeq = [];
+
+  const sceneEl = document.getElementById('scene');
+  const scoreEl = document.getElementById('score');
+  const roundEl = document.getElementById('round');
+  const arrivalEl = document.getElementById('arrival');
+  const promptEl = document.getElementById('prompt');
+  const fbEl = document.getElementById('feedback');
+
+  function carSvg(color, plate) {
+    return `
+      <svg viewBox="0 0 100 60" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+        <ellipse cx="50" cy="55" rx="38" ry="2" fill="#000" opacity="0.4"/>
+        <rect x="10" y="22" width="80" height="26" rx="6" fill="${color}"/>
+        <path d="M22 22 L34 12 L66 12 L78 22 Z" fill="rgba(0,0,0,0.45)"/>
+        <rect x="10" y="32" width="80" height="3" fill="rgba(0,0,0,0.30)"/>
+        <circle cx="22" cy="48" r="6" fill="#0a0a0d"/>
+        <circle cx="78" cy="48" r="6" fill="#0a0a0d"/>
+        <circle cx="22" cy="48" r="2.5" fill="#3f3f46"/>
+        <circle cx="78" cy="48" r="2.5" fill="#3f3f46"/>
+        <rect x="44" y="24" width="12" height="20" fill="rgba(0,0,0,0.30)"/>
+      </svg>
+    `;
+  }
+
+  function renderRound() {
+    // Clear cars
+    sceneEl.querySelectorAll('.car').forEach(c => c.remove());
+    pickedOrder = [];
+    fbEl.classList.remove('show', 'good', 'bad');
+    const r = rounds[roundIdx];
+    const dirs = Object.keys(r.arrivals);
+    correctSeq = correctOrder(r.arrivals);
+    promptEl.textContent = `▸ ROUND ${roundIdx+1} · CLICK ${dirs.length} CARS IN ORDER`;
+    arrivalEl.innerHTML = dirs.map(d => `${d}·t${r.arrivals[d]}`).join(' &nbsp; ');
+    roundEl.textContent = 'ROUND ' + (roundIdx+1) + ' / 5';
+    dirs.forEach((dir, i) => {
+      const car = document.createElement('div');
+      car.className = 'car car-' + dir;
+      car.dataset.dir = dir;
+      car.style.background = 'transparent';
+      car.innerHTML = carSvg(CAR_COLORS[i], PLATES[(roundIdx*4 + i) % PLATES.length]) +
+        `<div class="stop-sign">S</div>` +
+        `<div class="plate" style="transform: rotate(${{N:180,E:90,S:0,W:-90}[dir]}deg)">${PLATES[(roundIdx*4 + i) % PLATES.length]}</div>`;
+      car.addEventListener('click', onCarClick);
+      sceneEl.appendChild(car);
+    });
+  }
+
+  function onCarClick(e) {
+    const car = e.currentTarget;
+    if (car.classList.contains('picked')) return;
+    const dir = car.dataset.dir;
+    const expected = correctSeq[pickedOrder.length];
+    totalAttempts += 1;
+
+    if (dir === expected) {
+      totalHits += 1;
+      pickedOrder.push(dir);
+      car.classList.add('picked');
+      // order badge
+      const badge = document.createElement('div');
+      badge.className = 'order';
+      badge.textContent = pickedOrder.length;
+      // Counter-rotate the badge so it always reads upright
+      const counterRot = ({N:-180,E:-270,S:0,W:-90})[dir];
+      badge.style.transform = 'rotate(' + counterRot + 'deg)';
+      car.appendChild(badge);
+      score += 25;
+      flash('+25', 'good');
+      if (pickedOrder.length === correctSeq.length) {
+        showFeedback(true, rounds[roundIdx].hint);
+        setTimeout(advanceRound, 1500);
+      }
+    } else {
+      score = Math.max(0, score - 25);
+      flash('-25', 'bad');
+      car.style.animation = 'shake 0.4s';
+      setTimeout(() => car.style.animation = '', 400);
+      showFeedback(false, 'Not quite. ' + rounds[roundIdx].hint + ' Expected: ' + expected + ' next.');
+    }
+    updateHud();
+  }
+
+  function showFeedback(good, text) {
+    fbEl.textContent = (good ? '▸ NAILED IT — ' : '▸ — ') + text;
+    fbEl.classList.add('show');
+    fbEl.classList.toggle('good', good);
+    fbEl.classList.toggle('bad', !good);
+  }
+
+  function advanceRound() {
+    roundIdx += 1;
+    if (roundIdx >= rounds.length) {
+      endGame();
+    } else {
+      renderRound();
+      updateHud();
+    }
+  }
+
+  function updateHud() { scoreEl.textContent = String(score).padStart(3, '0') + ' PTS'; }
+
+  function flash(text, kind) {
+    const el = document.createElement('div');
+    el.textContent = text;
+    el.style.cssText = `position:fixed;top:30%;left:50%;transform:translate(-50%,-50%);font-family: 'Inter', system-ui, sans-serif;font-weight:800;font-size:42px;z-index:9999;pointer-events:none;animation:flash 0.9s ease-out forwards;color:${kind==='good'?'var(--signal)':'var(--danger)'};text-shadow:0 0 30px ${kind==='good'?'var(--signal-glow)':'rgba(255,59,92,0.5)'};`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 900);
+  }
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = `@keyframes flash {0%{opacity:0;transform:translate(-50%,-50%) scale(0.4);} 30%{opacity:1;transform:translate(-50%,-50%) scale(1.2);} 100%{opacity:0;transform:translate(-50%,-150%) scale(0.8);}} @keyframes shake {0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}`;
+  document.head.appendChild(styleSheet);
+
+  function endGame() {
+    const acc = totalAttempts > 0 ? Math.round((totalHits / totalAttempts) * 100) : 0;
+    const xp = Math.max(0, Math.min(100, Math.floor(score / 10)));
+    document.getElementById('endScore').textContent = score;
+    document.getElementById('endAcc').textContent = acc + '%';
+    document.getElementById('endXp').textContent = '+' + xp;
+    document.getElementById('endBlurb').textContent = '5 rounds · ' + acc + '% accuracy · score saved.';
+    document.getElementById('endScreen').classList.add('show');
+    sceneEl.style.display = 'none';
+    fbEl.classList.remove('show');
+    fireXpBurst(xp);
+    fireConfetti(80);
+    APEX.awardXP(xp);
+    if (window.APEX_API) APEX.submitGameScoreOnServer('rightofway', score, acc / 100, null);
+    try { sessionStorage.setItem('apex_just_completed', '1'); } catch(e){}
+    const topicId = new URLSearchParams(location.search).get('topic');
+    if (topicId && window.APEX_TOPICS) {
+      try { window.APEX_TOPICS.recordGameScore(topicId, score); window.APEX_TOPICS.markCompleteIfReady(topicId); } catch(e){}
+    }
+  }
+
+  // Boot
+  renderRound();
+  updateHud();
+</script>
+<script src="scripts/i18n.js"></script>
+<script src="scripts/lang-toggle.js"></script>
+<script type="module" src="scripts/compliance/bootstrap.js"></script>
+<script>if(window.APEX&&APEX.requireTrack)APEX.requireTrack("teen");</script>
+</body>
+</html>

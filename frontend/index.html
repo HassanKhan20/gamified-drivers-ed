@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — Texas Drivers Ed for teens, parent-taught, $29</title>
+<meta name="description" content="Texas-approved parent-taught driver education built like a flight simulator. 32 hours of interactive lessons, hazard drills, a 3D drive sim, and a behind-the-wheel logbook — in English and Spanish. One-time $29." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg-1: #ffffff; --bg-2: #ffffff; --bg-3: #f6f7f8;
+    --hairline: #e5e7eb; --hairline-strong: #d1d5db;
+    --ink-50: #0f1419; --ink-100: #1a202c; --ink-300: #374151;
+    --ink-500: #6b7280; --ink-700: #9ca3af;
+    --signal: #1d4ed8; --signal-soft: #3b82f6; --signal-deep: #1e3a8a;
+    --signal-bg: #dbeafe; --signal-glow: rgba(29,78,216,0.20);
+    --amber: #f59e0b; --amber-bg: #fef3c7;
+    --danger: #b91c1c;
+    --shadow-sm: 0 1px 2px rgba(15,17,22,0.04);
+    --shadow:    0 4px 14px rgba(15,17,22,0.05);
+    --shadow-lg: 0 18px 44px -16px rgba(15,17,22,0.12);
+    --shadow-primary: 0 12px 26px -10px rgba(29,78,216,0.30);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    color: var(--ink-100);
+    background: #ffffff;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+    line-height: 1.55;
+  }
+  a { color: inherit; text-decoration: none; }
+  img, svg { display: block; max-width: 100%; }
+  .container { max-width: 1140px; margin: 0 auto; padding: 0 22px; }
+  .font-display { font-family: 'Inter', -apple-system, system-ui, sans-serif; letter-spacing: -0.02em; }
+  .mono { font-family: 'Inter', -apple-system, system-ui, sans-serif; letter-spacing: 0.10em; font-weight: 600; }
+
+  /* ---------- NAV ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(251,250,246,0.86);
+    backdrop-filter: saturate(140%) blur(12px);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; }
+  .brand-mark {
+    width: 32px; height: 32px; border-radius: 9px;
+    background: #ffffff; border: 1px solid var(--hairline);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-sm);
+  }
+  .brand-mark svg { width: 22px; height: 22px; }
+  .brand-text { font-family: 'Inter'; font-weight: 800; font-size: 18px; letter-spacing: -0.025em; color: var(--ink-50); }
+  .nav-links { display: flex; align-items: center; gap: 28px; }
+  .nav-links a { font-size: 14px; color: var(--ink-300); font-weight: 500; }
+  .nav-links a:hover { color: var(--signal-deep); }
+  .nav-cta { display: flex; align-items: center; gap: 10px; }
+  .nav-cta .signin { font-size: 14px; color: var(--ink-300); font-weight: 600; padding: 8px 14px; border-radius: 8px; }
+  .nav-cta .signin:hover { background: var(--bg-3); color: var(--ink-50); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 18px; border-radius: 9px; border: 0;
+    font-family: 'Inter'; font-weight: 700; font-size: 14.5px; cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+  }
+  .btn-primary { background: var(--signal); color: #fff; box-shadow: var(--shadow-primary); }
+  .btn-primary:hover { background: var(--signal-deep); transform: translateY(-1px); }
+  .btn-secondary { background: var(--bg-2); color: var(--ink-50); border: 1px solid var(--hairline-strong); }
+  .btn-secondary:hover { background: var(--bg-3); }
+  .btn-lg { padding: 14px 26px; font-size: 16px; border-radius: 10px; }
+
+  @media (max-width: 760px) {
+    .nav-links { display: none; }
+  }
+
+  /* ---------- HERO ---------- */
+  .hero { position: relative; overflow: hidden; padding: 64px 0 80px; }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(900px 480px at 90% -10%, rgba(29,78,216,0.10), transparent 65%),
+      radial-gradient(700px 420px at -10% 30%, rgba(245,158,11,0.06), transparent 60%);
+    pointer-events: none;
+  }
+  .hero-inner { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 56px; align-items: center; position: relative; }
+  @media (max-width: 940px) { .hero-inner { grid-template-columns: 1fr; gap: 36px; } }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px; border-radius: 999px;
+    background: var(--signal-bg); color: var(--signal-deep);
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .hero h1 {
+    font-family: 'Inter'; font-weight: 800;
+    font-size: clamp(38px, 5vw, 56px);
+    line-height: 1.05; letter-spacing: -0.025em; color: var(--ink-50);
+    margin-bottom: 18px;
+  }
+  .hero h1 .accent { color: var(--signal-deep); }
+  .hero .lede { font-size: 17.5px; color: var(--ink-300); margin-bottom: 28px; max-width: 540px; }
+  .hero-cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .price-pill {
+    display: inline-flex; align-items: baseline; gap: 6px;
+    padding: 6px 12px; border-radius: 8px; background: var(--bg-2);
+    border: 1px solid var(--hairline-strong); font-family: 'Inter', system-ui, sans-serif;
+    font-size: 12px; color: var(--ink-300); letter-spacing: 0.08em;
+  }
+  .price-pill b { font-family: 'Inter'; color: var(--ink-50); font-size: 14px; letter-spacing: 0; }
+
+  .trust-strip {
+    margin-top: 28px; display: flex; gap: 22px; flex-wrap: wrap; align-items: center;
+    color: var(--ink-500); font-size: 12.5px; font-weight: 500;
+  }
+  .trust-strip span { display: inline-flex; align-items: center; gap: 6px; }
+  .trust-strip svg { width: 14px; height: 14px; color: var(--signal); }
+
+  /* Hero visual — a fake "course card" stack */
+  .hero-art { position: relative; min-height: 420px; }
+  .stack-card {
+    position: absolute; background: var(--bg-2); border: 1px solid var(--hairline);
+    border-radius: 16px; box-shadow: var(--shadow-lg);
+    padding: 18px;
+  }
+  .stack-card.lesson {
+    top: 0; left: 0; right: 26%;
+  }
+  .stack-card.sim {
+    bottom: 20px; right: 0; width: 56%;
+  }
+  .stack-card.badge {
+    top: 36%; right: 38%; padding: 14px 16px;
+    background: linear-gradient(135deg, #1d4ed8, #3b82f6); color: #fff;
+    transform: rotate(-3deg);
+  }
+  .stack-card h4 { font-family: 'Inter'; font-weight: 700; font-size: 14px; margin-bottom: 4px; color: var(--ink-50); }
+  .stack-card .crumb { font-family: 'Inter', system-ui, sans-serif; font-size: 9.5px; letter-spacing: 0.18em; color: var(--ink-500); text-transform: uppercase; }
+  .stack-card.lesson .crumb { color: var(--signal-deep); }
+  .stack-card .preview { margin-top: 10px; height: 6px; border-radius: 3px; background: var(--bg-3); overflow: hidden; }
+  .stack-card .preview .fill { height: 100%; width: 62%; background: linear-gradient(90deg, var(--signal), var(--signal-soft)); border-radius: 3px; }
+  .stack-card .lesson-body { display: flex; gap: 8px; margin-top: 12px; }
+  .stack-card .lesson-body span { padding: 3px 8px; border-radius: 6px; background: var(--bg-3); font-size: 10.5px; font-weight: 600; color: var(--ink-500); }
+  .stack-card.sim .sim-stage {
+    height: 110px; border-radius: 8px; margin-top: 10px;
+    background:
+      linear-gradient(180deg, #cbe0d6 0%, #1f3e35 100%);
+    position: relative; overflow: hidden;
+  }
+  .stack-card.sim .sim-road {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 70%; height: 60%;
+    background: linear-gradient(180deg, #2a3138 0%, #15181b 100%);
+    clip-path: polygon(35% 0, 65% 0, 100% 100%, 0 100%);
+  }
+  .stack-card.sim .sim-line {
+    position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+    width: 4px; height: 50%; background: repeating-linear-gradient(180deg, #fbbf24 0 14px, transparent 14px 28px);
+  }
+  .stack-card.badge .b-title { font-family: 'Inter'; font-weight: 800; font-size: 13px; letter-spacing: 0.04em; }
+  .stack-card.badge .b-num { font-family: 'Inter'; font-weight: 800; font-size: 28px; line-height: 1; }
+  .stack-card.badge .b-sub { font-family: 'Inter', system-ui, sans-serif; font-size: 9.5px; letter-spacing: 0.18em; opacity: 0.85; margin-top: 2px; }
+
+  @media (max-width: 940px) {
+    .hero-art { min-height: 360px; }
+  }
+
+  /* ---------- LOGO STRIP ---------- */
+  .logos {
+    border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
+    background: var(--bg-2);
+  }
+  .logos-inner { padding: 18px 0; display: flex; gap: 36px; flex-wrap: wrap; justify-content: center; align-items: center; }
+  .logo-item { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: var(--ink-500); text-transform: uppercase; }
+  .logo-item b { color: var(--signal-deep); }
+
+  /* ---------- SECTION SHELL ---------- */
+  .section { padding: 86px 0; position: relative; }
+  .section + .section { border-top: 1px solid var(--hairline); }
+  .section-head { max-width: 720px; margin: 0 auto 44px; text-align: center; }
+  .section-eyebrow {
+    font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.20em; text-transform: uppercase; color: var(--signal-deep);
+    margin-bottom: 10px;
+  }
+  .section-head h2 {
+    font-family: 'Inter'; font-weight: 800;
+    font-size: clamp(28px, 3.4vw, 38px);
+    line-height: 1.15; letter-spacing: -0.02em; color: var(--ink-50);
+    margin-bottom: 12px;
+  }
+  .section-head p { font-size: 16.5px; color: var(--ink-500); }
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  @media (max-width: 860px) { .steps { grid-template-columns: 1fr; } }
+  .step {
+    background: var(--bg-2); border: 1px solid var(--hairline); border-radius: 16px;
+    padding: 28px 24px; box-shadow: var(--shadow-sm); position: relative;
+  }
+  .step-num {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--signal-bg); color: var(--signal-deep); border: 1px solid var(--signal-soft);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Inter'; font-weight: 800; font-size: 15px;
+    margin-bottom: 14px;
+  }
+  .step h3 { font-family: 'Inter'; font-weight: 700; font-size: 18.5px; color: var(--ink-50); margin-bottom: 6px; letter-spacing: -0.01em; }
+  .step p { font-size: 14.5px; color: var(--ink-500); }
+
+  /* ---------- FEATURES ---------- */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  @media (max-width: 860px) { .features { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .features { grid-template-columns: 1fr; } }
+  .feature {
+    background: var(--bg-2); border: 1px solid var(--hairline); border-radius: 14px;
+    padding: 22px; box-shadow: var(--shadow-sm);
+  }
+  .feature-ic {
+    width: 38px; height: 38px; border-radius: 9px;
+    background: var(--signal-bg); color: var(--signal-deep); border: 1px solid var(--signal-soft);
+    display: flex; align-items: center; justify-content: center; margin-bottom: 12px;
+  }
+  .feature h4 { font-family: 'Inter'; font-weight: 700; font-size: 16px; color: var(--ink-50); margin-bottom: 4px; }
+  .feature p { font-size: 13.5px; color: var(--ink-500); }
+
+  /* ---------- BILINGUAL ---------- */
+  .bilingual {
+    background: var(--bg-2); border: 1px solid var(--hairline); border-radius: 18px;
+    padding: 36px 36px 32px; box-shadow: var(--shadow);
+    display: grid; grid-template-columns: 1fr 1fr; gap: 36px;
+  }
+  @media (max-width: 760px) { .bilingual { grid-template-columns: 1fr; padding: 28px 24px; } }
+  .bi-col h3 { font-family: 'Inter'; font-weight: 700; font-size: 21px; color: var(--ink-50); margin-bottom: 6px; }
+  .bi-col .flag {
+    font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.20em; text-transform: uppercase; color: var(--signal-deep); margin-bottom: 8px;
+  }
+  .bi-col p { color: var(--ink-500); font-size: 14.5px; }
+
+  /* ---------- COMPARE ---------- */
+  .compare-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .compare {
+    width: 100%; border-collapse: collapse;
+    background: var(--bg-2); border: 1px solid var(--hairline); border-radius: 14px;
+    overflow: hidden;
+  }
+  .compare th, .compare td { padding: 14px 16px; border-bottom: 1px solid var(--hairline); font-size: 14px; text-align: left; }
+  .compare th { background: var(--bg-3); font-family: 'Inter'; font-weight: 700; color: var(--ink-50); font-size: 13.5px; }
+  .compare th.col-us { color: var(--signal-deep); background: var(--signal-bg); }
+  .compare td.cell-us { background: rgba(231,245,239,0.5); font-weight: 600; color: var(--ink-50); }
+  .compare td.cell-y { color: var(--signal-deep); font-weight: 700; }
+  .compare td.cell-n { color: var(--ink-500); }
+  .compare tr:last-child td { border-bottom: 0; }
+
+  /* ---------- FAQ ---------- */
+  .faq { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+  .qa {
+    background: var(--bg-2); border: 1px solid var(--hairline); border-radius: 12px;
+    padding: 18px 22px; transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .qa[open] { border-color: var(--signal-soft); box-shadow: var(--shadow-sm); }
+  .qa summary { cursor: pointer; font-family: 'Inter'; font-weight: 700; font-size: 16px; color: var(--ink-50); list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 18px; }
+  .qa summary::-webkit-details-marker { display: none; }
+  .qa summary::after { content: '+'; font-family: 'Inter'; font-weight: 700; font-size: 22px; color: var(--signal-deep); line-height: 1; }
+  .qa[open] summary::after { content: '−'; }
+  .qa p { margin-top: 10px; color: var(--ink-500); font-size: 14.5px; line-height: 1.6; }
+
+  /* ---------- FINAL CTA ---------- */
+  .final-cta {
+    margin: 60px auto; max-width: 920px;
+    background: linear-gradient(135deg, var(--signal-deep) 0%, var(--signal) 100%);
+    color: #fff; border-radius: 22px; padding: 48px 40px;
+    box-shadow: var(--shadow-lg); text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .final-cta::before {
+    content: ''; position: absolute; top: -40%; right: -10%; width: 380px; height: 380px;
+    background: radial-gradient(circle, rgba(255,255,255,0.10), transparent 60%); pointer-events: none;
+  }
+  .final-cta h2 { font-family: 'Inter'; font-weight: 800; font-size: clamp(26px, 3vw, 34px); letter-spacing: -0.02em; margin-bottom: 10px; }
+  .final-cta p { font-size: 16px; opacity: 0.92; margin-bottom: 22px; }
+  .final-cta .btn-primary { background: #fff; color: var(--signal-deep); }
+  .final-cta .btn-primary:hover { background: var(--bg-3); }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    border-top: 1px solid var(--hairline); background: var(--bg-2);
+    padding: 36px 0 42px;
+  }
+  .foot-inner { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 30px; }
+  @media (max-width: 760px) { .foot-inner { grid-template-columns: 1fr 1fr; } }
+  .foot-col h5 { font-family: 'Inter'; font-weight: 700; font-size: 13px; color: var(--ink-50); margin-bottom: 10px; }
+  .foot-col a { display: block; font-size: 13px; color: var(--ink-500); padding: 4px 0; }
+  .foot-col a:hover { color: var(--signal-deep); }
+  .foot-meta {
+    margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--hairline);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    color: var(--ink-500); font-size: 12px;
+  }
+  .foot-tag { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; letter-spacing: 0.16em; }
+  .foot-brand { font-family: 'Inter'; font-weight: 700; font-size: 16px; color: var(--ink-50); margin-bottom: 10px; }
+  .foot-blurb { font-size: 13px; color: var(--ink-500); margin-bottom: 14px; line-height: 1.55; max-width: 320px; }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand" aria-label="Goodlane">
+      <div class="brand-mark">
+        <svg viewBox="0 0 32 32" fill="none" width="22" height="22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <g stroke="#1d4ed8" stroke-width="2.4" stroke-linecap="round">
+            <path d="M 14 4 C 6 12, 22 18, 12 24 C 6 28, 16 30, 14 30"/>
+            <path d="M 20 4 C 28 12, 12 18, 22 24 C 28 28, 18 30, 20 30"/>
+          </g>
+        </svg>
+      </div>
+      <span class="brand-text"><span style="color:#1d4ed8;">Good</span><span style="color:#f59e0b;">Lane</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#features">What's inside</a>
+      <a href="#compare">Compare</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="nav-cta">
+      <a href="login.html" class="signin">Sign in</a>
+      <a href="signup.html" class="btn btn-primary">Get started · $29 →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="container hero-inner">
+    <div class="hero-copy">
+      <div class="eyebrow">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Texas-approved · Parent-taught
+      </div>
+      <h1>
+        Drivers ed that <span class="accent">teens actually finish</span>.
+      </h1>
+      <p class="lede">
+        The full 32-hour Texas Parent-Taught course, built like a flight simulator instead of a slideshow. Real scenarios. 3D drive sim. Hazard drills. Behind-the-wheel logbook. English and Spanish. One-time $29.
+      </p>
+      <div class="hero-cta-row">
+        <a class="btn btn-primary btn-lg" href="signup.html">Get started · $29 →</a>
+        <a class="btn btn-secondary btn-lg" href="#how">How it works</a>
+        <span class="price-pill">One-time <b>$29</b> · no auto-renew</span>
+      </div>
+
+      <div class="trust-strip">
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          TDLR-approved curriculum
+        </span>
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          English + Spanish
+        </span>
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Works on phones, tablets, laptops
+        </span>
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          No subscriptions
+        </span>
+      </div>
+    </div>
+
+    <!-- Hero visual: lesson card + 3D sim card + completion badge -->
+    <div class="hero-art" aria-hidden="true">
+      <div class="stack-card lesson">
+        <div class="crumb">Chapter 4.2 · Quiz check</div>
+        <h4>Right-of-way at a 4-way stop</h4>
+        <div class="lesson-body">
+          <span>· 2 ft 3 sec</span>
+          <span>· No signal = ✗</span>
+          <span>· Over speed limit = ✗</span>
+        </div>
+        <div class="preview"><div class="fill"></div></div>
+      </div>
+
+      <div class="stack-card badge">
+        <div class="b-title">CHAPTER MASTERED</div>
+        <div class="b-num">+50 XP</div>
+        <div class="b-sub">3-DAY STREAK · LVL 7</div>
+      </div>
+
+      <div class="stack-card sim">
+        <div class="crumb">3D drive sim · Parallel park</div>
+        <h4>Live driving rubric</h4>
+        <div class="sim-stage">
+          <div class="sim-road"></div>
+          <div class="sim-line"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LOGO STRIP (trust line) ============ -->
+<section class="logos">
+  <div class="container logos-inner">
+    <div class="logo-item">Built for <b>Texas teens</b></div>
+    <div class="logo-item">Aligned with <b>16 TAC §84.501</b></div>
+    <div class="logo-item">DE-964 <b>logbook export</b></div>
+    <div class="logo-item"><b>Bilingual</b> EN · ES</div>
+    <div class="logo-item"><b>0</b> ad pixels</div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-eyebrow">How it works</div>
+      <h2>Sign up, learn at your pace, print your certificate.</h2>
+      <p>The same three steps every Texas parent-taught student goes through — without the dropouts.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Create your account</h3>
+        <p>Sign up in under a minute. Pick five quick personal questions (TDLR §84.501 identity check). Pay the one-time $29 — no auto-renew, no card on file.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Take the course on your phone or laptop</h3>
+        <p>Twelve modules, interactive lessons, mini-quizzes, hazard drills, and a real 3D drive simulator. Texas-required 32 hours, broken into Duolingo-sized chunks so you keep coming back.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Pass the exam, print the certificate</h3>
+        <p>Module checkpoints + a final 70-question state exam. Your parent supervises the behind-the-wheel hours in the logbook. We export your DE-964 ready for the DPS visit.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-eyebrow">What's inside</div>
+      <h2>Built like a driving game, not a slide deck.</h2>
+      <p>Everything Texas requires, packaged so a 15-year-old actually wants to come back tomorrow.</p>
+    </div>
+
+    <div class="features">
+      <div class="feature">
+        <div class="feature-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5a2 2 0 0 1 2-2h10l4 4v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M7 9h7M7 13h10M7 17h6"/></svg></div>
+        <h4>12 modules, 54 chapters</h4>
+        <p>Every TDLR-mandated unit covered, from "what driving is" to the implied-consent law.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <h4>2,055 minutes, no fake timers</h4>
+        <p>Active-time accumulator. Switch tabs and the clock pauses. Texas §84.501-compliant.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="2"/><circle cx="18" cy="17" r="2"/><path d="M3 17h2M19 17h2M5 17l2-7h10l2 7M7 10l1-3h8l1 3"/></svg></div>
+        <h4>3D drive simulator</h4>
+        <p>Parallel parking, 4-way stops, hazard pop-ups, skid recovery. Real rubric: signal first, full stop, hold 3 seconds, no curb-hits.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 22h20L12 2z"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="18" r="0.8" fill="currentColor"/></svg></div>
+        <h4>Hazard perception drills</h4>
+        <p>Pedestrian pop-ups, late yellows, slick roads. Spot the danger before it spots you.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 4v16"/></svg></div>
+        <h4>Behind-the-wheel logbook</h4>
+        <p>30 BTW hours, parent-signed, optional GPS verification. Exports the DE-964 ready for DPS.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2c3 4 3 16 0 20M12 2c-3 4-3 16 0 20"/></svg></div>
+        <h4>English & Spanish</h4>
+        <p>Switch languages anytime. Texas-Mexican Spanish, not a Google Translate slop. Family can study together.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BILINGUAL CALLOUT ============ -->
+<section class="section" style="background: var(--bg-2);">
+  <div class="container">
+    <div class="bilingual">
+      <div class="bi-col">
+        <div class="flag">English</div>
+        <h3>Learn however you think.</h3>
+        <p>Every chapter, every quiz, every drill — fully translated. Toggle EN↔ES anytime. Parents who speak Spanish can supervise without losing the thread.</p>
+      </div>
+      <div class="bi-col">
+        <div class="flag">Español</div>
+        <h3>Aprende como pienses.</h3>
+        <p>Todos los capítulos, exámenes y prácticas — traducidos completos. Cambia EN↔ES cuando quieras. Padres hispanohablantes pueden supervisar sin perderse del tema.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COMPARE ============ -->
+<section class="section" id="compare">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-eyebrow">Why Goodlane</div>
+      <h2>Built for the way teens actually learn.</h2>
+      <p>The Texas online-driver-ed market hasn't changed in a decade. We rebuilt it.</p>
+    </div>
+
+    <div class="compare-wrap">
+      <table class="compare">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="col-us">Goodlane</th>
+            <th>Typical TX online course</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Price</td><td class="cell-us">$29 one-time</td><td>$60–$90 + upsells</td></tr>
+          <tr><td>3D drive simulator</td><td class="cell-us cell-y">Yes — real rubric</td><td class="cell-n">Slideshow video</td></tr>
+          <tr><td>Hazard perception drill</td><td class="cell-us cell-y">Yes</td><td class="cell-n">Rarely</td></tr>
+          <tr><td>BTW logbook + DE-964 export</td><td class="cell-us cell-y">Built-in</td><td class="cell-n">PDF you print</td></tr>
+          <tr><td>Bilingual (EN + ES)</td><td class="cell-us cell-y">Native, switch anytime</td><td class="cell-n">English only or paid add-on</td></tr>
+          <tr><td>Auto-renewal subscription</td><td class="cell-us cell-y">Never</td><td class="cell-n">Often</td></tr>
+          <tr><td>Ad pixels / data brokers</td><td class="cell-us cell-y">Zero</td><td class="cell-n">Many</td></tr>
+          <tr><td>Time-floor enforcement (§84.501)</td><td class="cell-us cell-y">Active-time accumulator, tab-pause</td><td class="cell-n">Idle stopwatch</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="section" id="faq">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-eyebrow">FAQ</div>
+      <h2>The questions we get every week.</h2>
+      <p>Don't see your question? Email <a href="mailto:hello@goodlane.example" style="color: var(--signal-deep); text-decoration: underline;">hello@goodlane.example</a>.</p>
+    </div>
+
+    <div class="faq">
+      <details class="qa">
+        <summary>Is this TDLR-approved?</summary>
+        <p>The curriculum is built around the TDLR Program of Instruction guide and 16 TAC §84.501 minimums (32 hours, time floors, identity checks, mastery thresholds). Provider approval is in progress; certificates are issued only after that's final. You can take the course now; the certificate ships the day approval lands.</p>
+      </details>
+      <details class="qa">
+        <summary>Why parent-taught?</summary>
+        <p>Texas lets a parent or guardian be the instructor of record. We supply the curriculum, you supply the supervised driving hours. It's the cheapest legal path and the most flexible — no driving school appointments.</p>
+      </details>
+      <details class="qa">
+        <summary>How long does it take?</summary>
+        <p>32 hours of classroom content (TDLR minimum) plus 30 behind-the-wheel hours your parent supervises. Most teens finish the classroom side in 4–6 weeks of evenings. The behind-the-wheel takes longer because you can only drive so much in a day.</p>
+      </details>
+      <details class="qa">
+        <summary>Is the simulator a real driving test?</summary>
+        <p>No. The DPS road test happens at a Texas DPS office, in a real car. Our simulator builds the muscle memory: signal first, full stop at the bar, hold three seconds, no curb-hits, no speeding. By the time you're at DPS, the moves are second nature.</p>
+      </details>
+      <details class="qa">
+        <summary>What if I don't finish in one sitting?</summary>
+        <p>That's the whole point. You can stop and resume anywhere. The chapter timer pauses when you switch tabs. Your streak runs whether you do one chapter a day or five — but five is rare and we tell you to slow down.</p>
+      </details>
+      <details class="qa">
+        <summary>Can my parents do this with me in Spanish?</summary>
+        <p>Yes. Every chapter, every quiz, every drill is fully Spanish. Toggle EN↔ES anytime from the top right. Parent-supervisor materials are also bilingual.</p>
+      </details>
+      <details class="qa">
+        <summary>Do you sell my data?</summary>
+        <p>No. We don't run ads. We don't track you across other sites. The only third party that sees your info is the payment processor at checkout. Read the <a href="privacy.html" style="color: var(--signal-deep); text-decoration: underline;">privacy policy</a> — it's short and in plain English.</p>
+      </details>
+      <details class="qa">
+        <summary>How do I get a refund?</summary>
+        <p>If you haven't started the course yet, full refund — email us. Once you've started, we follow the TDLR refund rules in 16 TAC §84.502.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section class="container">
+  <div class="final-cta">
+    <h2>Get your Texas permit. The good way.</h2>
+    <p>One-time $29. Full course, parent-taught, bilingual. No upsells.</p>
+    <a class="btn btn-primary btn-lg" href="signup.html">Get started · $29 →</a>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="container foot-inner">
+    <div class="foot-col">
+      <div class="foot-brand">Goodlane</div>
+      <p class="foot-blurb">Texas drivers ed for teens, built like a driving game instead of a slideshow. Parent-taught. Bilingual. One-time $29.</p>
+      <p class="foot-tag">© 2026 Goodlane (working name)</p>
+    </div>
+    <div class="foot-col">
+      <h5>Product</h5>
+      <a href="#how">How it works</a>
+      <a href="#features">What's inside</a>
+      <a href="#compare">Compare</a>
+      <a href="plans.html">Pricing</a>
+      <a href="signup.html">Get started</a>
+    </div>
+    <div class="foot-col">
+      <h5>Account</h5>
+      <a href="login.html">Sign in</a>
+      <a href="signup.html">Sign up</a>
+      <a href="settings.html">Settings</a>
+    </div>
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a href="mailto:hello@goodlane.example">Contact</a>
+    </div>
+  </div>
+  <div class="container foot-meta">
+    <span class="foot-tag">Texas-approved · 16 TAC §84.501</span>
+    <span>Made in Texas · For Texas teens · By a Texas teen</span>
+  </div>
+</footer>
+
+</body>
+</html>

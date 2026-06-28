@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Goodlane — Shorts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/app.css" />
+<style>
+  body { padding: 0; margin: 0; overflow: hidden; }
+
+  /* Vertical scroll-snap container — fills viewport, no horizontal overflow */
+  .feed {
+    position: fixed; inset: 0;
+    overflow-y: scroll; scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+    background: #0d1117;
+  }
+  .short {
+    position: relative; height: 100vh; height: 100dvh;
+    scroll-snap-align: start; scroll-snap-stop: always;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    overflow: hidden;
+  }
+
+  /* Each short has a generated visual scene as background */
+  .scene { position: absolute; inset: 0; overflow: hidden; }
+  .scene svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  /* Bottom-up gradient so text is always readable */
+  .short::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(180deg, rgba(13,17,23,0.05) 0%, rgba(13,17,23,0.35) 60%, rgba(13,17,23,0.85) 100%);
+  }
+
+  /* Top progress bar */
+  .progress {
+    position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 10;
+    background: rgba(255,255,255,0.18);
+  }
+  .progress > .bar { height: 100%; width: 0; background: var(--signal-soft); transition: width 0.1s linear; }
+
+  /* Top-left close + module tag */
+  .top-row {
+    position: absolute; top: 16px; left: 16px; right: 16px; z-index: 12;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  }
+  .pill-light {
+    padding: 7px 12px; border-radius: 999px;
+    background: rgba(255,255,255,0.16); backdrop-filter: blur(10px);
+    color: #ffffff; font-family: 'Inter', system-ui, sans-serif;
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700;
+  }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(255,255,255,0.16); backdrop-filter: blur(10px);
+    border: 0; cursor: pointer;
+    color: #ffffff;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .icon-btn:active { transform: scale(0.94); }
+
+  /* Right-side action rail */
+  .rail {
+    position: absolute; right: 14px; bottom: 24%; z-index: 12;
+    display: flex; flex-direction: column; gap: 14px; align-items: center;
+  }
+  .rail .icon-btn { width: 48px; height: 48px; }
+  .rail .lbl {
+    font-family: 'Inter', system-ui, sans-serif; font-size: 10px;
+    color: #ffffff; letter-spacing: 0.10em; margin-top: 2px;
+  }
+  .rail .stack { display: flex; flex-direction: column; align-items: center; }
+  .liked .icon-btn { background: rgba(245,158,11,0.85); }
+  .saved .icon-btn { background: rgba(29,78,216,0.85); }
+
+  /* Bottom content */
+  .bottom {
+    position: relative; z-index: 11; padding: 20px 22px 88px;
+    color: #ffffff;
+  }
+  .bottom .type {
+    font-family: 'Inter', system-ui, sans-serif; font-size: 11px;
+    color: var(--signal-soft); letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .bottom h2 {
+    font-family: 'Inter', system-ui, sans-serif; font-size: 28px; font-weight: 800;
+    margin: 0 0 10px; letter-spacing: -0.02em;
+    text-shadow: 0 2px 24px rgba(0,0,0,0.6);
+  }
+  .bottom .hook { font-size: 16px; font-weight: 600; margin: 0 0 8px; line-height: 1.35; max-width: 540px; }
+  .bottom .body { font-size: 14.5px; line-height: 1.55; opacity: 0.92; max-width: 600px; margin: 0 0 14px; }
+  .rule-card-mini {
+    background: rgba(255,255,255,0.95); color: var(--ink-50);
+    border-radius: 12px; padding: 12px 16px; max-width: 560px;
+    box-shadow: 0 18px 40px -12px rgba(0,0,0,0.5);
+  }
+  .rule-card-mini .rt {
+    font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px;
+    color: var(--signal-deep); letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .rule-card-mini .rb { font-size: 14px; font-weight: 600; line-height: 1.4; }
+
+  /* Bottom CTA + nav */
+  .cta-row {
+    position: absolute; left: 22px; right: 88px; bottom: 22px; z-index: 13;
+    display: flex; gap: 10px; align-items: center;
+  }
+  .deeper {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 11px 16px; border-radius: 10px;
+    background: var(--signal); color: #ffffff;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 13.5px;
+    box-shadow: 0 12px 28px -8px rgba(29,78,216,0.5);
+    transition: all 0.15s;
+  }
+  .deeper:hover { background: var(--signal-deep); transform: translateY(-1px); }
+
+  /* Swipe-up hint */
+  .hint {
+    position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 12;
+    color: rgba(255,255,255,0.55);
+    font-family: 'Inter', system-ui, sans-serif; font-size: 11px; letter-spacing: 0.20em; text-transform: uppercase;
+    animation: hintbounce 1.6s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .short.viewed .hint { opacity: 0; }
+  @keyframes hintbounce {
+    0%,100% { transform: translateX(-50%) translateY(0); }
+    50%     { transform: translateX(-50%) translateY(-10px); }
+  }
+
+  /* Quiz modal */
+  .quiz-mask {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(13,17,23,0.7); backdrop-filter: blur(8px);
+    display: none; align-items: center; justify-content: center; padding: 16px;
+  }
+  .quiz-mask.show { display: flex; }
+  .quiz-card {
+    background: var(--bg-2); color: var(--ink-50);
+    border: 1px solid var(--hairline); border-radius: 16px;
+    padding: 28px 24px; max-width: 460px; width: 100%;
+    box-shadow: var(--shadow-lg);
+  }
+  .quiz-card h3 { font-family: 'Inter', system-ui, sans-serif; font-size: 19px; font-weight: 700; margin: 0 0 14px; letter-spacing: -0.015em; }
+  .quiz-opts { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-opt {
+    padding: 13px 16px; border-radius: 10px;
+    background: var(--bg-3); border: 1px solid var(--hairline);
+    text-align: left; font: inherit; font-size: 14px; color: var(--ink-50);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .quiz-opt:hover { border-color: var(--signal); background: var(--signal-bg); }
+  .quiz-opt.right { border-color: var(--signal); background: var(--signal-bg); color: var(--signal-deep); font-weight: 600; }
+  .quiz-opt.wrong { border-color: var(--danger); background: #fce8e8; color: var(--danger); font-weight: 600; }
+  .quiz-feedback { margin-top: 12px; font-size: 13px; color: var(--ink-500); line-height: 1.5; }
+  .quiz-actions { display: flex; gap: 10px; margin-top: 18px; }
+
+  /* "End of feed" splash */
+  .end-card {
+    height: 100vh; height: 100dvh; scroll-snap-align: start;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 40px; text-align: center; gap: 14px;
+    background: linear-gradient(180deg, #1a2230 0%, #0d1117 100%);
+    color: #ffffff;
+  }
+  .end-card h2 { font-family: 'Inter', system-ui, sans-serif; font-size: 28px; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
+  .end-card p { color: rgba(255,255,255,0.7); margin: 0; max-width: 360px; line-height: 1.5; }
+  .end-card a {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 12px 18px; border-radius: 10px;
+    background: var(--signal); color: #ffffff; font-family: 'Inter', system-ui, sans-serif; font-weight: 700;
+  }
+  /* Big check-circle + progress count on the end card */
+  .end-check {
+    width: 88px; height: 88px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--signal), #1ad48b);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 6px rgba(59,130,246,0.18), 0 18px 40px -10px rgba(59,130,246,0.45);
+    animation: end-pop 0.55s cubic-bezier(0.16,1,0.3,1);
+  }
+  @keyframes end-pop { 0% { transform: scale(0); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  .end-progress {
+    display: inline-flex; align-items: center; gap: 14px;
+    padding: 8px 16px; border-radius: 10px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+    font-family: 'Inter', system-ui, sans-serif; letter-spacing: 0.10em; font-weight: 700;
+    color: #ffffff;
+  }
+  .end-progress .num { font-family: 'Inter', system-ui, sans-serif; font-size: 22px; font-weight: 800; color: var(--signal); }
+  .end-progress .lbl { font-size: 11px; color: rgba(255,255,255,0.6); text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<div class="feed" id="feed"></div>
+
+<!-- Quiz modal -->
+<div class="quiz-mask" id="quizMask">
+  <div class="quiz-card">
+    <h3 id="quizQ">Loading…</h3>
+    <div class="quiz-opts" id="quizOpts"></div>
+    <p class="quiz-feedback" id="quizFB" style="display:none;"></p>
+    <div class="quiz-actions">
+      <button class="btn btn-secondary" onclick="closeQuiz()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="scripts/api.js"></script>
+<script src="scripts/app.js"></script>
+<script src="scripts/curriculum.js"></script>
+<script src="scripts/curriculum_es.js"></script>
+<script src="scripts/shorts.js"></script>
+<script src="scripts/topics.js"></script>
+
+<script>
+  // ---------- Hydrate user state ----------
+  (async () => { try { if (window.APEX_API) await APEX.refresh(); } catch (e) {} })();
+
+  // ---------- Scene templates (pure SVG) ----------
+  const SCENES = {
+    'scene-pedestrian': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="skyA" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#7e9bb6"/><stop offset="100%" stop-color="#dccfae"/>
+          </linearGradient>
+        </defs>
+        <rect width="800" height="800" fill="url(#skyA)"/>
+        <rect y="800" width="800" height="400" fill="#3a4148"/>
+        <rect y="970" width="800" height="20" fill="#fde68a"/>
+        <rect x="500" y="600" width="280" height="320" fill="#94a3b8" rx="10"/>
+        <rect x="520" y="650" width="120" height="60" fill="#1e293b" opacity="0.6"/>
+        <text x="640" y="780" text-anchor="middle" font-family="Inter" font-size="28" font-weight="800" fill="#0d1117" opacity="0.55">DELIVERY</text>
+        <circle cx="540" cy="940" r="20" fill="#0a0a0d"/><circle cx="740" cy="940" r="20" fill="#0a0a0d"/>
+        <g opacity="0.85">
+          <circle cx="780" cy="850" r="14" fill="#fafafa"/>
+          <rect x="770" y="864" width="20" height="40" fill="#fafafa"/>
+        </g>
+      </svg>`,
+    'scene-following': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <rect width="800" height="500" fill="#7e9bb6"/>
+        <rect y="500" width="800" height="700" fill="#3a4148"/>
+        <line x1="380" y1="700" x2="380" y2="1200" stroke="#fde68a" stroke-width="6" stroke-dasharray="40 30"/>
+        <line x1="420" y1="700" x2="420" y2="1200" stroke="#fde68a" stroke-width="6" stroke-dasharray="40 30"/>
+        <rect x="320" y="900" width="160" height="84" fill="#1d4ed8" rx="14"/>
+        <rect x="335" y="916" width="130" height="40" fill="#0a0a0d" opacity="0.5" rx="6"/>
+        <text x="400" y="1080" text-anchor="middle" font-family="Inter" font-size="18" letter-spacing="6" fill="#ffffff" opacity="0.6">3 SEC</text>
+      </svg>`,
+    'scene-sign-pentagon': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <rect width="800" height="1200" fill="#dccfae"/>
+        <polygon points="400,200 600,360 540,640 260,640 200,360" fill="#fbbf24" stroke="#0d1117" stroke-width="10"/>
+        <circle cx="400" cy="430" r="38" fill="#0d1117"/>
+        <rect x="380" y="468" width="40" height="80" fill="#0d1117"/>
+        <rect x="350" y="540" width="100" height="14" fill="#0d1117"/>
+      </svg>`,
+    'scene-blindspot': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <rect width="800" height="500" fill="#7e9bb6"/>
+        <rect y="500" width="800" height="700" fill="#3a4148"/>
+        <rect x="280" y="600" width="240" height="120" fill="#f59e0b" rx="20"/>
+        <rect x="300" y="615" width="200" height="44" fill="#0a0a0d" opacity="0.5" rx="6"/>
+        <rect x="540" y="740" width="220" height="100" fill="#94a3b8" rx="14" opacity="0.85"/>
+        <g stroke="#ff3b5c" stroke-width="6" fill="none" stroke-dasharray="20 14">
+          <path d="M 540 740 L 460 660 L 540 660 Z"/>
+        </g>
+        <text x="640" y="900" text-anchor="middle" font-family="Inter" font-size="16" letter-spacing="4" fill="#ffffff" opacity="0.7">BLIND SPOT</text>
+      </svg>`,
+    'scene-fact': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <rect width="800" height="1200" fill="#1a2230"/>
+        <text x="400" y="540" text-anchor="middle" font-family="Inter" font-size="180" font-weight="800" fill="#ffffff" opacity="0.92">180</text>
+        <text x="400" y="640" text-anchor="middle" font-family="Inter" font-size="22" letter-spacing="8" fill="#3b82f6">DAYS · ALR SUSPENSION</text>
+      </svg>`,
+    'scene-physics': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <rect width="800" height="1200" fill="#3a4148"/>
+        <rect x="100" y="600" width="600" height="20" fill="#94a3b8" opacity="0.6" rx="6"/>
+        <rect x="100" y="600" width="240" height="20" fill="#1d4ed8" rx="6"/>
+        <text x="220" y="580" text-anchor="middle" font-family="Inter" font-size="16" letter-spacing="3" fill="#ffffff" opacity="0.7">REACT 1.5s</text>
+        <rect x="340" y="600" width="260" height="20" fill="#f59e0b" rx="6"/>
+        <text x="470" y="580" text-anchor="middle" font-family="Inter" font-size="16" letter-spacing="3" fill="#ffffff" opacity="0.7">BRAKE 50ft</text>
+        <text x="400" y="700" text-anchor="middle" font-family="Inter" font-size="60" font-weight="800" fill="#ffffff" opacity="0.92">120 ft</text>
+        <text x="400" y="740" text-anchor="middle" font-family="Inter" font-size="14" letter-spacing="4" fill="#ffffff" opacity="0.55">AT 35 MPH · DRY</text>
+      </svg>`,
+    'scene-rightonred': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <rect width="800" height="500" fill="#7e9bb6"/>
+        <rect y="500" width="800" height="700" fill="#3a4148"/>
+        <rect x="350" y="60" width="100" height="220" fill="#0d1117" rx="6"/>
+        <circle cx="400" cy="120" r="34" fill="#3f3f46"/>
+        <circle cx="400" cy="190" r="34" fill="#3f3f46"/>
+        <circle cx="400" cy="250" r="34" fill="#dc2626"/>
+        <rect x="200" y="700" width="160" height="80" fill="#1d4ed8" rx="12"/>
+        <rect x="500" y="900" width="200" height="40" fill="#fde68a" opacity="0.65" rx="4"/>
+        <text x="600" y="930" text-anchor="middle" font-family="Inter" font-size="16" letter-spacing="3" fill="#0d1117">CROSSWALK</text>
+      </svg>`,
+    'scene-rain': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <rect width="800" height="1200" fill="#3d4756"/>
+        <g stroke="#94a3b8" stroke-width="2" opacity="0.65">
+          <line x1="60" y1="100" x2="40" y2="220"/>
+          <line x1="180" y1="180" x2="160" y2="320"/>
+          <line x1="300" y1="60" x2="280" y2="200"/>
+          <line x1="420" y1="240" x2="400" y2="380"/>
+          <line x1="540" y1="120" x2="520" y2="260"/>
+          <line x1="660" y1="200" x2="640" y2="340"/>
+          <line x1="100" y1="500" x2="80" y2="640"/>
+          <line x1="220" y1="600" x2="200" y2="740"/>
+          <line x1="340" y1="540" x2="320" y2="680"/>
+          <line x1="460" y1="660" x2="440" y2="800"/>
+          <line x1="580" y1="540" x2="560" y2="680"/>
+          <line x1="700" y1="620" x2="680" y2="760"/>
+        </g>
+        <rect x="280" y="800" width="240" height="120" fill="#1d4ed8" rx="20" opacity="0.92"/>
+        <ellipse cx="400" cy="940" rx="160" ry="14" fill="#94a3b8" opacity="0.4"/>
+      </svg>`,
+    'scene-moveover': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <rect width="800" height="500" fill="#7e9bb6"/>
+        <rect y="500" width="800" height="700" fill="#3a4148"/>
+        <line x1="400" y1="500" x2="400" y2="1200" stroke="#fde68a" stroke-width="6" stroke-dasharray="40 30"/>
+        <rect x="540" y="800" width="240" height="120" fill="#dc2626" rx="14"/>
+        <rect x="560" y="780" width="80" height="40" fill="#fbbf24" rx="6"/>
+        <rect x="660" y="780" width="80" height="40" fill="#3b82f6" rx="6"/>
+        <rect x="80" y="900" width="200" height="100" fill="#1d4ed8" rx="14"/>
+        <path d="M 280 800 L 320 800" stroke="#ffffff" stroke-width="8" stroke-dasharray="20 12"/>
+      </svg>`,
+    'scene-bus': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <rect width="800" height="500" fill="#7e9bb6"/>
+        <rect y="500" width="800" height="700" fill="#3a4148"/>
+        <rect x="120" y="580" width="560" height="180" fill="#fbbf24" rx="14"/>
+        <rect x="140" y="600" width="80" height="80" fill="#0a0a0d" opacity="0.6" rx="4"/>
+        <rect x="240" y="600" width="80" height="80" fill="#0a0a0d" opacity="0.6" rx="4"/>
+        <rect x="340" y="600" width="80" height="80" fill="#0a0a0d" opacity="0.6" rx="4"/>
+        <rect x="440" y="600" width="80" height="80" fill="#0a0a0d" opacity="0.6" rx="4"/>
+        <rect x="540" y="600" width="80" height="80" fill="#0a0a0d" opacity="0.6" rx="4"/>
+        <text x="400" y="730" text-anchor="middle" font-family="Inter" font-size="32" font-weight="800" fill="#0a0a0d">SCHOOL BUS</text>
+        <circle cx="180" cy="780" r="30" fill="#0a0a0d"/><circle cx="620" cy="780" r="30" fill="#0a0a0d"/>
+        <rect x="60" y="640" width="50" height="20" fill="#dc2626" rx="3"/>
+        <rect x="690" y="640" width="50" height="20" fill="#dc2626" rx="3"/>
+      </svg>`,
+    'scene-night': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <rect width="800" height="1200" fill="#0d1117"/>
+        <rect x="60" y="500" width="6" height="700" fill="#ffffff" opacity="0.7"/>
+        <line x1="400" y1="500" x2="400" y2="1200" stroke="#fde68a" stroke-width="4" stroke-dasharray="40 30" opacity="0.5"/>
+        <circle cx="240" cy="640" r="80" fill="#ffffff" opacity="0.95"/>
+        <circle cx="320" cy="640" r="80" fill="#ffffff" opacity="0.95"/>
+        <ellipse cx="280" cy="640" rx="180" ry="40" fill="#ffffff" opacity="0.55"/>
+      </svg>`,
+    'scene-gdl': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <rect width="800" height="1200" fill="#1a2230"/>
+        <text x="400" y="380" text-anchor="middle" font-family="Inter" font-size="160" font-weight="800" fill="#ffffff">12</text>
+        <text x="400" y="450" text-anchor="middle" font-family="Inter" font-size="20" letter-spacing="6" fill="#3b82f6">MONTHS · GDL</text>
+        <g font-family="Inter" font-size="22" letter-spacing="3" fill="#ffffff" opacity="0.85">
+          <text x="400" y="600" text-anchor="middle">⏰  NO 12am–5am</text>
+          <text x="400" y="660" text-anchor="middle">📵  NO PHONE</text>
+          <text x="400" y="720" text-anchor="middle">🧑‍🤝‍🧑  ONE NON-FAMILY MINOR</text>
+        </g>
+      </svg>`,
+    // ---- Generic backgrounds for AUTO-GENERATED shorts ----
+    'gen-intro': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <defs><linearGradient id="gi" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1d4ed8"/><stop offset="1" stop-color="#1e3a8a"/></linearGradient></defs>
+        <rect width="800" height="1200" fill="url(#gi)"/>
+        <circle cx="400" cy="400" r="180" fill="rgba(255,255,255,0.08)"/>
+        <circle cx="400" cy="400" r="120" fill="rgba(255,255,255,0.10)"/>
+        <polygon points="370,340 470,400 370,460" fill="#ffffff"/>
+      </svg>`,
+    'gen-concept-0': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <rect width="800" height="600" fill="#7e9bb6"/>
+        <rect y="600" width="800" height="600" fill="#3a4148"/>
+        <line x1="400" y1="600" x2="400" y2="1200" stroke="#fde68a" stroke-width="6" stroke-dasharray="40 30"/>
+        <rect x="280" y="800" width="240" height="120" fill="#1d4ed8" rx="14"/>
+        <rect x="300" y="820" width="200" height="50" fill="#a6c4d8" opacity="0.55" rx="6"/>
+      </svg>`,
+    'gen-concept-1': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <defs><linearGradient id="gc1" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#f59e0b"/><stop offset="1" stop-color="#7c2d12"/></linearGradient></defs>
+        <rect width="800" height="1200" fill="url(#gc1)"/>
+        <circle cx="200" cy="300" r="80" fill="rgba(255,255,255,0.10)"/>
+        <circle cx="600" cy="800" r="120" fill="rgba(255,255,255,0.08)"/>
+      </svg>`,
+    'gen-concept-2': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <rect width="800" height="1200" fill="#1e293b"/>
+        <line x1="100" y1="200" x2="700" y2="200" stroke="#fde68a" stroke-width="3" stroke-dasharray="30 18" opacity="0.4"/>
+        <line x1="100" y1="500" x2="700" y2="500" stroke="#fde68a" stroke-width="3" stroke-dasharray="30 18" opacity="0.5"/>
+        <line x1="100" y1="800" x2="700" y2="800" stroke="#fde68a" stroke-width="3" stroke-dasharray="30 18" opacity="0.6"/>
+        <line x1="100" y1="1100" x2="700" y2="1100" stroke="#fde68a" stroke-width="3" stroke-dasharray="30 18" opacity="0.7"/>
+      </svg>`,
+    'gen-concept-3': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <defs><linearGradient id="gc3" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1e3a5f"/><stop offset="1" stop-color="#0d1f33"/></linearGradient></defs>
+        <rect width="800" height="1200" fill="url(#gc3)"/>
+        <polygon points="0,800 800,800 800,1200 0,1200" fill="#374151"/>
+        <line x1="400" y1="800" x2="400" y2="1200" stroke="#fde68a" stroke-width="8" stroke-dasharray="50 35"/>
+      </svg>`,
+    'gen-rule': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <rect width="800" height="1200" fill="#15191f"/>
+        <rect x="120" y="350" width="560" height="500" rx="20" fill="#fef3c7"/>
+        <rect x="120" y="350" width="560" height="80" rx="20" fill="#f59e0b"/>
+        <text x="400" y="402" text-anchor="middle" font-family="Inter" font-size="22" letter-spacing="10" font-weight="700" fill="#ffffff">RULE</text>
+        <text x="400" y="600" text-anchor="middle" font-family="Inter" font-size="60" font-weight="800" fill="#1e293b">★</text>
+      </svg>`,
+    'gen-stat': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <defs><linearGradient id="gs" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#1d4ed8"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs>
+        <rect width="800" height="1200" fill="#0d1117"/>
+        <circle cx="400" cy="500" r="280" fill="url(#gs)" opacity="0.30"/>
+        <circle cx="400" cy="500" r="200" fill="url(#gs)" opacity="0.50"/>
+      </svg>`,
+    'gen-keypoints': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <rect width="800" height="1200" fill="#1e3a8a"/>
+        <g font-family="Inter" font-weight="700" fill="#ffffff" opacity="0.18" font-size="120">
+          <text x="100" y="200">✓</text><text x="500" y="400">✓</text>
+          <text x="200" y="600">✓</text><text x="550" y="800">✓</text>
+          <text x="100" y="1000">✓</text>
+        </g>
+      </svg>`,
+    'gen-scene': () => `
+      <svg viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice">
+        <defs><linearGradient id="gsc" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#dc2626"/><stop offset="1" stop-color="#7f1d1d"/></linearGradient></defs>
+        <rect width="800" height="1200" fill="url(#gsc)"/>
+        <polygon points="380,420 480,500 380,580" fill="#ffffff" opacity="0.95"/>
+        <text x="400" y="780" text-anchor="middle" font-family="Inter" font-size="22" letter-spacing="10" font-weight="700" fill="#ffffff" opacity="0.88">SCENARIO</text>
+      </svg>`,
+  };
+
+  const TYPE_LABELS = {
+    scenario: 'Scenario',
+    rule: 'Rule',
+    fact: 'Fact',
+    sign: 'Sign',
+    habit: 'Habit',
+    mistake: 'Common mistake',
+  };
+
+  // ---------- Topic-scoped playlist ----------
+  // shorts.html is now ALWAYS opened from a topic (?topic=ID). We render only
+  // the shorts that belong to that topic — no infinite scroll, no orphan feed.
+  //
+  // Bug fix: topic shorts are a MIX of curated entries (in APEX_SHORTS) and
+  // auto-generated entries (only in APEX_SHORTS_BY_ID). Filtering the static
+  // array dropped every generated short — that's why only the first card
+  // showed. Resolve each id via the by-id map, which contains both.
+  const params = new URLSearchParams(location.search);
+  const topicId = params.get('topic');
+  const topicObj = (window.APEX_TOPICS && topicId) ? window.APEX_TOPICS.get(topicId) : null;
+  const topicShortIds = topicObj ? topicObj.assets.shorts.map(s => s.id) : [];
+  const SHORTS_FILTERED = topicObj
+    ? topicShortIds.map(id => window.APEX_SHORTS_BY_ID && window.APEX_SHORTS_BY_ID[id]).filter(Boolean)
+    : APEX_SHORTS; // legacy fallback only — every entry point should pass ?topic
+  const RETURN_HREF = topicObj ? ('topic.html?id=' + encodeURIComponent(topicObj.id)) : 'roadmap.html';
+
+  // Empty playlist guard — bounce back to topic page so the user isn't stuck on a black screen.
+  if (topicObj && SHORTS_FILTERED.length === 0) {
+    location.replace(RETURN_HREF);
+  }
+
+  // ---------- Render the feed ----------
+  const feed = document.getElementById('feed');
+  const liked = new Set(JSON.parse(localStorage.getItem('apex_liked_shorts') || '[]'));
+  const saved = new Set(JSON.parse(localStorage.getItem('apex_saved_shorts') || '[]'));
+  const watched = new Set(JSON.parse(localStorage.getItem('apex_watched_shorts') || '[]'));
+
+  function svgIcon(name) {
+    const ICONS = {
+      heart: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+      heartFilled: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+      bookmark: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',
+      bookmarkFilled: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',
+      target: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+      x: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+      arrow: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 5l7 7-7 7"/></svg>',
+    };
+    return ICONS[name] || '';
+  }
+
+  SHORTS_FILTERED.forEach((s, i) => {
+    const sceneSvg = (SCENES[s.visual] || SCENES['scene-fact'])();
+    const isLiked = liked.has(s.id);
+    const isSaved = saved.has(s.id);
+
+    const el = document.createElement('section');
+    el.className = 'short';
+    el.dataset.id = s.id;
+    el.dataset.index = i;
+    el.innerHTML = `
+      <div class="scene">${sceneSvg}</div>
+      <div class="progress"><div class="bar"></div></div>
+      <div class="top-row">
+        <a class="icon-btn" href="${RETURN_HREF}" title="Close" aria-label="Close">${svgIcon('x')}</a>
+        <span class="pill-light">${topicObj ? 'TOPIC ' + topicObj.id : 'M' + s.moduleNum} · ${TYPE_LABELS[s.type] || 'Tip'} · ${s.duration}s · ${i+1}/${SHORTS_FILTERED.length}</span>
+      </div>
+      <div class="rail">
+        <div class="stack ${isLiked ? 'liked' : ''}">
+          <button class="icon-btn like" data-id="${s.id}" aria-label="Like">${svgIcon(isLiked ? 'heartFilled' : 'heart')}</button>
+        </div>
+        <div class="stack ${isSaved ? 'saved' : ''}">
+          <button class="icon-btn save" data-id="${s.id}" aria-label="Save">${svgIcon(isSaved ? 'bookmarkFilled' : 'bookmark')}</button>
+        </div>
+        <div class="stack">
+          <button class="icon-btn quiz" data-id="${s.id}" aria-label="Quiz me">${svgIcon('target')}</button>
+        </div>
+      </div>
+      <div class="bottom">
+        <div class="type">${TYPE_LABELS[s.type] || 'Tip'}</div>
+        <h2>${escape(s.title)}</h2>
+        ${s.hook ? `<p class="hook">${escape(s.hook)}</p>` : ''}
+        ${s.body ? `<p class="body">${escape(s.body)}</p>` : ''}
+        ${s.keyPoints && s.keyPoints.length ? `<ul style="margin: 8px 0 0 18px; padding: 0; color: rgba(255,255,255,0.92); line-height: 1.55; font-size: 14px;">${s.keyPoints.map(k => `<li style="margin: 4px 0;">${escape(k)}</li>`).join('')}</ul>` : ''}
+        ${s.rule ? `<div class="rule-card-mini"><div class="rt">${escape(s.rule.tag)}</div><div class="rb">${escape(s.rule.text)}</div></div>` : ''}
+      </div>
+      ${s.deeper ? `<div class="cta-row"><a class="deeper" href="${escape(s.deeper.href)}">${escape(s.deeper.label)} ${svgIcon('arrow')}</a></div>` : ''}
+      <div class="hint">SCROLL ↑</div>
+    `;
+    feed.appendChild(el);
+  });
+
+  // End-of-playlist splash — shows progress + a strong "Continue" CTA.
+  // Refreshed via renderEndCard() whenever a short gets marked watched.
+  const endEl = document.createElement('section');
+  endEl.className = 'end-card';
+  feed.appendChild(endEl);
+
+  function renderEndCard() {
+    const total = SHORTS_FILTERED.length;
+    const playlistIds = new Set(SHORTS_FILTERED.map(s => s.id));
+    const doneInPlaylist = [...watched].filter(id => playlistIds.has(id)).length;
+    const allDone = total > 0 && doneInPlaylist >= total;
+    const headline = allDone
+      ? (topicObj ? "Topic shorts complete." : "Queue cleared.")
+      : (topicObj ? "Keep going — more clips below." : "Some left in the queue.");
+    const blurb = topicObj
+      ? (allDone
+          ? "Now read the article and take the quiz to clear this topic."
+          : "Scroll through the rest, then read the article + quiz to clear the topic.")
+      : (doneInPlaylist + ' / ' + total + ' watched.');
+    const ctaLabel = topicObj
+      ? (allDone ? "Back to topic" : "Return to topic")
+      : "Continue";
+    endEl.innerHTML = `
+      ${allDone ? `<div class="end-check"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>` : ''}
+      <h2>${headline}</h2>
+      <div class="end-progress">
+        <span class="num">${doneInPlaylist}<span style="color:rgba(255,255,255,0.4); font-size:14px;"> / ${total}</span></span>
+        <span class="lbl">${allDone ? 'all watched' : 'watched'}</span>
+      </div>
+      <p>${blurb}</p>
+      <a href="${RETURN_HREF}">${ctaLabel} ${svgIcon('arrow')}</a>
+    `;
+  }
+  renderEndCard();
+
+  // ---------- Like / save / quiz handlers ----------
+  feed.addEventListener('click', (e) => {
+    const btn = e.target.closest('button.icon-btn');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    if (btn.classList.contains('like')) {
+      if (liked.has(id)) liked.delete(id); else liked.add(id);
+      localStorage.setItem('apex_liked_shorts', JSON.stringify([...liked]));
+      btn.innerHTML = svgIcon(liked.has(id) ? 'heartFilled' : 'heart');
+      btn.parentElement.classList.toggle('liked', liked.has(id));
+    }
+    if (btn.classList.contains('save')) {
+      if (saved.has(id)) saved.delete(id); else saved.add(id);
+      localStorage.setItem('apex_saved_shorts', JSON.stringify([...saved]));
+      btn.innerHTML = svgIcon(saved.has(id) ? 'bookmarkFilled' : 'bookmark');
+      btn.parentElement.classList.toggle('saved', saved.has(id));
+    }
+    if (btn.classList.contains('quiz')) openQuiz(id);
+  });
+
+  // ---------- Quiz modal ----------
+  const QUIZ_BANK = {
+    's-pedestrian-popup': { q: 'A van blocks your view of the sidewalk. The defensive move is to:', opts: ['Maintain speed; the light is green', 'Cover the brake, ease off, scan for movement', 'Honk and proceed'], correct: 1, why: 'You can\'t react to what you can\'t see. Cover the brake, scan, slow.' },
+    's-3-second-rule': { q: 'In rain at night, your following distance should be:', opts: ['3 seconds', '4–5 seconds', 'Whatever feels safe'], correct: 1, why: 'Add 1 second per bad condition. Rain + night = 5 seconds minimum.' },
+    's-yield-pentagon': { q: 'A 5-sided yellow sign means:', opts: ['Yield', 'School zone', 'Construction'], correct: 1, why: 'Pentagon = school zone. Triangle = yield. Diamond = warning.' },
+    's-blind-spot': { q: 'The "M" in SMOG stands for:', opts: ['Maneuver', 'Mirror', 'Move'], correct: 1, why: 'Signal · Mirror · Over-the-shoulder · Go.' },
+    's-implied-consent': { q: 'In TX, refusing the breath test after a DWI arrest results in:', opts: ['No automatic penalty', 'Automatic 180-day license suspension', 'Immediate jail time'], correct: 1, why: 'TX implied-consent law: refusal = automatic 180-day ALR suspension.' },
+    's-stop-distance-physics': { q: 'Doubling your speed roughly multiplies braking distance by:', opts: ['2', '3', '4'], correct: 2, why: 'Kinetic energy scales with v². Twice the speed = four times the energy to dump.' },
+    's-right-on-red': { q: 'Before turning right on red you must:', opts: ['Slow and roll through', 'Come to a complete stop and yield to all traffic and pedestrians', 'Honk to warn cross traffic'], correct: 1, why: 'Full stop, then yield, then turn — and only if no sign forbids it.' },
+    's-hydroplane': { q: 'When hydroplaning, the right move is:', opts: ['Brake hard', 'Steer sharply away from the puddle', 'Ease off the gas, hold the wheel straight'], correct: 2, why: 'Don\'t add inputs. Let the tires re-engage.' },
+    's-move-over': { q: 'On a TX highway with an emergency vehicle on the shoulder you must:', opts: ['Continue normally', 'Move over a lane OR slow to limit-minus-20', 'Stop completely until they move'], correct: 1, why: 'TX Move Over law §545.157.' },
+    's-school-bus': { q: 'A school bus on a 2-lane road has its red lights flashing. Drivers in both directions must:', opts: ['Slow to 20 mph', 'Stop completely', 'Pass cautiously'], correct: 1, why: 'Both directions stop until the lights stop and the arm retracts.' },
+    's-night-glare': { q: 'Oncoming high beams blind you. The right reaction is:', opts: ['Flash your high beams back', 'Look down at the right edge line until they pass', 'Close your eyes briefly'], correct: 1, why: 'Track the white right-edge line. Eyes off the glare.' },
+    's-gdl-restrictions': { q: 'Under the TX GDL, in your first year you cannot:', opts: ['Drive between 12am–5am except for school/work/medical', 'Drive on state highways', 'Drive any car older than 2010'], correct: 0, why: 'GDL curfew: midnight to 5am except school/work/medical.' },
+  };
+
+  function openQuiz(id) {
+    pauseAutoplay();
+    const q = QUIZ_BANK[id];
+    if (!q) { closeQuiz(); return; }
+    document.getElementById('quizQ').textContent = q.q;
+    const optsEl = document.getElementById('quizOpts');
+    optsEl.innerHTML = '';
+    const fb = document.getElementById('quizFB');
+    fb.style.display = 'none'; fb.textContent = '';
+    q.opts.forEach((o, i) => {
+      const b = document.createElement('button');
+      b.className = 'quiz-opt';
+      b.textContent = o;
+      b.onclick = () => {
+        optsEl.querySelectorAll('.quiz-opt').forEach(x => x.disabled = true);
+        const correct = i === q.correct;
+        b.classList.add(correct ? 'right' : 'wrong');
+        if (!correct) optsEl.children[q.correct].classList.add('right');
+        fb.textContent = (correct ? '+10 XP — ' : '') + q.why;
+        fb.style.display = 'block';
+        if (correct && window.Goodlane) APEX.awardXP(10);
+      };
+      optsEl.appendChild(b);
+    });
+    document.getElementById('quizMask').classList.add('show');
+  }
+  function closeQuiz() {
+    document.getElementById('quizMask').classList.remove('show');
+    resumeAutoplay();
+  }
+  window.closeQuiz = closeQuiz;
+
+  // ---------- Autoplay timer per visible short ----------
+  let activeShort = null;
+  let timerStart = 0;
+  let timerDur = 0;
+  let timerPaused = false;
+  let pauseAccum = 0;
+  let pauseBegan = 0;
+  let rafHandle = null;
+
+  function tickProgress() {
+    if (!activeShort || timerPaused) { rafHandle = requestAnimationFrame(tickProgress); return; }
+    const elapsed = (performance.now() - timerStart - pauseAccum) / 1000;
+    const pct = Math.min(1, elapsed / timerDur);
+    const bar = activeShort.querySelector('.progress > .bar');
+    if (bar) bar.style.width = (pct * 100) + '%';
+    if (pct >= 1) {
+      // Auto-advance — find the next sibling .short or .end-card
+      markWatched(activeShort.dataset.id);
+      const next = activeShort.nextElementSibling;
+      if (next) next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    rafHandle = requestAnimationFrame(tickProgress);
+  }
+
+  function markWatched(id) {
+    if (!id || watched.has(id)) return;
+    watched.add(id);
+    localStorage.setItem('apex_watched_shorts', JSON.stringify([...watched]));
+    // Topic-progress hook: this short was part of a topic playlist
+    if (topicObj && window.APEX_TOPICS) window.APEX_TOPICS.recordShortWatched(topicObj.id, id);
+    // Server sync, capped to 50 XP/day
+    if (window.APEX_API) {
+      fetch('/api/shorts/watched', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ short_id: id })
+      }).catch(() => {});
+    }
+    // Refresh the end card so the X / Y count updates live as you scroll through.
+    if (typeof renderEndCard === 'function') renderEndCard();
+  }
+
+  function pauseAutoplay() { if (!timerPaused) { timerPaused = true; pauseBegan = performance.now(); } }
+  function resumeAutoplay() { if (timerPaused) { pauseAccum += performance.now() - pauseBegan; timerPaused = false; } }
+
+  // Tap-to-pause / resume
+  feed.addEventListener('click', (e) => {
+    if (e.target.closest('button, a')) return;
+    if (timerPaused) resumeAutoplay(); else pauseAutoplay();
+  });
+
+  // Watch which short is most visible — IntersectionObserver
+  const io = new IntersectionObserver((entries) => {
+    let bestEntry = null;
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      if (!bestEntry || e.intersectionRatio > bestEntry.intersectionRatio) bestEntry = e;
+    }
+    if (!bestEntry) return;
+    const target = bestEntry.target;
+    if (target === activeShort) return;
+    activeShort = target;
+    activeShort.classList.add('viewed');
+    if (target.classList.contains('short')) {
+      const id = target.dataset.id;
+      const sd = APEX_SHORTS_BY_ID[id];
+      timerDur = (sd && sd.duration) || 12;
+      timerStart = performance.now();
+      pauseAccum = 0; timerPaused = false;
+      const bar = target.querySelector('.progress > .bar');
+      if (bar) bar.style.width = '0%';
+    }
+  }, { root: feed, threshold: [0.6] });
+  document.querySelectorAll('.short').forEach(s => io.observe(s));
+  if (rafHandle) cancelAnimationFrame(rafHandle);
+  rafHandle = requestAnimationFrame(tickProgress);
+
+  // Keyboard nav
+  window.addEventListener('keydown', (e) => {
+    if (document.getElementById('quizMask').classList.contains('show')) return;
+    if (e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      if (activeShort && activeShort.nextElementSibling) {
+        markWatched(activeShort.dataset.id);
+        activeShort.nextElementSibling.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (activeShort && activeShort.previousElementSibling) {
+        activeShort.previousElementSibling.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+    if (e.key === 'Escape') location.href = RETURN_HREF;
+  });
+
+  function escape(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+<script src="scripts/i18n.js"></script>
+<script src="scripts/lang-toggle.js"></script>
+<script type="module" src="scripts/compliance/bootstrap.js"></script>
+</body>
+</html>

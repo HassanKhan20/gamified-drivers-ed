@@ -1,0 +1,2260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — Drive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/app.css" />
+
+<style>
+  body { padding: 0; margin: 0; overflow: hidden; background: #cfddea; color: var(--ink-100); }
+  body::before { display: none; }
+
+  #stage { position: fixed; inset: 0; }
+  canvas { display: block; outline: none; }
+
+  /* ---------- HUD ---------- */
+  .hud-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  .hud-overlay > * { pointer-events: auto; }
+
+  /* Top-left: scenario + back */
+  .hud-top-left {
+    position: fixed; top: 16px; left: 16px;
+    display: flex; gap: 8px; align-items: center;
+  }
+  .hud-back, .hud-pill {
+    padding: 9px 14px; border-radius: 8px;
+    background: rgba(255,255,255,0.94); border: 1px solid var(--hairline);
+    backdrop-filter: blur(8px);
+    font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 700;
+    color: var(--ink-300); letter-spacing: 0.12em; text-transform: uppercase;
+    text-decoration: none; transition: all 0.15s; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    box-shadow: var(--shadow-sm);
+  }
+  .hud-back:hover { color: var(--signal-deep); border-color: var(--signal); background: var(--signal-bg); }
+  .hud-pill.signal { color: #ffffff; border-color: var(--signal); background: var(--signal); }
+
+  /* Top-right: car name + scenario picker */
+  .hud-top-right {
+    position: fixed; top: 16px; right: 16px;
+    display: flex; gap: 8px; align-items: center;
+  }
+  select.hud-pill, button.hud-pill {
+    appearance: none; -webkit-appearance: none; cursor: pointer;
+    padding-right: 30px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235d6776' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+    background-color: rgba(255,255,255,0.94);
+  }
+  select.hud-pill { padding-right: 30px; }
+  button.hud-pill { background-image: none; padding-right: 14px; }
+
+  /* Bottom-left: speed + gear */
+  .hud-bottom-left {
+    position: fixed; bottom: 16px; left: 16px;
+    padding: 16px 20px; border-radius: 12px;
+    background: rgba(255,255,255,0.95); border: 1px solid var(--hairline);
+    backdrop-filter: blur(8px);
+    display: flex; gap: 24px; align-items: flex-end;
+    box-shadow: var(--shadow);
+  }
+  .speed-block .lbl { font-family: 'Inter', system-ui, sans-serif; font-size: 10px; color: var(--ink-700); letter-spacing: 0.20em; text-transform: uppercase; }
+  .speed-block .val { font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 56px; line-height: 1; color: var(--ink-50); letter-spacing: -0.04em; }
+  .speed-block .unit { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--ink-500); letter-spacing: 0.16em; }
+  .gear-block { display: flex; flex-direction: column; gap: 4px; }
+  .gear-block .gear { font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 28px; color: var(--ink-700); letter-spacing: -0.02em; }
+  .gear-block .gear.active { color: var(--signal); }
+
+  /* Right: throttle + brake bars */
+  .pedal-stack {
+    position: fixed; right: 16px; bottom: 16px;
+    display: flex; gap: 8px; align-items: flex-end;
+    padding: 14px 16px; border-radius: 12px;
+    background: rgba(255,255,255,0.95); border: 1px solid var(--hairline);
+    backdrop-filter: blur(8px); box-shadow: var(--shadow);
+  }
+  .pedal { width: 28px; height: 110px; position: relative; border-radius: 6px; background: var(--bg-3); border: 1px solid var(--hairline); overflow: hidden; }
+  .pedal-fill { position: absolute; bottom: 0; left: 0; right: 0; transition: height 0.06s linear; }
+  .pedal.t .pedal-fill { background: linear-gradient(180deg, var(--signal-soft) 0%, var(--signal-deep) 100%); }
+  .pedal.b .pedal-fill { background: linear-gradient(180deg, var(--danger) 0%, #7a1414 100%); }
+  .pedal-lbl { font-family: 'Inter', system-ui, sans-serif; font-size: 9px; color: var(--ink-500); letter-spacing: 0.16em; text-align: center; margin-top: 6px; }
+
+  /* ---------- Step-by-step guide bar (top center) ---------- */
+  .guide-bar {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 6;
+    max-width: min(560px, calc(100vw - 280px));
+    padding: 10px 16px; border-radius: 12px;
+    background: var(--signal); color: #fff;
+    box-shadow: var(--shadow-primary);
+    display: flex; gap: 12px; align-items: center;
+    font-family: 'Inter', sans-serif;
+  }
+  .guide-bar .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(255,255,255,0.22); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 13px;
+    flex-shrink: 0;
+  }
+  .guide-bar .text {
+    font-size: 13.5px; font-weight: 600; line-height: 1.35; letter-spacing: -0.005em;
+  }
+  .guide-bar .text .small {
+    display: block; font-family: 'Inter', system-ui, sans-serif; font-size: 10px;
+    font-weight: 500; letter-spacing: 0.14em; opacity: 0.85; margin-top: 2px;
+  }
+  @media (max-width: 760px) {
+    .guide-bar { left: 16px; right: 16px; transform: none; max-width: none; }
+  }
+
+  /* ---------- Compass arrow pointer (always visible while a checkpoint exists) ---------- */
+  .compass {
+    position: fixed; bottom: 150px; left: 50%; transform: translateX(-50%); z-index: 6;
+    background: rgba(255,255,255,0.95); border: 1px solid var(--hairline);
+    border-radius: 999px; padding: 8px 14px;
+    box-shadow: var(--shadow);
+    display: none; align-items: center; gap: 10px;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.10em; color: var(--ink-300);
+  }
+  .compass.show { display: inline-flex; }
+  .compass .arrow {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--signal); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    transform: rotate(0deg); transition: transform 0.18s ease;
+  }
+  .compass .arrow svg { width: 14px; height: 14px; }
+  .compass .dist { color: var(--signal-deep); font-weight: 800; }
+
+  /* ---------- First-time onboarding card ---------- */
+  .onboard-mask {
+    position: fixed; inset: 0; background: rgba(13,17,23,0.55);
+    backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center;
+    z-index: 60; padding: 16px;
+  }
+  .onboard-mask.show { display: flex; }
+  .onboard-card {
+    max-width: 460px; width: 100%; padding: 28px 24px;
+    background: var(--bg-2); border: 1px solid var(--signal); border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+  }
+  .onboard-card h2 { font-family: 'Inter', system-ui, sans-serif; font-size: 24px; font-weight: 800; margin: 0 0 6px; color: var(--ink-50); letter-spacing: -0.02em; }
+  .onboard-card p { color: var(--ink-500); margin: 0 0 14px; font-size: 14px; line-height: 1.5; }
+  .onboard-steps { display: flex; flex-direction: column; gap: 10px; margin: 14px 0 22px; }
+  .onboard-step { display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: var(--bg-3); border: 1px solid var(--hairline); border-radius: 10px; }
+  .onboard-step .num { width: 26px; height: 26px; border-radius: 50%; background: var(--signal); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 13px; flex-shrink: 0; }
+  .onboard-step .body { font-size: 14px; color: var(--ink-50); line-height: 1.45; }
+  .onboard-step .body .keys { display: inline-block; margin-right: 4px; padding: 1px 6px; border-radius: 4px; background: var(--bg-2); border: 1px solid var(--hairline); font-family: 'Inter', system-ui, sans-serif; font-size: 11px; }
+
+  /* Center crosshair / target reticle (first person) */
+  .reticle { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; pointer-events: none; opacity: 0.5; display: none; }
+  .reticle.show { display: block; }
+  .reticle::before, .reticle::after { content: ''; position: absolute; background: rgba(13,17,23,0.65); }
+  .reticle::before { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-0.5px); }
+  .reticle::after  { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-0.5px); }
+
+  /* Mini-map */
+  .minimap {
+    position: fixed; top: 16px; right: 16px; transform: translateY(48px);
+    width: 180px; height: 180px;
+    border-radius: 12px; background: rgba(255,255,255,0.95); border: 1px solid var(--hairline);
+    backdrop-filter: blur(8px); overflow: hidden; box-shadow: var(--shadow);
+    display: none;
+  }
+  @media (min-width: 768px) { .minimap { display: block; } }
+
+  /* Help panel */
+  .help-panel {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    padding: 10px 16px; border-radius: 8px;
+    background: rgba(255,255,255,0.94); border: 1px solid var(--hairline);
+    backdrop-filter: blur(8px); box-shadow: var(--shadow-sm);
+    font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--ink-300); letter-spacing: 0.10em;
+    display: flex; gap: 18px; align-items: center;
+  }
+  .help-panel kbd { padding: 2px 6px; border-radius: 4px; background: var(--bg-3); border: 1px solid var(--hairline); color: var(--ink-50); font-family: inherit; font-size: 10.5px; }
+  @media (max-width: 640px) { .help-panel { display: none; } }
+
+  /* ---------- Coach card (bottom-left context tip) ---------- */
+  .coach-card {
+    position: fixed; bottom: 110px; left: 16px; z-index: 6;
+    max-width: 320px; padding: 12px 14px;
+    background: rgba(255,255,255,0.96); border: 1px solid var(--hairline);
+    border-left: 4px solid var(--signal);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    font-family: 'Inter', sans-serif;
+    display: none; gap: 10px; align-items: flex-start;
+  }
+  .coach-card.show { display: flex; }
+  .coach-card.warn { border-left-color: #f59e0b; }
+  .coach-card.bad  { border-left-color: var(--danger); }
+  .coach-card .icon {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--signal-bg); color: var(--signal-deep);
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 14px;
+  }
+  .coach-card.warn .icon { background: #fef3e3; color: #f59e0b; }
+  .coach-card.bad .icon  { background: #fdeeee; color: #8a3925; }
+  .coach-card .body .tit {
+    font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; font-weight: 700;
+    color: var(--ink-700); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 3px;
+  }
+  .coach-card .body .msg { font-size: 13.5px; color: var(--ink-50); line-height: 1.4; font-weight: 600; }
+
+  /* ---------- Ghost arrows (parallel park / 3-point turn) ---------- */
+  .ghost-arrows { position: fixed; inset: 0; pointer-events: none; z-index: 4; }
+
+  /* Toast */
+  .toast {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.6);
+    padding: 18px 28px; border-radius: 10px;
+    background: var(--signal); border: 1px solid var(--signal-deep);
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 22px; color: #ffffff;
+    letter-spacing: -0.01em; box-shadow: var(--shadow-lg);
+    opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+  /* End screen */
+  .end-overlay {
+    position: fixed; inset: 0; background: rgba(13,17,23,0.55); backdrop-filter: blur(8px);
+    display: none; align-items: center; justify-content: center; z-index: 50;
+  }
+  .end-overlay.show { display: flex; }
+  .end-card {
+    max-width: 460px; padding: 32px;
+    background: var(--bg-2); border: 1px solid var(--signal); border-radius: 14px;
+    text-align: center; box-shadow: var(--shadow-lg);
+  }
+  .end-card h2 { font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 30px; color: var(--ink-50); margin: 0 0 6px; }
+  .end-card p { color: var(--ink-500); margin: 0 0 18px; }
+  .end-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+  .end-stat { padding: 14px 10px; border-radius: 10px; background: var(--bg-3); border: 1px solid var(--hairline); }
+  .end-stat .num { font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 22px; color: var(--signal); }
+  .end-stat .lbl { font-family: 'Inter', system-ui, sans-serif; font-size: 10px; color: var(--ink-500); letter-spacing: 0.14em; text-transform: uppercase; margin-top: 4px; }
+
+  /* ---------- Turn signal indicators (top center, next to guide bar) ---------- */
+  .signal-bay {
+    position: fixed; top: 16px; right: 220px; z-index: 7;
+    display: flex; gap: 8px; align-items: center;
+  }
+  @media (max-width: 760px) { .signal-bay { right: 16px; top: 64px; } }
+  .signal-light {
+    width: 38px; height: 38px; border-radius: 8px;
+    background: rgba(255,255,255,0.92); border: 1px solid var(--hairline);
+    box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center;
+    color: #b9aa6b; transition: background 0.08s, color 0.08s, transform 0.12s;
+    cursor: pointer; user-select: none;
+  }
+  .signal-light svg { width: 18px; height: 18px; }
+  .signal-light .lbl { display: none; }
+  .signal-light.on { background: #fbbf24; color: #4a2e00; border-color: #fbbf24; box-shadow: 0 0 0 3px rgba(251,191,36,0.35), 0 4px 14px -4px rgba(251,191,36,0.55); transform: scale(1.06); }
+
+  /* ---------- Speed-limit sign (next to speed block) ---------- */
+  .speed-limit {
+    position: fixed; bottom: 16px; left: 230px; z-index: 7;
+    width: 60px; height: 78px; border-radius: 10px 10px 22px 22px;
+    background: #ffffff; border: 3px solid #111418; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: 'Inter', system-ui, sans-serif; color: #111418;
+    transition: box-shadow 0.18s, border-color 0.18s;
+  }
+  .speed-limit .top { font-size: 9.5px; font-weight: 700; letter-spacing: 0.10em; margin-top: 4px; line-height: 1; }
+  .speed-limit .top2 { font-size: 8.5px; font-weight: 700; letter-spacing: 0.10em; line-height: 1; }
+  .speed-limit .num { font-size: 30px; font-weight: 900; line-height: 1; margin-top: 2px; }
+  .speed-limit.over { border-color: var(--danger); box-shadow: 0 0 0 4px rgba(220,38,38,0.30), var(--shadow); animation: speed-pulse 0.6s ease-in-out infinite alternate; }
+  @keyframes speed-pulse { from { background: #ffffff; } to { background: #fff0f0; } }
+  @media (max-width: 760px) { .speed-limit { display: none; } }
+
+  /* ---------- Stop-hold ring (appears when you're stopped at a stop bar) ---------- */
+  .stop-hold {
+    position: fixed; bottom: 200px; left: 50%; transform: translateX(-50%); z-index: 7;
+    display: none; flex-direction: column; align-items: center; gap: 6px;
+    padding: 12px 18px; border-radius: 14px;
+    background: rgba(255,255,255,0.96); border: 1px solid var(--hairline); box-shadow: var(--shadow);
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .stop-hold.show { display: flex; }
+  .stop-hold .ring-wrap { position: relative; width: 56px; height: 56px; }
+  .stop-hold svg { transform: rotate(-90deg); }
+  .stop-hold .ring-bg { stroke: #e6dfcc; }
+  .stop-hold .ring-fg { stroke: var(--signal); stroke-dasharray: 169.6; transition: stroke-dashoffset 0.12s linear; }
+  .stop-hold .count { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 22px; color: var(--ink-50); }
+  .stop-hold .label { font-size: 10px; letter-spacing: 0.18em; color: var(--ink-500); font-weight: 700; }
+
+  /* ---------- Rubric list on end screen ---------- */
+  .rubric-list { text-align: left; margin: 4px 0 18px; display: flex; flex-direction: column; gap: 6px; }
+  .rubric-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: 8px; background: var(--bg-3); border: 1px solid var(--hairline); }
+  .rubric-row .mark { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 800; font-size: 13px; color: #fff; margin-top: 1px; }
+  .rubric-row.pass .mark { background: var(--signal); }
+  .rubric-row.fail .mark { background: var(--danger); }
+  .rubric-row.pending .mark { background: #94a3b8; }
+  .rubric-row .body { flex: 1; }
+  .rubric-row .lbl { font-size: 13.5px; color: var(--ink-50); font-weight: 600; line-height: 1.35; }
+  .rubric-row .det { font-size: 11.5px; color: var(--ink-500); margin-top: 2px; font-family: 'Inter', system-ui, sans-serif; letter-spacing: 0.05em; }
+  .rubric-row .pts { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--ink-300); letter-spacing: 0.08em; }
+  .rubric-row.fail .pts { color: var(--danger); }
+  .rubric-row.pass .pts { color: var(--signal-deep); }
+
+  /* Boot */
+  #boot { position: fixed; inset: 0; background: var(--bg-1); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; gap: 14px; }
+  #boot .ring { width: 50px; height: 50px; border: 3px solid var(--hairline); border-top-color: var(--signal); border-radius: 50%; animation: spin 0.9s linear infinite; }
+  #boot .lbl { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--signal-deep); letter-spacing: 0.20em; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #unsupported { display: none; padding: 20px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <div class="ring"></div>
+  <div class="lbl">▸ INITIALIZING SIMULATOR</div>
+  <div id="unsupported"><strong>WebGL unavailable.</strong><br><a href="dashboard.html" style="color: var(--signal);">Back to dashboard →</a></div>
+</div>
+
+<div id="stage"></div>
+
+<div class="hud-overlay">
+  <div class="hud-top-left">
+    <a class="hud-back" href="roadmap.html">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      EXIT
+    </a>
+    <span class="hud-pill" id="scenarioBadge">FREE DRIVE</span>
+    <span class="hud-pill signal" id="checkpointBadge" style="display:none;">CHECKPOINTS 0 / 0</span>
+  </div>
+
+  <div class="hud-top-right">
+    <select id="scenarioPicker" class="hud-pill">
+      <option value="freedrive">▸ Free Drive</option>
+      <option value="parking">▸ Lot Warm-up (3 stops)</option>
+      <option value="parallel_park">▸ Parallel Park (guided)</option>
+      <option value="three_point">▸ 3-Point Turn (guided)</option>
+      <option value="pedestrian">▸ Pedestrian Pop-Up</option>
+      <option value="yellow">▸ Late-Yellow Decision</option>
+      <option value="lane_change">▸ SMOG Lane Change</option>
+      <option value="four_way">▸ 4-Way Stop</option>
+      <option value="wet_weather">▸ Wet Weather</option>
+      <option value="skid">▸ Skid Recovery</option>
+      <option value="checkpoint">▸ Checkpoint Run</option>
+      <option value="finaltest" data-final="1">▸ Road Test (final)</option>
+    </select>
+    <button class="hud-pill" id="cameraBtn">CAM · 3RD</button>
+    <button class="hud-pill" id="restartBtn">RESTART</button>
+  </div>
+
+  <div class="hud-bottom-left">
+    <div class="speed-block">
+      <div class="lbl">Speed</div>
+      <div class="val" id="speedVal">000</div>
+      <div class="unit">MPH</div>
+    </div>
+    <div class="gear-block">
+      <div class="gear" id="gear-r">R</div>
+      <div class="gear" id="gear-n">N</div>
+      <div class="gear active" id="gear-d">D</div>
+    </div>
+    <div class="speed-block" style="margin-left: 12px;">
+      <div class="lbl">Car</div>
+      <div style="font-family: 'Inter', system-ui, sans-serif;font-weight:700;font-size:18px;color:var(--ink-50);" id="carName">Origin Sedan</div>
+      <div class="unit" id="carClass">CLASS A · LVL 1</div>
+    </div>
+  </div>
+
+  <div class="pedal-stack">
+    <div>
+      <div class="pedal t"><div class="pedal-fill" id="throttleFill" style="height: 0%;"></div></div>
+      <div class="pedal-lbl">THR · W</div>
+    </div>
+    <div>
+      <div class="pedal b"><div class="pedal-fill" id="brakeFill" style="height: 0%;"></div></div>
+      <div class="pedal-lbl">BR · S</div>
+    </div>
+  </div>
+
+  <div class="reticle" id="reticle"></div>
+  <canvas class="minimap" id="minimap" width="180" height="180"></canvas>
+
+  <!-- Step-by-step guide (top center) -->
+  <div class="guide-bar" id="guideBar">
+    <div class="step-num" id="guideStep">1</div>
+    <div class="text">
+      <span id="guideText">Press W to start driving.</span>
+      <span class="small" id="guideHint">W/↑ accelerate · S/↓ brake · A D / ← → steer · C camera</span>
+    </div>
+  </div>
+
+  <!-- Turn signals -->
+  <div class="signal-bay">
+    <div class="signal-light" id="signalLeft" title="Left turn signal (Q)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    </div>
+    <div class="signal-light" id="signalRight" title="Right turn signal (E)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </div>
+  </div>
+
+  <!-- Speed-limit sign -->
+  <div class="speed-limit" id="speedLimit">
+    <div class="top">SPEED</div>
+    <div class="top2">LIMIT</div>
+    <div class="num" id="speedLimitNum">30</div>
+  </div>
+
+  <!-- Stop-hold countdown ring (shown only when player is stopped at a stop bar) -->
+  <div class="stop-hold" id="stopHold">
+    <div class="ring-wrap">
+      <svg width="56" height="56" viewBox="0 0 60 60">
+        <circle class="ring-bg" cx="30" cy="30" r="27" stroke-width="5" fill="none"/>
+        <circle class="ring-fg" id="stopHoldFg" cx="30" cy="30" r="27" stroke-width="5" fill="none" stroke-linecap="round" stroke-dashoffset="169.6"/>
+      </svg>
+      <div class="count" id="stopHoldCount">3</div>
+    </div>
+    <div class="label">HOLD STOP</div>
+  </div>
+
+  <!-- Compass arrow pointing at the active checkpoint -->
+  <div class="compass" id="compass">
+    <div class="arrow" id="compassArrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l8 16-8-4-8 4z"/></svg>
+    </div>
+    <span>NEXT</span>
+    <span class="dist" id="compassDist">0 m</span>
+  </div>
+
+  <!-- First-time onboarding overlay -->
+  <div class="onboard-mask" id="onboardMask">
+    <div class="onboard-card">
+      <h2>Welcome to your simulator.</h2>
+      <p>This is a 3D driving practice ground. Pick a scenario in the top-right when you're ready — Free Drive to roam, or Checkpoint Run / Road Test for guided exercises.</p>
+      <div class="onboard-steps">
+        <div class="onboard-step"><div class="num">1</div><div class="body"><strong>Keyboard:</strong> <span class="keys">W</span> or <span class="keys">↑</span> = accelerate. <span class="keys">S</span> or <span class="keys">↓</span> = brake. <span class="keys">A</span> <span class="keys">D</span> or <span class="keys">←</span> <span class="keys">→</span> = steer. <span class="keys">Q</span> = left signal. <span class="keys">E</span> = right signal.</div></div>
+        <div class="onboard-step"><div class="num">⚑</div><div class="body"><strong>You're being graded.</strong> Each scenario checks for things like a full 3-second stop at the line, signalling before turns or lane changes, staying under the speed-limit sign on the left, and not hitting anything. The end card shows what you missed.</div></div>
+        <div class="onboard-step"><div class="num">2</div><div class="body"><strong>Touch (mobile):</strong> tap and hold the <span class="keys">THR</span> bar (right side) to accelerate, the <span class="keys">BR</span> bar to brake. Drag a finger left/right anywhere on the screen to steer.</div></div>
+        <div class="onboard-step"><div class="num">3</div><div class="body">Follow the <strong style="color: var(--signal-deep);">green flagpoles</strong>. The compass at the bottom of the screen always points at your next target. The coach card on the bottom-left tells you what to do next.</div></div>
+        <div class="onboard-step"><div class="num">4</div><div class="body"><strong>Camera:</strong> <span class="keys">C</span> toggles 1st/3rd person. <span class="keys">R</span> restarts the current scenario. Stuck? Hit <span class="keys">EXIT</span> top-left to go back.</div></div>
+      </div>
+      <button class="btn btn-primary btn-lg btn-block" onclick="closeOnboarding()">Got it — let's drive →</button>
+    </div>
+  </div>
+
+  <!-- Coach context tips -->
+  <div class="coach-card" id="coachCard">
+    <div class="icon" id="coachIcon">💡</div>
+    <div class="body">
+      <div class="tit" id="coachTit">COACH</div>
+      <div class="msg" id="coachMsg">—</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="end-overlay" id="endOverlay">
+    <div class="end-card">
+      <h2 id="endTitle">Run complete.</h2>
+      <p id="endBlurb">Score saved to your account.</p>
+      <div class="end-stats">
+        <div class="end-stat"><div class="num" id="endTime">0s</div><div class="lbl">Time</div></div>
+        <div class="end-stat"><div class="num" id="endTopSpeed">0</div><div class="lbl">Top mph</div></div>
+        <div class="end-stat"><div class="num" id="endXp">+0</div><div class="lbl">XP</div></div>
+      </div>
+      <div class="rubric-list" id="rubricList"></div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button class="btn btn-secondary" onclick="document.getElementById('endOverlay').classList.remove('show'); restart();">Drive again</button>
+        <a class="btn btn-primary" href="roadmap.html">Back to path →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+
+<script src="scripts/api.js"></script>
+<script src="scripts/app.js"></script>
+<script src="scripts/cars.js"></script>
+<script src="scripts/curriculum.js"></script>
+<script src="scripts/curriculum_es.js"></script>
+<script src="scripts/shorts.js"></script>
+<script src="scripts/topics.js"></script>
+
+<script type="module">
+  import * as THREE from 'three';
+
+  // ---------- Boot guards ----------
+  const bootEl = document.getElementById('boot');
+  const unsupp = document.getElementById('unsupported');
+  function fail(msg) {
+    bootEl.style.display = 'flex';
+    bootEl.querySelector('.ring').style.display = 'none';
+    bootEl.querySelector('.lbl').textContent = '✕ ' + msg.toUpperCase();
+    unsupp.style.display = 'block';
+  }
+
+  // Local state hydrate (server → local) so we know level + selected car.
+  try { if (window.Goodlane) await APEX.refresh(); } catch (e) {}
+  const state = (window.Goodlane ? APEX.load() : {}) || {};
+  const userLevel = state.level || 1;
+
+  // Pick the player's selected (and unlocked) car. Default = highest unlocked.
+  let selectedCarId = 'sedan-base';
+  try {
+    if (window.APEX_API) {
+      const owned = await APEX_API.me().then(() => APEX_API).catch(() => null);
+    }
+  } catch (e) {}
+  // Try server endpoint, fall back to client-side level check
+  try {
+    if (window.APEX_API) {
+      const r = await fetch('/api/cars/owned', { credentials: 'include' });
+      if (r.ok) {
+        const data = await r.json();
+        selectedCarId = data.selected || selectedCarId;
+        // If selected car not yet unlocked at this level, pick highest unlocked
+        const sel = (window.APEX_CARS || []).find(c => c.id === selectedCarId);
+        if (!sel || data.level < sel.level) {
+          const unlockedSorted = (window.APEX_CARS || []).filter(c => data.level >= c.level).sort((a,b) => b.level - a.level);
+          if (unlockedSorted.length) selectedCarId = unlockedSorted[0].id;
+        }
+      }
+    }
+  } catch (e) {}
+  const carDef = window.APEX_CAR_BY_ID[selectedCarId] || window.APEX_CARS[0];
+
+  document.getElementById('carName').textContent = carDef.name;
+  document.getElementById('carClass').textContent = `CLASS ${carDef.class} · LVL ${carDef.level}`;
+
+  // ---------- Renderer ----------
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  } catch (e) { fail('WebGL not available'); throw e; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0xcfddea, 1);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  document.getElementById('stage').appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  // Soft daytime haze — color-matches the horizon
+  scene.fog = new THREE.FogExp2(0xc7d3df, 0.0055);
+
+  // ---------- Camera ----------
+  const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 800);
+  let cameraMode = 'third';
+
+  // ---------- Lighting (clear morning) ----------
+  const hemi = new THREE.HemisphereLight(0xc8dff5, 0x6e7461, 0.85);
+  scene.add(hemi);
+
+  const sun = new THREE.DirectionalLight(0xfff4d6, 1.05);
+  sun.position.set(120, 180, 80);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.near = 1;
+  sun.shadow.camera.far = 400;
+  sun.shadow.camera.left = -120;
+  sun.shadow.camera.right = 120;
+  sun.shadow.camera.top = 120;
+  sun.shadow.camera.bottom = -120;
+  scene.add(sun);
+
+  // Sky dome — soft blue overhead, warm cream at horizon
+  const skyGeom = new THREE.SphereGeometry(400, 32, 16);
+  const skyMat = new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false,
+    uniforms: {
+      topColor: { value: new THREE.Color(0x9bbcd8) },
+      midColor: { value: new THREE.Color(0xc6d6e1) },
+      botColor: { value: new THREE.Color(0xeadfc6) },
+    },
+    vertexShader: 'varying vec3 vWorld; void main(){ vWorld = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+    fragmentShader: 'varying vec3 vWorld; uniform vec3 topColor; uniform vec3 midColor; uniform vec3 botColor; void main(){ float h = normalize(vWorld).y * 0.5 + 0.5; vec3 c = mix(botColor, midColor, smoothstep(0.0, 0.5, h)); c = mix(c, topColor, smoothstep(0.5, 1.0, h)); gl_FragColor = vec4(c, 1.0); }'
+  });
+  scene.add(new THREE.Mesh(skyGeom, skyMat));
+
+  // ---------- Ground (warm grass) ----------
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(800, 800, 1, 1),
+    new THREE.MeshStandardMaterial({ color: 0x7d8c6d, roughness: 1, metalness: 0 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // ---------- Roads ----------
+  // Build a 4-cell grid of streets. Each road is 8m wide. Block spacing 60m.
+  const ROAD_WIDTH = 9;
+  const BLOCK = 60;
+  const roadGroup = new THREE.Group();
+  scene.add(roadGroup);
+
+  function makeRoadStrip(length, axis) {
+    const w = ROAD_WIDTH;
+    const geo = axis === 'x' ? new THREE.PlaneGeometry(length, w) : new THREE.PlaneGeometry(w, length);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x4a4f57, roughness: 0.92 });
+    const m = new THREE.Mesh(geo, mat);
+    m.rotation.x = -Math.PI / 2;
+    m.position.y = 0.02;
+    m.receiveShadow = true;
+    return m;
+  }
+  function laneLines(length, axis) {
+    // Bolder, more visible lane painting:
+    //   - thick dashed yellow center line
+    //   - solid white edge lines on both sides
+    //   - additional dashed white lane divider midway out (suggests 2 lanes per side)
+    const grp = new THREE.Group();
+    const dashCount = Math.floor(length / 5);
+    const yellowGeo = axis === 'x' ? new THREE.PlaneGeometry(3.2, 0.32) : new THREE.PlaneGeometry(0.32, 3.2);
+    const yellowMat = new THREE.MeshBasicMaterial({ color: 0xfde68a });
+    for (let i = 0; i < dashCount; i++) {
+      const d = new THREE.Mesh(yellowGeo, yellowMat);
+      d.rotation.x = -Math.PI / 2;
+      const t = -length/2 + (i + 0.5) * 5;
+      if (axis === 'x') d.position.set(t, 0.04, 0); else d.position.set(0, 0.04, t);
+      grp.add(d);
+    }
+    // Solid white edge lines (the painted edge that hugs the curb)
+    const edgeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const edgeOff = ROAD_WIDTH/2 - 0.5;
+    const edgeGeo = axis === 'x' ? new THREE.PlaneGeometry(length, 0.26) : new THREE.PlaneGeometry(0.26, length);
+    const e1 = new THREE.Mesh(edgeGeo, edgeMat); e1.rotation.x = -Math.PI / 2;
+    const e2 = new THREE.Mesh(edgeGeo, edgeMat); e2.rotation.x = -Math.PI / 2;
+    if (axis === 'x') { e1.position.set(0, 0.04,  edgeOff); e2.position.set(0, 0.04, -edgeOff); }
+    else              { e1.position.set( edgeOff, 0.04, 0); e2.position.set(-edgeOff, 0.04, 0); }
+    grp.add(e1); grp.add(e2);
+    return grp;
+  }
+  // 5 horizontal + 5 vertical streets
+  for (let i = -2; i <= 2; i++) {
+    const r = makeRoadStrip(BLOCK * 5, 'x');
+    r.position.set(0, 0.02, i * BLOCK);
+    roadGroup.add(r);
+    const lanes = laneLines(BLOCK * 5, 'x');
+    lanes.position.set(0, 0, i * BLOCK);
+    roadGroup.add(lanes);
+
+    const v = makeRoadStrip(BLOCK * 5, 'z');
+    v.position.set(i * BLOCK, 0.02, 0);
+    roadGroup.add(v);
+    const lanes2 = laneLines(BLOCK * 5, 'z');
+    lanes2.position.set(i * BLOCK, 0, 0);
+    roadGroup.add(lanes2);
+  }
+
+  // (No more neon curb accents — natural road edges now.)
+
+  // ---------- Buildings ----------
+  const buildingGeo = new THREE.BoxGeometry(1, 1, 1);
+  const buildingPalette = [0xd6cdb6, 0xc4b994, 0xb09375, 0x9a8268, 0x8a8e9a, 0x6e7686, 0xb5b3a8, 0xc8a87a];
+  // AABB list of building footprints for collision detection — populated by spawnBuildings().
+  const buildingAABBs = [];
+  function spawnBuildings() {
+    for (let bx = -2; bx <= 2; bx++) {
+      for (let bz = -2; bz <= 2; bz++) {
+        const onRoadX = Math.abs(bx) <= 0;
+        const onRoadZ = Math.abs(bz) <= 0;
+        if (onRoadX && onRoadZ) continue;
+        const cx = bx * BLOCK, cz = bz * BLOCK;
+        for (const [qx, qz] of [[1,1],[-1,1],[1,-1],[-1,-1]]) {
+          const w = 6 + Math.random() * 12;
+          const d = 6 + Math.random() * 12;
+          const h = 8 + Math.random() * 22;
+          // Offset the building so its EDGE clears the road by at least 1.5m.
+          // Previous version used a fixed 4m offset which let max-width buildings
+          // (18m wide / 9m half) intrude into the 9m-wide road.
+          const minOffsetX = ROAD_WIDTH / 2 + w / 2 + 1.5;
+          const minOffsetZ = ROAD_WIDTH / 2 + d / 2 + 1.5;
+          const px = cx + qx * (minOffsetX + Math.random() * 8);
+          const pz = cz + qz * (minOffsetZ + Math.random() * 8);
+          const baseColor = buildingPalette[Math.floor(Math.random() * buildingPalette.length)];
+          const mat = new THREE.MeshStandardMaterial({
+            color: baseColor,
+            roughness: 0.78, metalness: 0.05,
+          });
+          const b = new THREE.Mesh(buildingGeo, mat);
+          b.scale.set(w, h, d);
+          b.position.set(px, h/2, pz);
+          b.castShadow = true; b.receiveShadow = true;
+          scene.add(b);
+          // Record footprint for collision (with a small buffer so the car doesn't visually intersect the wall).
+          buildingAABBs.push({ minX: px - w/2 - 0.4, maxX: px + w/2 + 0.4, minZ: pz - d/2 - 0.4, maxZ: pz + d/2 + 0.4 });
+
+          // ---- Variation: 1-in-3 buildings get a stepped roof ----
+          if (Math.random() < 0.34) {
+            const topW = w * (0.55 + Math.random() * 0.25);
+            const topD = d * (0.55 + Math.random() * 0.25);
+            const topH = 2 + Math.random() * 4;
+            const top = new THREE.Mesh(buildingGeo, mat);
+            top.scale.set(topW, topH, topD);
+            top.position.set(px + (Math.random() - 0.5) * (w - topW) * 0.6, h + topH / 2, pz + (Math.random() - 0.5) * (d - topD) * 0.6);
+            top.castShadow = true;
+            scene.add(top);
+          }
+
+          // ---- Window grid (proper rectangles, not strips) ----
+          // Cool dark glass with a tiny variation per window so it doesn't look like a barcode.
+          const winRows = Math.max(2, Math.floor(h / 3));
+          const winCols = Math.max(2, Math.floor(Math.min(w, d) / 2.4));
+          const winMat = new THREE.MeshStandardMaterial({ color: 0x2c3645, roughness: 0.20, metalness: 0.40 });
+          const litMat = new THREE.MeshStandardMaterial({ color: 0x4d5468, emissive: 0xffd599, emissiveIntensity: 0.08, roughness: 0.30 });
+          function placeWindowsOnFace(faceW, faceH, baseCenter, normalAxis, offsetSign) {
+            const winW = (faceW / winCols) * 0.55;
+            const winH = 1.3;
+            for (let r = 0; r < winRows; r++) {
+              for (let c = 0; c < winCols; c++) {
+                const lit = Math.random() < 0.18;
+                const wm = new THREE.Mesh(new THREE.PlaneGeometry(winW, winH), lit ? litMat : winMat);
+                const cx = (c - (winCols - 1) / 2) * (faceW / winCols);
+                const cy = 1.6 + r * 3;
+                if (normalAxis === 'z') {
+                  wm.position.set(baseCenter[0] + cx, cy, baseCenter[1] + offsetSign * 0.005);
+                  if (offsetSign < 0) wm.rotation.y = Math.PI;
+                } else {
+                  wm.position.set(baseCenter[0] + offsetSign * 0.005, cy, baseCenter[1] + cx);
+                  wm.rotation.y = offsetSign > 0 ? Math.PI / 2 : -Math.PI / 2;
+                }
+                scene.add(wm);
+              }
+            }
+          }
+          placeWindowsOnFace(w, h, [px, pz + d/2], 'z',  1);
+          placeWindowsOnFace(w, h, [px, pz - d/2], 'z', -1);
+          placeWindowsOnFace(d, h, [px + w/2, pz], 'x',  1);
+          placeWindowsOnFace(d, h, [px - w/2, pz], 'x', -1);
+        }
+      }
+    }
+  }
+  spawnBuildings();
+
+  // ---------- Player car ----------
+  // Sculpted profile: an extruded silhouette across the car's WIDTH gives the
+  // hood-slope + roof-arc curves you'd expect on a real car. Way less boxy than
+  // stacking BoxGeometry primitives.
+  function makeCar(def) {
+    const grp = new THREE.Group();
+    const { length, width, height, hood, trunk, cabinHeight } = def.body;
+    const bodyColor = def.color;
+    const accent = def.accentColor;
+
+    // ---- 1. Sculpted body via ExtrudeGeometry of a side profile ----
+    // Profile drawn in the XZ plane (X=length, Z=height), then extruded along Y for width.
+    const halfL = length / 2;
+    const lowerH = height * 0.55;       // belt-line height (where doors meet glass)
+    const cabinH = height * cabinHeight; // greenhouse height
+    const ridgeH = lowerH + cabinH;      // roof height
+
+    const profile = new THREE.Shape();
+    profile.moveTo(-halfL,            0);
+    profile.lineTo( halfL,            0);
+    profile.lineTo( halfL,            lowerH * 0.78);   // hood front lip
+    profile.bezierCurveTo(
+      halfL - hood * 0.35, lowerH * 1.15,  // hood slope cp1
+      halfL - hood * 0.65, lowerH + cabinH * 0.55, // windshield base cp2
+      halfL - hood,        ridgeH          // top of windshield
+    );
+    profile.lineTo(-halfL + trunk,    ridgeH);          // roof line
+    profile.bezierCurveTo(
+      -halfL + trunk * 0.55, lowerH + cabinH * 0.55,
+      -halfL + trunk * 0.25, lowerH * 1.10,
+      -halfL,                lowerH * 0.78              // trunk lid
+    );
+    profile.lineTo(-halfL,            0);
+
+    const extrudeOpts = {
+      steps: 1, depth: width, bevelEnabled: true,
+      bevelThickness: 0.10, bevelSize: 0.10, bevelOffset: 0, bevelSegments: 3,
+    };
+    const bodyGeo = new THREE.ExtrudeGeometry(profile, extrudeOpts);
+    bodyGeo.translate(0, 0, -width / 2);
+    bodyGeo.rotateY(Math.PI / 2);            // align extrude axis to vehicle width
+    const chassisMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.32, metalness: 0.55 });
+    const body = new THREE.Mesh(bodyGeo, chassisMat);
+    body.position.y = 0.32;
+    body.castShadow = true; body.receiveShadow = true;
+    grp.add(body);
+
+    // ---- 2. Cabin/greenhouse — separate inset for the glass ----
+    const cabinW = width * 0.86;
+    const cabinL = length - hood - trunk;
+    const cabinMat = new THREE.MeshStandardMaterial({ color: 0x161b25, roughness: 0.20, metalness: 0.20 });
+    const cabin = new THREE.Mesh(
+      new THREE.BoxGeometry(cabinW, cabinH * 0.92, cabinL),
+      cabinMat
+    );
+    cabin.position.set(0, 0.32 + lowerH + (cabinH * 0.92) / 2 - 0.06, (trunk - hood) / 2);
+    cabin.castShadow = true;
+    // Bevel by scaling slightly with material edge softening
+    grp.add(cabin);
+
+    // ---- 3. Windshield + rear glass (sloped planes) ----
+    const glassMat = new THREE.MeshStandardMaterial({
+      color: 0xa6c4d8, roughness: 0.06, metalness: 0.45,
+      transparent: true, opacity: 0.62,
+    });
+    const wsGeo = new THREE.PlaneGeometry(cabinW * 0.95, cabinH * 0.88);
+    const ws = new THREE.Mesh(wsGeo, glassMat);
+    ws.position.set(0, cabin.position.y, cabin.position.z + cabinL / 2 + 0.005);
+    ws.rotation.x = THREE.MathUtils.degToRad(-18);
+    grp.add(ws);
+    const rear = new THREE.Mesh(wsGeo, glassMat);
+    rear.position.set(0, cabin.position.y, cabin.position.z - cabinL / 2 - 0.005);
+    rear.rotation.y = Math.PI;
+    rear.rotation.x = THREE.MathUtils.degToRad(-18);
+    grp.add(rear);
+
+    // Side windows (left + right) — narrower planes
+    const sideGeo = new THREE.PlaneGeometry(cabinL * 0.92, cabinH * 0.68);
+    const sideL = new THREE.Mesh(sideGeo, glassMat);
+    sideL.position.set(-cabinW / 2 - 0.005, cabin.position.y, cabin.position.z);
+    sideL.rotation.y = -Math.PI / 2;
+    grp.add(sideL);
+    const sideR = new THREE.Mesh(sideGeo, glassMat);
+    sideR.position.set(cabinW / 2 + 0.005, cabin.position.y, cabin.position.z);
+    sideR.rotation.y = Math.PI / 2;
+    grp.add(sideR);
+
+    // ---- 4. Accent stripe — thinner, painted-on look (no emissive glow) ----
+    const stripeGeo = new THREE.BoxGeometry(width * 1.005, height * 0.10, length * 0.92);
+    const stripeMat = new THREE.MeshStandardMaterial({ color: accent, roughness: 0.45, metalness: 0.30 });
+    const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+    stripe.position.set(0, 0.32 + lowerH * 0.45, 0);
+    grp.add(stripe);
+
+    // ---- 5. Headlights — recessed circles into the front fascia ----
+    const headlightY = 0.32 + lowerH * 0.55;
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff8d0, emissiveIntensity: 1.5 });
+    const headGeo = new THREE.CylinderGeometry(0.14, 0.14, 0.06, 16);
+    headGeo.rotateX(Math.PI / 2);
+    const hL = new THREE.Mesh(headGeo, headMat); hL.position.set(-width/2 + 0.36, headlightY, length/2 - 0.02); grp.add(hL);
+    const hR = new THREE.Mesh(headGeo, headMat); hR.position.set( width/2 - 0.36, headlightY, length/2 - 0.02); grp.add(hR);
+    const headLight = new THREE.SpotLight(0xfff5d0, 1.4, 60, Math.PI / 6, 0.4, 1.2);
+    headLight.position.set(0, headlightY + 0.4, length/2);
+    grp.add(headLight);
+    headLight.target.position.set(0, 0, 30);
+    grp.add(headLight.target);
+
+    // ---- 6. Brake lights — slim horizontal bars ----
+    const brakeMat = new THREE.MeshStandardMaterial({ color: 0x2a0506, emissive: 0xff1a1a, emissiveIntensity: 0.0 });
+    const brakeGeo = new THREE.BoxGeometry(0.36, 0.08, 0.04);
+    const bL = new THREE.Mesh(brakeGeo, brakeMat); bL.position.set(-width/2 + 0.36, headlightY + 0.05, -length/2 + 0.01); grp.add(bL);
+    const bR = new THREE.Mesh(brakeGeo, brakeMat); bR.position.set( width/2 - 0.36, headlightY + 0.05, -length/2 + 0.01); grp.add(bR);
+
+    // ---- 6b. Turn-signal LEDs — amber squares at all 4 corners ----
+    const signalGeo = new THREE.BoxGeometry(0.14, 0.10, 0.04);
+    function makeSignal(x, y, z, faceForward) {
+      const m = new THREE.MeshStandardMaterial({ color: 0x3a2a0a, emissive: 0xfbbf24, emissiveIntensity: 0.0 });
+      const mesh = new THREE.Mesh(signalGeo, m);
+      mesh.position.set(x, y, z);
+      if (!faceForward) mesh.rotation.y = Math.PI;
+      grp.add(mesh);
+      return m;
+    }
+    const sigFL = makeSignal(-width/2 + 0.06, headlightY,  length/2 + 0.005, true);   // front-left
+    const sigFR = makeSignal( width/2 - 0.06, headlightY,  length/2 + 0.005, true);   // front-right
+    const sigRL = makeSignal(-width/2 + 0.06, headlightY, -length/2 - 0.005, false);  // rear-left
+    const sigRR = makeSignal( width/2 - 0.06, headlightY, -length/2 - 0.005, false);  // rear-right
+
+    // ---- 7. Wheel arches (curved fender bulges over each wheel) ----
+    const archMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.35, metalness: 0.5 });
+    function addArch(x, z) {
+      const archGeo = new THREE.TorusGeometry(0.50, 0.10, 8, 18, Math.PI);
+      const arch = new THREE.Mesh(archGeo, archMat);
+      arch.rotation.y = Math.PI / 2;
+      arch.position.set(x, 0.55, z);
+      arch.castShadow = true;
+      grp.add(arch);
+    }
+    addArch(-width/2 - 0.02,  length/2 - 0.7);
+    addArch( width/2 + 0.02,  length/2 - 0.7);
+    addArch(-width/2 - 0.02, -length/2 + 0.7);
+    addArch( width/2 + 0.02, -length/2 + 0.7);
+
+    // ---- 8. Wheels — alloy rim look (two-cylinder stack) ----
+    const tireGeo = new THREE.CylinderGeometry(0.40, 0.40, 0.30, 20);
+    tireGeo.rotateZ(Math.PI / 2);
+    const tireMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0d, roughness: 0.85, metalness: 0.05 });
+    const rimGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.32, 12);
+    rimGeo.rotateZ(Math.PI / 2);
+    const rimMat = new THREE.MeshStandardMaterial({ color: 0xb8bdc6, roughness: 0.35, metalness: 0.85 });
+    const wheelPositions = [
+      { x: -width/2 - 0.05, z:  length/2 - 0.7, fl: true },
+      { x:  width/2 + 0.05, z:  length/2 - 0.7, fl: true },
+      { x: -width/2 - 0.05, z: -length/2 + 0.7, fl: false },
+      { x:  width/2 + 0.05, z: -length/2 + 0.7, fl: false },
+    ];
+    const wheels = [];
+    wheelPositions.forEach(p => {
+      // Each wheel sits inside a pivot group. The pivot rotates Y for steering;
+      // the wheel mesh inside spins on its local Z axis (the cylinder's natural axis,
+      // since the geometry was already rotateZ'd to lay flat).
+      const pivot = new THREE.Group();
+      pivot.position.set(p.x, 0.40, p.z);
+      const tire = new THREE.Mesh(tireGeo, tireMat);
+      const rim = new THREE.Mesh(rimGeo, rimMat);
+      tire.castShadow = true;
+      pivot.add(tire); pivot.add(rim);
+      grp.add(pivot);
+      wheels.push({ mesh: tire, pivot: p.fl ? pivot : null, isFront: p.fl, baseZ: p.z });
+    });
+
+    return {
+      group: grp, body, cabin, headLight,
+      brakeMats: [bL.material, bR.material],
+      signalLeftMats: [sigFL, sigRL],
+      signalRightMats: [sigFR, sigRR],
+      wheels, length, width, height
+    };
+  }
+
+  const car = makeCar(carDef);
+  scene.add(car.group);
+
+  // ---------- Checkpoints (for run modes) ----------
+  let checkpoints = [];
+  function makeCheckpoint(x, z, idx, isFinal = false) {
+    const grp = new THREE.Group();
+    const baseColor = isFinal ? 0xb45309 : 0x0e7c5d;
+    const ringGeo = new THREE.TorusGeometry(3.0, 0.22, 8, 32);
+    const mat = new THREE.MeshStandardMaterial({ color: baseColor, emissive: baseColor, emissiveIntensity: 0.9 });
+    const ring = new THREE.Mesh(ringGeo, mat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.set(0, 0.6, 0);
+    grp.add(ring);
+    const inner = new THREE.Mesh(new THREE.CircleGeometry(2.6, 24), new THREE.MeshBasicMaterial({ color: baseColor, transparent: true, opacity: 0.20 }));
+    inner.rotation.x = -Math.PI / 2;
+    inner.position.y = 0.05;
+    grp.add(inner);
+    // Vertical pole so it's easy to spot from far
+    const poleGeo = new THREE.CylinderGeometry(0.06, 0.06, 4.5, 8);
+    const pole = new THREE.Mesh(poleGeo, new THREE.MeshStandardMaterial({ color: 0xffffff }));
+    pole.position.set(0, 2.25, 0);
+    grp.add(pole);
+    const flag = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.9), new THREE.MeshStandardMaterial({ color: baseColor, side: THREE.DoubleSide }));
+    flag.position.set(0.7, 4.1, 0);
+    grp.add(flag);
+    grp.position.set(x, 0, z);
+    grp.userData = { idx, hit: false, isFinal };
+    scene.add(grp);
+    return grp;
+  }
+
+  // ---------- GUIDED-SCENARIO STATE ----------
+  // Each guided scenario has: a list of "step gates" (target position + radius)
+  // and a per-step voice/tip line. As the car enters each gate, the next step
+  // unlocks. This produces the "follow the voice tutor" feel.
+  let scenarioSteps = [];     // [{ pos: {x,z}, radius, en, es, hint, voice }]
+  let scenarioStepIdx = 0;
+  let scenarioMarkers = [];   // visual cones / boxes added per scenario
+  let parkedCars = [];        // collision boxes added by parallel-park
+
+  // ---------- DRIVING RUBRIC ----------
+  // Each scenario seeds a rubric of named checks; the tick loop marks pass/fail.
+  // The end card shows the breakdown; the score is the sum of passed point values.
+  let rubric = [];            // [{ id, label_en, label_es, points, status, detail_en, detail_es }]
+  let speedLimitMph = 30;
+  let stopBar = null;         // { x, z, holdMs, satisfied } — when active, a "must stop" zone
+  let stopHoldStart = null;   // ms when speed first dropped near stopBar (null = not started)
+  let stopBarOverrunWarned = false;
+  function addCheck(id, label_en, label_es, points) {
+    rubric.push({ id, label_en, label_es, points, status: 'pending' });
+  }
+  function setCheck(id, status, detail_en, detail_es) {
+    const it = rubric.find(r => r.id === id);
+    if (!it) return;
+    // 'fail' is sticky — once you blow it, you can't un-blow it. 'pass' upgrades pending.
+    if (it.status === 'fail') return;
+    it.status = status;
+    if (detail_en) it.detail_en = detail_en;
+    if (detail_es) it.detail_es = detail_es;
+  }
+  function getCheck(id) { return rubric.find(r => r.id === id); }
+  function flashViolation(title_en, title_es, msg_en, msg_es) {
+    const lang = (window.APEX_TOPICS && window.APEX_TOPICS.lang()) || 'en';
+    const t = lang === 'es' ? title_es : title_en;
+    const m = lang === 'es' ? msg_es : msg_en;
+    showCoach('⚠️', t, m, 'bad');
+  }
+  function clearScenarioMarkers() {
+    scenarioMarkers.forEach(m => scene.remove(m));
+    scenarioMarkers = [];
+    parkedCars = [];
+  }
+  function addCone(x, z, color = 0xff7a3c) {
+    const cone = new THREE.Mesh(
+      new THREE.ConeGeometry(0.35, 1.1, 12),
+      new THREE.MeshStandardMaterial({ color })
+    );
+    cone.position.set(x, 0.55, z); cone.castShadow = true;
+    scene.add(cone); scenarioMarkers.push(cone);
+    return cone;
+  }
+  function addParkedCar(x, z, rotY = 0, color = 0x8a8f99) {
+    const grp = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.3, 4.5), new THREE.MeshStandardMaterial({ color, roughness: 0.5 }));
+    body.position.y = 0.85; body.castShadow = true;
+    grp.add(body);
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.85, 2.4), new THREE.MeshStandardMaterial({ color: 0x222831 }));
+    cabin.position.set(0, 1.85, -0.2);
+    grp.add(cabin);
+    grp.position.set(x, 0, z); grp.rotation.y = rotY;
+    scene.add(grp); scenarioMarkers.push(grp);
+    // Add to AABB collision list (rotation 0 here — parallel-park layout uses straight cars)
+    const halfL = 2.4, halfW = 1.1;
+    buildingAABBs.push({ minX: x - halfW, maxX: x + halfW, minZ: z - halfL, maxZ: z + halfL });
+    parkedCars.push({ x, z, halfL, halfW });
+    return grp;
+  }
+  function addCurb(x, z, w, d, color = 0xc8ccd2) {
+    const g = new THREE.Mesh(new THREE.BoxGeometry(w, 0.18, d), new THREE.MeshStandardMaterial({ color }));
+    g.position.set(x, 0.09, z); g.receiveShadow = true;
+    scene.add(g); scenarioMarkers.push(g);
+    return g;
+  }
+  // Painted ground line (white or yellow) — flat plane just above the road
+  function addPaintedLine(x1, z1, x2, z2, color = 0xffffff, width = 0.18) {
+    const dx = x2 - x1, dz = z2 - z1;
+    const len = Math.sqrt(dx*dx + dz*dz);
+    const geo = new THREE.PlaneGeometry(len, width);
+    const mat = new THREE.MeshBasicMaterial({ color });
+    const m = new THREE.Mesh(geo, mat);
+    m.rotation.x = -Math.PI / 2;
+    m.position.set((x1 + x2) / 2, 0.05, (z1 + z2) / 2);
+    m.rotation.z = -Math.atan2(dz, dx);
+    scene.add(m); scenarioMarkers.push(m);
+    return m;
+  }
+  // Painted parking spot rectangle (4 lines)
+  function addParkingSpot(cx, cz, w, l, color = 0xffffff) {
+    addPaintedLine(cx - w/2, cz - l/2, cx + w/2, cz - l/2, color);
+    addPaintedLine(cx - w/2, cz + l/2, cx + w/2, cz + l/2, color);
+    addPaintedLine(cx - w/2, cz - l/2, cx - w/2, cz + l/2, color);
+    addPaintedLine(cx + w/2, cz - l/2, cx + w/2, cz + l/2, color);
+  }
+  // Ghost arrow (green chevron on ground) showing the path
+  function addGhostArrow(x, z, rotY = 0) {
+    const grp = new THREE.Group();
+    const mat = new THREE.MeshBasicMaterial({ color: 0x14a37e, transparent: true, opacity: 0.55 });
+    const a1 = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.20), mat);
+    a1.rotation.x = -Math.PI / 2; a1.rotation.z = Math.PI / 4; a1.position.set(-0.3, 0.06, 0);
+    const a2 = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.20), mat);
+    a2.rotation.x = -Math.PI / 2; a2.rotation.z = -Math.PI / 4; a2.position.set(0.3, 0.06, 0);
+    grp.add(a1); grp.add(a2);
+    grp.position.set(x, 0, z); grp.rotation.y = rotY;
+    scene.add(grp); scenarioMarkers.push(grp);
+    return grp;
+  }
+  // Pedestrian shape — simple body + head, not a cone
+  function addPedestrian(x, z, color = 0xb45309) {
+    const grp = new THREE.Group();
+    const torso = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.20, 0.24, 0.95, 10),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.65 })
+    );
+    torso.position.y = 0.85;
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.18, 12, 10),
+      new THREE.MeshStandardMaterial({ color: 0xddc7a3, roughness: 0.55 })
+    );
+    head.position.y = 1.55;
+    const legL = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.09, 0.09, 0.55, 8),
+      new THREE.MeshStandardMaterial({ color: 0x2a313b })
+    );
+    legL.position.set(-0.10, 0.30, 0);
+    const legR = legL.clone(); legR.position.x = 0.10;
+    grp.add(torso); grp.add(head); grp.add(legL); grp.add(legR);
+    grp.position.set(x, 0, z);
+    grp.castShadow = true;
+    scene.add(grp); scenarioMarkers.push(grp);
+    return grp;
+  }
+  // Voice tutor — uses browser SpeechSynthesis if available
+  function speakLine(text) {
+    try {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      const lang = (window.APEX_TOPICS && window.APEX_TOPICS.lang() === 'es') ? 'es-MX' : 'en-US';
+      u.lang = lang; u.rate = 1.0; u.pitch = 1.0;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  function applyScenarioStep(idx) {
+    const s = scenarioSteps[idx];
+    if (!s) return;
+    const lang = (window.APEX_TOPICS && window.APEX_TOPICS.lang()) || 'en';
+    const txt = (lang === 'es' && s.es) || s.en;
+    const hint = (lang === 'es' && s.hint_es) || s.hint || '';
+    setGuide(idx + 1, txt, hint || ('Step ' + (idx + 1) + ' of ' + scenarioSteps.length));
+    showCoach(s.coach_icon || '🎯', s.coach_title || 'COACH', txt);
+    if (s.voice !== false) speakLine(txt);
+  }
+
+  // ---------- COACH CARD ----------
+  let coachTimer = null;
+  function showCoach(icon, title, msg, kind /* 'ok' | 'warn' | 'bad' */) {
+    const card = document.getElementById('coachCard');
+    document.getElementById('coachIcon').textContent = icon || '💡';
+    document.getElementById('coachTit').textContent = title || 'COACH';
+    document.getElementById('coachMsg').textContent = msg || '';
+    card.classList.remove('warn', 'bad');
+    if (kind === 'warn') card.classList.add('warn');
+    if (kind === 'bad')  card.classList.add('bad');
+    card.classList.add('show');
+    clearTimeout(coachTimer);
+    coachTimer = setTimeout(() => card.classList.remove('show'), 6500);
+  }
+  function hideCoach() { document.getElementById('coachCard').classList.remove('show'); }
+
+  function setupScenario(name) {
+    // Clear old checkpoints + markers
+    checkpoints.forEach(cp => scene.remove(cp));
+    checkpoints = [];
+    clearScenarioMarkers();
+    scenarioSteps = []; scenarioStepIdx = 0;
+    document.getElementById('checkpointBadge').style.display = 'none';
+    document.getElementById('scenarioBadge').textContent = ({
+      freedrive:    'FREE DRIVE',
+      parking:      'LOT WARM-UP',
+      parallel_park:'PARALLEL PARK · GUIDED',
+      three_point:  '3-POINT TURN · GUIDED',
+      pedestrian:   'PEDESTRIAN POP-UP',
+      yellow:       'LATE-YELLOW DRILL',
+      lane_change:  'SMOG LANE CHANGE',
+      four_way:     '4-WAY STOP',
+      wet_weather:  'WET WEATHER',
+      skid:         'SKID RECOVERY',
+      checkpoint:   'CHECKPOINT RUN',
+      finaltest:    'ROAD TEST · FINAL',
+    })[name] || name.toUpperCase();
+
+    // Reset car position (center spawn, facing +Z)
+    car.group.position.set(0, 0, -BLOCK + 8);
+    car.group.rotation.y = 0;
+    velocity = 0; steer = 0; runStart = performance.now(); runEnded = false;
+    topSpeedReached = 0;
+    hideCoach();
+
+    // ---- Reset rubric + driving state ----
+    rubric = []; stopBar = null; stopHoldStart = null; stopBarOverrunWarned = false;
+    leftSignal = false; rightSignal = false;
+    document.getElementById('signalLeft').classList.remove('on');
+    document.getElementById('signalRight').classList.remove('on');
+    document.getElementById('stopHold').classList.remove('show');
+    speedLimitMph = ({
+      freedrive: 30, parking: 15, parallel_park: 10, three_point: 15,
+      pedestrian: 25, yellow: 30, lane_change: 35, four_way: 25,
+      wet_weather: 30, skid: 25, checkpoint: 30, finaltest: 30,
+    })[name] || 30;
+    document.getElementById('speedLimitNum').textContent = String(speedLimitMph);
+    document.getElementById('speedLimit').classList.remove('over');
+
+    // Seed per-scenario rubric items + stop bars. Each scenario gets its own
+    // set of named checks; the tick loop marks pass/fail as the driver acts.
+    if (name === 'four_way') {
+      addCheck('full_stop_at_bar', 'Came to a complete stop behind the line', 'Paraste completamente detrás de la línea', 40);
+      addCheck('held_stop_3sec',  'Held the stop for 3 full seconds',         'Mantuviste el alto por 3 segundos',          30);
+      addCheck('within_limit',    'Stayed at or under the 25 mph speed limit', 'Te mantuviste al límite de 25 mph',         15);
+      addCheck('no_collision',    'No collisions with signs, cones, or curbs', 'Sin colisiones con señales, conos o banqueta', 15);
+      stopBar = { x: 0, z: -4, holdMs: 3000, satisfied: false, radius: 3.5 };
+    } else if (name === 'yellow') {
+      addCheck('full_stop_at_bar', 'Stopped behind the white stop bar',       'Paraste detrás de la línea blanca',         50);
+      addCheck('held_stop_3sec',  'Held the stop for 3 full seconds',         'Mantuviste el alto por 3 segundos',          20);
+      addCheck('within_limit',    'Approached at or below the 30 mph limit',  'Llegaste al límite de 30 mph o menos',       15);
+      addCheck('no_collision',    'No collisions with cones',                 'Sin colisiones con conos',                   15);
+      stopBar = { x: 0, z: 7.5, holdMs: 3000, satisfied: false, radius: 3.0 };
+    } else if (name === 'lane_change') {
+      addCheck('signaled_left',   'Signaled LEFT (Q) before the lane change', 'Pusiste direccional IZQ (Q) antes del cambio', 35);
+      addCheck('within_limit',    'Stayed at or under the 35 mph limit',      'Te mantuviste al límite de 35 mph',          20);
+      addCheck('no_collision',    'No collision with the adjacent car',       'Sin chocar con el carro de al lado',         30);
+      addCheck('canceled_signal', 'Canceled the signal after merging',        'Apagaste la direccional después',            15);
+    } else if (name === 'three_point') {
+      addCheck('signaled_left',   'Signaled LEFT (Q) before starting the turn','Pusiste direccional IZQ (Q) antes',         30);
+      addCheck('within_limit',    'Stayed at or under the 15 mph limit',      'Te mantuviste al límite de 15 mph',          20);
+      addCheck('no_collision',    'Did not hit the curb',                     'No tocaste la banqueta',                     30);
+      addCheck('full_completion', 'Reached the final step',                   'Llegaste al paso final',                     20);
+    } else if (name === 'parallel_park') {
+      addCheck('signaled_right',  'Signaled RIGHT (E) before pulling over',   'Pusiste direccional DER (E) antes',          25);
+      addCheck('within_limit',    'Stayed at or under the 10 mph limit',      'Te mantuviste al límite de 10 mph',          15);
+      addCheck('no_collision',    'No collision with parked cars or curb',    'Sin chocar con carros estacionados o banqueta', 35);
+      addCheck('full_completion', 'Reached the final spot',                   'Llegaste al espacio final',                  25);
+    } else if (name === 'pedestrian') {
+      addCheck('full_stop_at_bar', 'Stopped before the crosswalk',            'Paraste antes del cruce peatonal',           50);
+      addCheck('held_stop_3sec',  'Held the stop while the pedestrian crossed','Mantuviste el alto mientras cruzaba',       20);
+      addCheck('within_limit',    'Approached at or below the 25 mph limit',  'Llegaste al límite de 25 mph o menos',       15);
+      addCheck('no_collision',    'No collision with the pedestrian or van',  'Sin chocar con el peatón o la camioneta',    15);
+      stopBar = { x: 0, z: 7.0, holdMs: 2500, satisfied: false, radius: 3.0 };
+    } else if (name === 'wet_weather' || name === 'skid') {
+      addCheck('within_limit',    'Kept speed under control (≤ ' + speedLimitMph + ' mph)', 'Mantuviste la velocidad ≤ ' + speedLimitMph + ' mph', 50);
+      addCheck('no_collision',    'No collisions',                            'Sin colisiones',                             20);
+      addCheck('full_completion', 'Recovered and reached the end',            'Recuperaste y llegaste al final',            30);
+    } else if (name === 'parking' || name === 'checkpoint' || name === 'finaltest') {
+      addCheck('within_limit',    'Stayed at or under the ' + speedLimitMph + ' mph limit', 'Te mantuviste al límite', 30);
+      addCheck('no_collision',    'No collisions with buildings or cones',    'Sin colisiones',                             20);
+      addCheck('full_completion', 'Hit every checkpoint',                     'Pasaste por cada checkpoint',                50);
+    }
+
+    if (name === 'freedrive') {
+      setGuide(1, 'Free drive — explore the city.', 'No goal. W/↑ go. S/↓ brake. A D / ← → steer. Try the camera toggle.');
+      document.getElementById('compass').classList.remove('show');
+      return;
+    }
+    if (name === 'parking') {
+      checkpoints.push(makeCheckpoint(0, BLOCK - 12, 0));
+      checkpoints.push(makeCheckpoint(BLOCK, 0, 1));
+      checkpoints.push(makeCheckpoint(0, -BLOCK + 12, 2));
+      setGuide(1, 'Stop 1: drive north and pull up to the green flagpole.', 'Use the compass below to find it. Slow down as you arrive.');
+    }
+    if (name === 'parallel_park') {
+      // Two parked cars + curb + painted parking-spot box + ghost-arrow path
+      const lane_x = 4.5;       // street lane center for moving traffic
+      const curb_x = 7.5;       // curb edge
+      const front_z = -2;       // front car
+      const back_z  = 9.5;      // back car (~22 ft gap)
+      addCurb(curb_x + 0.6, 4, 1.2, 26);
+      addParkedCar(curb_x - 1.2, front_z, 0);
+      addParkedCar(curb_x - 1.2, back_z, 0);
+      // Painted yellow curb stripe (no-park edge) + the white parking-spot rectangle
+      addPaintedLine(curb_x - 0.4, -10, curb_x - 0.4, 16, 0xfde68a, 0.12);
+      addParkingSpot(curb_x - 1.3, (front_z + back_z) / 2, 2.0, (back_z - front_z) - 1.0);
+      // Ghost-arrow path showing the parallel-park sweep
+      addGhostArrow(lane_x, front_z + 1, 0);
+      addGhostArrow(curb_x - 2.6, front_z + 4, -0.7);
+      addGhostArrow(curb_x - 1.5, front_z + 7, -1.2);
+      addGhostArrow(curb_x - 1.3, (front_z + back_z) / 2, -Math.PI);
+      car.group.position.set(lane_x, 0, front_z - 6);
+      car.group.rotation.y = 0;
+      scenarioSteps = [
+        { pos: { x: lane_x, z: front_z + 0.3 }, radius: 2.2,
+          en: '1) Pull alongside the front car, 2 ft out, bumpers aligned. Stop.',
+          es: '1) Ponte al lado del carro de adelante, a 2 pies de distancia, defensas alineadas. Para.',
+          coach_icon: '🅿️', coach_title: 'STEP 1' },
+        { pos: { x: lane_x, z: front_z + 1.0 }, radius: 1.8,
+          en: '2) Shift to reverse. Turn the wheel hard right.',
+          es: '2) Pon reversa. Gira el volante todo a la derecha.',
+          coach_icon: '↩️', coach_title: 'STEP 2' },
+        { pos: { x: curb_x - 2.5, z: front_z + 4.0 }, radius: 2.2,
+          en: '3) Back slowly until your right mirror lines up with the rear car\'s bumper.',
+          es: '3) Retrocede despacio hasta que tu espejo derecho se alinee con la defensa del carro trasero.',
+          coach_icon: '🪞', coach_title: 'STEP 3' },
+        { pos: { x: curb_x - 1.5, z: front_z + 6.5 }, radius: 2.0,
+          en: '4) Straighten the wheel. Continue back at 45°.',
+          es: '4) Endereza el volante. Sigue retrocediendo a 45°.',
+          coach_icon: '↘️', coach_title: 'STEP 4' },
+        { pos: { x: curb_x - 1.4, z: front_z + 8.5 }, radius: 1.8,
+          en: '5) Turn wheel hard left as your front bumper clears the front car.',
+          es: '5) Gira todo a la izquierda cuando tu defensa frontal pase el carro de adelante.',
+          coach_icon: '↙️', coach_title: 'STEP 5' },
+        { pos: { x: curb_x - 1.3, z: (front_z + back_z) / 2 }, radius: 1.8,
+          en: '6) Straighten and pull forward to center in the spot. Done.',
+          es: '6) Endereza y avanza para quedar centrado. Listo.',
+          coach_icon: '✅', coach_title: 'FINISHED' },
+      ];
+      applyScenarioStep(0);
+      checkpoints.push(makeCheckpoint(curb_x - 1.3, (front_z + back_z) / 2, 0, true));
+    }
+    if (name === 'three_point') {
+      // Two-lane road bordered by curbs. Goal: turn around facing the opposite way.
+      addCurb(-7, 0, 1, 30);
+      addCurb( 7, 0, 1, 30);
+      // Painted center divider + ghost-arrow turn path
+      addPaintedLine(0, -15, 0, 15, 0xfde68a, 0.10);
+      addGhostArrow(-3, -8, 0);
+      addGhostArrow( 5, -2, -1.0);
+      addGhostArrow(-5,  4,  1.2);
+      addGhostArrow( 0,  8,  Math.PI);
+      car.group.position.set(-3, 0, -8);
+      scenarioSteps = [
+        { pos: { x: -3, z: -8 }, radius: 1.5,
+          en: '1) Signal left. Check both ways. Pull forward turning hard left toward the far curb.',
+          es: '1) Señala a la izquierda. Mira en ambos sentidos. Avanza girando todo a la izquierda hacia la banqueta.' ,
+          coach_icon: '⬅️', coach_title: 'STEP 1' },
+        { pos: { x: 5, z: -2 }, radius: 2.5,
+          en: '2) Stop just before the far curb. Shift to reverse. Turn the wheel hard right.',
+          es: '2) Para antes de tocar la banqueta. Pon reversa. Gira el volante todo a la derecha.',
+          coach_icon: '↩️', coach_title: 'STEP 2' },
+        { pos: { x: -5, z: 4 }, radius: 2.5,
+          en: '3) Back up turning right until you face the original side. Stop. Shift to drive.',
+          es: '3) Retrocede girando a la derecha hasta apuntar al lado original. Para. Pon drive.',
+          coach_icon: '↘️', coach_title: 'STEP 3' },
+        { pos: { x: 0, z: 8 }, radius: 2.0,
+          en: '4) Pull forward and continue in the new direction.',
+          es: '4) Avanza y continúa en la nueva dirección.',
+          coach_icon: '✅', coach_title: 'FINISHED' },
+      ];
+      applyScenarioStep(0);
+      checkpoints.push(makeCheckpoint(0, 8, 0, true));
+    }
+    if (name === 'pedestrian') {
+      // Parked van blocks sight line; an actual pedestrian shape steps out
+      addParkedCar(4, 6, 0, 0x444b56);
+      addPedestrian(2.4, 11);
+      // Painted crosswalk
+      for (let i = -3; i <= 3; i += 1.5) addPaintedLine(i, 9, i, 11, 0xffffff, 0.6);
+      car.group.position.set(0, 0, -10);
+      scenarioSteps = [
+        { pos: { x: 0, z: -2 }, radius: 2,
+          en: 'Cover the brake. The van blocks your view of the curb — slow down and scan.',
+          es: 'Cubre el freno. La camioneta bloquea tu vista — reduce la velocidad y escanea.',
+          coach_icon: '👀', coach_title: 'COVER THE BRAKE' },
+        { pos: { x: 0, z: 8 }, radius: 2,
+          en: 'A pedestrian could step out. Stop within 5 feet of the parked van.',
+          es: 'Un peatón podría salir. Para a menos de 5 pies de la camioneta.',
+          coach_icon: '🚶', coach_title: 'STOP & YIELD' },
+      ];
+      applyScenarioStep(0);
+      checkpoints.push(makeCheckpoint(0, 8, 0, true));
+    }
+    if (name === 'yellow') {
+      // Approach an intersection — voice prompt to stop on yellow
+      addCone(-3, 8); addCone(3, 8); // stop bar markers
+      car.group.position.set(0, 0, -10);
+      scenarioSteps = [
+        { pos: { x: 0, z: 0 }, radius: 3,
+          en: 'Light just turned yellow. At your speed, can you stop safely?',
+          es: 'Acaba de cambiar a amarillo. ¿Puedes parar con seguridad a esta velocidad?',
+          coach_icon: '🟡', coach_title: 'YELLOW' },
+        { pos: { x: 0, z: 7.5 }, radius: 2,
+          en: 'Stop two feet behind the white stop bar.',
+          es: 'Para dos pies detrás de la línea blanca.',
+          coach_icon: '🛑', coach_title: 'STOP' },
+      ];
+      applyScenarioStep(0);
+      checkpoints.push(makeCheckpoint(0, 7.5, 0, true));
+    }
+    if (name === 'lane_change') {
+      // Two-lane straight + one car in adjacent lane (blind-spot setup)
+      addParkedCar(-4, 4, 0, 0x556070);
+      car.group.position.set(0, 0, -10);
+      scenarioSteps = [
+        { pos: { x: 0, z: -3 }, radius: 2,
+          en: 'Signal left. Check rearview, then your left mirror.',
+          es: 'Señala izquierda. Revisa retrovisor y luego espejo izquierdo.',
+          coach_icon: '↖️', coach_title: 'SMOG · SIGNAL · MIRROR' },
+        { pos: { x: 0, z: 2 }, radius: 2,
+          en: 'OVER-the-shoulder check. There IS a car in your blind spot — abort.',
+          es: 'Checa por encima del hombro. HAY un carro en tu punto ciego — aborta.',
+          coach_icon: '👀', coach_title: 'BLIND SPOT — ABORT' },
+        { pos: { x: 0, z: 9 }, radius: 2,
+          en: 'Wait. Re-check. Now move over smoothly.',
+          es: 'Espera. Revisa de nuevo. Ahora cámbiate suavemente.',
+          coach_icon: '✅', coach_title: 'CLEAR · GO' },
+      ];
+      applyScenarioStep(0);
+      checkpoints.push(makeCheckpoint(-4, 9, 0, true));
+    }
+    if (name === 'four_way') {
+      // 4-way stop intersection — painted stop bars on every approach
+      addPaintedLine(-3, -5, 3, -5, 0xffffff, 0.6); // south approach
+      addPaintedLine(-3,  5, 3,  5, 0xffffff, 0.6); // north approach
+      addPaintedLine(-5, -3, -5, 3, 0xffffff, 0.6); // east approach
+      addPaintedLine( 5, -3,  5, 3, 0xffffff, 0.6); // west approach
+      // 4 octagonal stop signs at corners (boxy octagon proxy)
+      [[-6,-6],[6,-6],[-6,6],[6,6]].forEach(([x,z]) => {
+        const sign = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.45, 0.45, 0.04, 8),
+          new THREE.MeshStandardMaterial({ color: 0xdc2626 })
+        );
+        sign.rotation.x = Math.PI / 2;
+        sign.position.set(x, 1.6, z);
+        scene.add(sign); scenarioMarkers.push(sign);
+        const post = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.04, 0.04, 1.6, 6),
+          new THREE.MeshStandardMaterial({ color: 0xa39e91 })
+        );
+        post.position.set(x, 0.8, z);
+        scene.add(post); scenarioMarkers.push(post);
+      });
+      car.group.position.set(0, 0, -10);
+      scenarioSteps = [
+        { pos: { x: 0, z: -4 }, radius: 2,
+          en: 'Come to a complete stop behind the line for 3 full seconds.',
+          es: 'Para completamente detrás de la línea por 3 segundos.',
+          coach_icon: '🛑', coach_title: 'FULL STOP' },
+        { pos: { x: 0, z: 0 }, radius: 2,
+          en: 'First to stop = first to go. Yield to anyone who arrived before you.',
+          es: 'El primero que paró se va primero. Cede al que llegó antes.',
+          coach_icon: '↔️', coach_title: 'ORDER OF ARRIVAL' },
+        { pos: { x: 0, z: 8 }, radius: 2,
+          en: 'Proceed straight. Done.',
+          es: 'Sigue recto. Listo.',
+          coach_icon: '✅', coach_title: 'FINISHED' },
+      ];
+      applyScenarioStep(0);
+      checkpoints.push(makeCheckpoint(0, 8, 0, true));
+    }
+    if (name === 'wet_weather') {
+      // Just a long straight with voice tips
+      car.group.position.set(0, 0, -10);
+      scenarioSteps = [
+        { pos: { x: 0, z: -2 }, radius: 2,
+          en: 'Wet pavement — increase following distance to 4-5 seconds.',
+          es: 'Pavimento mojado — aumenta la distancia de seguimiento a 4-5 segundos.',
+          coach_icon: '🌧️', coach_title: 'EASE OFF' },
+        { pos: { x: 0, z: 6 }, radius: 2,
+          en: 'If steering feels light, ease off the gas. No brakes. No sharp inputs.',
+          es: 'Si el volante se siente ligero, suelta el acelerador. Sin frenos ni movimientos bruscos.',
+          coach_icon: '💧', coach_title: 'HYDROPLANE' },
+        { pos: { x: 0, z: 14 }, radius: 2,
+          en: 'You did it without panicking. Done.',
+          es: 'Lo hiciste sin entrar en pánico. Listo.',
+          coach_icon: '✅', coach_title: 'FINISHED' },
+      ];
+      applyScenarioStep(0);
+      checkpoints.push(makeCheckpoint(0, 14, 0, true));
+    }
+    if (name === 'skid') {
+      car.group.position.set(0, 0, -10);
+      scenarioSteps = [
+        { pos: { x: 0, z: 0 }, radius: 2,
+          en: 'Skid! Look where you want to go. Steer that way smoothly.',
+          es: '¡Derrape! Mira hacia donde quieres ir. Gira suavemente en esa dirección.',
+          coach_icon: '🌀', coach_title: 'EYES = HANDS' },
+        { pos: { x: 0, z: 10 }, radius: 2,
+          en: 'No brake. Let off the gas. Recover, then accelerate gently.',
+          es: 'Sin frenar. Suelta el gas. Recupera, luego acelera suave.',
+          coach_icon: '✅', coach_title: 'RECOVERED' },
+      ];
+      applyScenarioStep(0);
+      checkpoints.push(makeCheckpoint(0, 10, 0, true));
+    }
+    if (name === 'checkpoint') {
+      [[0, BLOCK - 8],[BLOCK, BLOCK],[BLOCK, -BLOCK],[-BLOCK, -BLOCK],[-BLOCK, BLOCK],[0, 0]].forEach((p, i) => checkpoints.push(makeCheckpoint(p[0], p[1], i)));
+      setGuide(1, 'Stop 1 of 6: head to the green flagpole.', 'Score = checkpoints hit + finish time. Compass below points at your next one.');
+    }
+    if (name === 'finaltest') {
+      const route = [
+        [0, BLOCK - 6], [BLOCK - 6, BLOCK], [BLOCK, 0], [BLOCK - 6, -BLOCK + 6],
+        [0, -BLOCK + 6], [-BLOCK + 6, 0], [0, 0]
+      ];
+      route.forEach((p, i) => checkpoints.push(makeCheckpoint(p[0], p[1], i, i === route.length - 1)));
+      setGuide(1, 'Road Test — 7 stops, last one is the final.', 'Drive smoothly. Stop near each green flag. The amber flag is the final.');
+    }
+    document.getElementById('checkpointBadge').style.display = 'inline-flex';
+    updateCheckpointBadge();
+  }
+
+  // Step gate progression — call this every frame after movement
+  function checkScenarioStep() {
+    if (!scenarioSteps.length || scenarioStepIdx >= scenarioSteps.length) return;
+    const s = scenarioSteps[scenarioStepIdx];
+    const dx = s.pos.x - car.group.position.x;
+    const dz = s.pos.z - car.group.position.z;
+    if (Math.sqrt(dx*dx + dz*dz) < (s.radius || 2)) {
+      scenarioStepIdx += 1;
+      // Step-1 entry triggers the "did you signal first?" rubric checks.
+      if (scenarioStepIdx === 1) {
+        const recentLeft  = leftSignal  || (performance.now() - leftSignalChangedAt)  < 5000;
+        const recentRight = rightSignal || (performance.now() - rightSignalChangedAt) < 5000;
+        if (getCheck('signaled_left')) {
+          if (recentLeft) setCheck('signaled_left', 'pass');
+          else { setCheck('signaled_left', 'fail', 'No left signal before the turn', 'Sin direccional izq antes del giro');
+            flashViolation('NO SIGNAL', 'SIN DIRECCIONAL', 'You need to signal LEFT (press Q) before turning.', 'Pon direccional IZQ (Q) antes de girar.'); }
+        }
+        if (getCheck('signaled_right')) {
+          if (recentRight) setCheck('signaled_right', 'pass');
+          else { setCheck('signaled_right', 'fail', 'No right signal before pulling over', 'Sin direccional der antes de orillar');
+            flashViolation('NO SIGNAL', 'SIN DIRECCIONAL', 'You need to signal RIGHT (press E) before pulling over.', 'Pon direccional DER (E) antes de orillar.'); }
+        }
+      }
+      if (scenarioStepIdx < scenarioSteps.length) applyScenarioStep(scenarioStepIdx);
+      // Last step reached → completion + check signal cancel for lane_change.
+      if (scenarioStepIdx === scenarioSteps.length) {
+        if (getCheck('full_completion')) setCheck('full_completion', 'pass');
+        if (getCheck('canceled_signal')) {
+          if (!leftSignal && !rightSignal) setCheck('canceled_signal', 'pass');
+          else setCheck('canceled_signal', 'fail', 'Signal left on after the maneuver', 'La direccional se quedó encendida');
+        }
+        endRun();
+      }
+    }
+  }
+
+  // ---------- Context-aware tip pulses (every scenario) ----------
+  let lastTipAt = 0;
+  function checkContextTips() {
+    const now = performance.now();
+    if (now - lastTipAt < 2200) return;
+    const speedMph = Math.round(velocity * 2.237);
+    if (speedMph > 35 && currentScenario === 'wet_weather') {
+      showCoach('🌧️', 'TOO FAST FOR WET', 'Hydroplaning starts at ~35 mph in heavy rain. Ease off.', 'warn');
+      lastTipAt = now;
+    } else if (speedMph > 45 && currentScenario.startsWith('parallel') ) {
+      showCoach('⚠️', 'SLOW DOWN', 'Parking maneuvers below 5 mph.', 'warn');
+      lastTipAt = now;
+    } else if (currentScenario === 'pedestrian' && speedMph > 25 && car.group.position.z > -4) {
+      showCoach('👀', 'COVER THE BRAKE', 'You can\'t react to what you can\'t see.', 'warn');
+      lastTipAt = now;
+    }
+  }
+
+  // Update the top-center step bar
+  function setGuide(stepNum, text, hint) {
+    document.getElementById('guideStep').textContent = stepNum;
+    document.getElementById('guideText').textContent = text;
+    document.getElementById('guideHint').textContent = hint;
+  }
+
+  // Compass arrow + distance to current target checkpoint
+  // Pick the "next thing to drive toward":
+  //   1. Next unfired scenario-step gate (for guided drills like parallel-park)
+  //   2. Otherwise the next un-hit checkpoint flag (free drives, road test)
+  function nextTargetPos() {
+    if (scenarioSteps && scenarioSteps.length && scenarioStepIdx < scenarioSteps.length) {
+      const s = scenarioSteps[scenarioStepIdx];
+      return { x: s.pos.x, z: s.pos.z };
+    }
+    const cp = checkpoints.find(c => !c.userData.hit);
+    if (cp) return { x: cp.position.x, z: cp.position.z };
+    return null;
+  }
+
+  // ---- 3D Guidance system: beacon at target + forward arrow on car hood + ground line ----
+  // MODULE-SCOPED (not on window) so they get rebuilt cleanly on every page load.
+  let guideBeacon = null;     // vertical pole + ring + downward chevron at target
+  let guideLine   = null;     // 30 dashed ground segments from car to target
+  let guideHoodArrow = null;  // small arrow floating just in front of the car's hood
+
+  function buildGuideBeacon() {
+    const grp = new THREE.Group();
+    // Tall white pole
+    const pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06, 0.06, 5, 8),
+      new THREE.MeshBasicMaterial({ color: 0x14a37e })
+    );
+    pole.position.y = 2.5;
+    grp.add(pole);
+    // Big glowing ring on the ground (the actual destination)
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(1.6, 0.16, 8, 28),
+      new THREE.MeshBasicMaterial({ color: 0x14a37e, transparent: true, opacity: 0.85 })
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = 0.06;
+    grp.add(ring);
+    // Inner translucent disc so the ring reads as a "spot" from far away
+    const disc = new THREE.Mesh(
+      new THREE.CircleGeometry(1.5, 28),
+      new THREE.MeshBasicMaterial({ color: 0x14a37e, transparent: true, opacity: 0.20 })
+    );
+    disc.rotation.x = -Math.PI / 2;
+    disc.position.y = 0.05;
+    grp.add(disc);
+    // Downward-pointing chevron at top (tip points DOWN at the spot — unambiguous)
+    const chevron = new THREE.Mesh(
+      new THREE.ConeGeometry(0.65, 1.1, 6),
+      new THREE.MeshStandardMaterial({ color: 0x14a37e, emissive: 0x14a37e, emissiveIntensity: 0.7 })
+    );
+    chevron.position.y = 4.4;
+    chevron.rotation.x = Math.PI; // tip down
+    grp.add(chevron);
+    return grp;
+  }
+  function buildGuideLine() {
+    const segs = new THREE.Group();
+    const lineGeo = new THREE.PlaneGeometry(0.50, 1, 1, 1);
+    for (let i = 0; i < 30; i++) {
+      const seg = new THREE.Mesh(
+        lineGeo,
+        new THREE.MeshBasicMaterial({ color: 0x14a37e, transparent: true, opacity: 0.65 })
+      );
+      seg.rotation.x = -Math.PI / 2;
+      segs.add(seg);
+    }
+    return segs;
+  }
+  function buildGuideHoodArrow() {
+    // A flat green chevron sitting just above the car's hood pointing where to go.
+    // Built so its tip is along its OWN +Z axis. We then rotate the whole thing
+    // around Y to match the bearing-from-car-to-target.
+    const grp = new THREE.Group();
+    // Two angled flat blades forming a V chevron, lying flat
+    const bladeGeo = new THREE.PlaneGeometry(1.4, 0.30);
+    const bladeMat = new THREE.MeshBasicMaterial({ color: 0x14a37e, transparent: true, opacity: 0.92 });
+    const left  = new THREE.Mesh(bladeGeo, bladeMat);
+    left.rotation.x = -Math.PI / 2;     // lay flat on XZ
+    left.rotation.z =  Math.PI / 4;      // +45° around Z
+    left.position.set(-0.45, 0, 0);
+    grp.add(left);
+    const right = new THREE.Mesh(bladeGeo, bladeMat);
+    right.rotation.x = -Math.PI / 2;
+    right.rotation.z = -Math.PI / 4;     // -45° around Z
+    right.position.set( 0.45, 0, 0);
+    grp.add(right);
+    return grp;
+  }
+
+  function updateCompass() {
+    const compass = document.getElementById('compass');
+    const target = nextTargetPos();
+    if (!target) {
+      compass.classList.remove('show');
+      if (guideBeacon)    guideBeacon.visible = false;
+      if (guideLine)      guideLine.visible = false;
+      if (guideHoodArrow) guideHoodArrow.visible = false;
+      return;
+    }
+    compass.classList.add('show');
+    const dx = target.x - car.group.position.x;
+    const dz = target.z - car.group.position.z;
+    const dist = Math.sqrt(dx*dx + dz*dz);
+    document.getElementById('compassDist').textContent = Math.round(dist) + ' m';
+    // Bearing math: car forward is +Z when rotation.y=0. We want the HUD compass
+    // arrow rotated so 0deg = "go straight" (target ahead). atan2(dx, dz) gives
+    // bearing-from-+Z; subtracting car.rotation.y converts to car-relative bearing;
+    // CSS rotate(deg) is clockwise.
+    const bearingWorld = Math.atan2(dx, dz);
+    const rel = bearingWorld - car.group.rotation.y;
+    let deg = (rel * 180 / Math.PI) % 360;
+    if (deg > 180) deg -= 360;
+    if (deg < -180) deg += 360;
+    document.getElementById('compassArrow').style.transform = `rotate(${deg}deg)`;
+
+    // ---- 3D BEACON at target ----
+    if (!guideBeacon) { guideBeacon = buildGuideBeacon(); scene.add(guideBeacon); }
+    guideBeacon.visible = true;
+    guideBeacon.position.set(
+      target.x,
+      Math.sin(performance.now() / 280) * 0.15,  // slight bob
+      target.z
+    );
+    // Spin the chevron-on-top so it stays eye-catching
+    guideBeacon.rotation.y = performance.now() / 1400;
+
+    // ---- HOOD ARROW: floats just in front of the car, rotates toward target ----
+    if (!guideHoodArrow) { guideHoodArrow = buildGuideHoodArrow(); scene.add(guideHoodArrow); }
+    guideHoodArrow.visible = dist > 1.5; // hide when basically AT the target
+    // Place it 4m ahead of the car along its current heading
+    const hoodFwd = new THREE.Vector3(0, 0, 1).applyEuler(car.group.rotation);
+    guideHoodArrow.position.set(
+      car.group.position.x + hoodFwd.x * 4.0,
+      0.10 + Math.sin(performance.now() / 220) * 0.05,
+      car.group.position.z + hoodFwd.z * 4.0
+    );
+    // Rotate around Y so it points toward the target (world-space bearing)
+    guideHoodArrow.rotation.y = bearingWorld - Math.PI / 2;
+
+    // ---- GROUND LINE from car to target ----
+    if (!guideLine) { guideLine = buildGuideLine(); scene.add(guideLine); }
+    guideLine.visible = true;
+    const segCount = guideLine.children.length;
+    const stepLen = Math.sqrt((dx/segCount)**2 + (dz/segCount)**2);
+    const phase = (performance.now() / 700) % 1;
+    for (let i = 0; i < segCount; i++) {
+      const seg = guideLine.children[i];
+      const t01 = (i + phase) / segCount;
+      seg.position.set(
+        car.group.position.x + dx * t01,
+        0.07,
+        car.group.position.z + dz * t01,
+      );
+      seg.rotation.z = -Math.atan2(dz, dx);
+      // Fade distant segments so the line "leads" you
+      seg.material.opacity = 0.65 * (1 - t01) + 0.20;
+      // Stretch each dash to its step length
+      seg.scale.y = stepLen;
+    }
+  }
+
+  function updateCheckpointBadge() {
+    const total = checkpoints.length;
+    const hit = checkpoints.filter(cp => cp.userData.hit).length;
+    document.getElementById('checkpointBadge').textContent = `CHECKPOINTS ${hit} / ${total}`;
+  }
+
+  // ---------- Controls ----------
+  const keys = {};
+  window.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    keys[k] = true;
+    if (k === 'c') toggleCamera();
+    if (k === 'r') restart();
+    if (k === 'q') toggleSignal('left');
+    if (k === 'e') toggleSignal('right');
+  });
+  window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+  // Turn-signal state (toggle on/off).
+  let leftSignal = false, rightSignal = false;
+  let leftSignalChangedAt = 0, rightSignalChangedAt = 0;
+  function toggleSignal(side) {
+    if (side === 'left') {
+      leftSignal = !leftSignal;
+      leftSignalChangedAt = performance.now();
+      if (leftSignal) rightSignal = false;
+    } else {
+      rightSignal = !rightSignal;
+      rightSignalChangedAt = performance.now();
+      if (rightSignal) leftSignal = false;
+    }
+    document.getElementById('signalLeft').classList.toggle('on', leftSignal);
+    document.getElementById('signalRight').classList.toggle('on', rightSignal);
+  }
+  document.getElementById('signalLeft').addEventListener('click', () => toggleSignal('left'));
+  document.getElementById('signalRight').addEventListener('click', () => toggleSignal('right'));
+
+  function input() {
+    const throttle = (keys['w'] || keys['arrowup']) ? 1 : 0;
+    const brake    = (keys['s'] || keys['arrowdown']) ? 1 : 0;
+    let st = 0;
+    if (keys['a'] || keys['arrowleft'])  st += 1;
+    if (keys['d'] || keys['arrowright']) st -= 1;
+    const handbrake = keys[' '] ? 1 : 0;
+    return { throttle, brake, steer: st, handbrake };
+  }
+
+  // ---------- Physics (arcade) ----------
+  let velocity = 0;
+  let steer = 0;
+  let shookAt = 0;
+  const MAX_SPEED_MPH = carDef.topSpeed;
+  const MAX_REVERSE_MPH = 25;
+  const ACCEL = 18 / Math.max(1.5, carDef.accel);
+  const BRAKE_DECEL = 28;
+  const COAST = 4;
+  const STEER_RATE = 2.4;
+  const STEER_RETURN = 4.0;
+  const MAX_STEER = THREE.MathUtils.degToRad(34);
+  const WORLD_HALF = 230; // soft world boundary
+
+  function mphToMs(m) { return m * 0.44704; }
+  function msToMph(m) { return m / 0.44704; }
+
+  // True if the car position is on a road tile (within ROAD_WIDTH/2 of any of the
+  // 5 horizontal or 5 vertical street centerlines).
+  function onRoad(x, z) {
+    const half = ROAD_WIDTH / 2 + 0.5;
+    for (let i = -2; i <= 2; i++) {
+      if (Math.abs(z - i * BLOCK) <= half) return true;
+      if (Math.abs(x - i * BLOCK) <= half) return true;
+    }
+    return false;
+  }
+
+  // Test the car center against the building AABB list. Returns a push-back vector
+  // (the smallest delta that moves the car out of any intersected building's footprint).
+  function buildingPushBack(x, z) {
+    const carRadius = Math.max(car.length, car.width) / 2 + 0.2;
+    let pushX = 0, pushZ = 0, hit = false;
+    for (const b of buildingAABBs) {
+      if (x + carRadius < b.minX || x - carRadius > b.maxX) continue;
+      if (z + carRadius < b.minZ || z - carRadius > b.maxZ) continue;
+      // Compute axis of least penetration
+      const overlapX1 = (x + carRadius) - b.minX;   // push left
+      const overlapX2 = b.maxX - (x - carRadius);   // push right
+      const overlapZ1 = (z + carRadius) - b.minZ;   // push back
+      const overlapZ2 = b.maxZ - (z - carRadius);   // push forward
+      const minOverlap = Math.min(overlapX1, overlapX2, overlapZ1, overlapZ2);
+      if (minOverlap === overlapX1)      pushX -= overlapX1;
+      else if (minOverlap === overlapX2) pushX += overlapX2;
+      else if (minOverlap === overlapZ1) pushZ -= overlapZ1;
+      else                                pushZ += overlapZ2;
+      hit = true;
+    }
+    return { x: pushX, z: pushZ, hit };
+  }
+
+  // ---------- Engine audio (WebAudio, no asset files) ----------
+  // Two oscillators (sub + body) + a small noise band, low-pass filtered, tied to RPM.
+  // First user gesture (click/key) unlocks the AudioContext (browser autoplay policy).
+  let audioCtx = null, engineNodes = null;
+  function ensureAudio() {
+    if (audioCtx) return;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new Ctx();
+      const master = audioCtx.createGain(); master.gain.value = 0.0; master.connect(audioCtx.destination);
+      const sub = audioCtx.createOscillator(); sub.type = 'sawtooth'; sub.frequency.value = 60;
+      const body = audioCtx.createOscillator(); body.type = 'square';   body.frequency.value = 120;
+      const sg = audioCtx.createGain(); sg.gain.value = 0.55; sub.connect(sg);
+      const bg = audioCtx.createGain(); bg.gain.value = 0.20; body.connect(bg);
+      const lpf = audioCtx.createBiquadFilter(); lpf.type = 'lowpass'; lpf.frequency.value = 600; lpf.Q.value = 0.6;
+      sg.connect(lpf); bg.connect(lpf); lpf.connect(master);
+      sub.start(); body.start();
+      engineNodes = { master, sub, body, lpf };
+    } catch (e) { audioCtx = null; }
+  }
+  function updateEngineAudio(speedMs) {
+    if (!engineNodes) return;
+    const speedNorm = Math.min(1, Math.abs(speedMs) / Math.max(1, mphToMs(MAX_SPEED_MPH)));
+    const baseHz = 55 + speedNorm * 180;
+    engineNodes.sub.frequency.setTargetAtTime(baseHz, audioCtx.currentTime, 0.05);
+    engineNodes.body.frequency.setTargetAtTime(baseHz * 1.95, audioCtx.currentTime, 0.05);
+    engineNodes.lpf.frequency.setTargetAtTime(450 + speedNorm * 1100, audioCtx.currentTime, 0.05);
+    engineNodes.master.gain.setTargetAtTime(0.04 + speedNorm * 0.10, audioCtx.currentTime, 0.05);
+  }
+  // Unlock on first input
+  ['keydown', 'pointerdown', 'click'].forEach(ev => window.addEventListener(ev, ensureAudio, { once: true }));
+
+  function tick(dt) {
+    const { throttle, brake, steer: stIn, handbrake } = input();
+
+    // ---- Off-road dampening ----
+    const isOffRoad = !onRoad(car.group.position.x, car.group.position.z);
+    const offroadFactor = isOffRoad ? 0.55 : 1.0; // softer accel + lower top speed on grass
+
+    // Longitudinal
+    if (throttle) velocity += ACCEL * dt * offroadFactor;
+    if (brake) {
+      if (velocity > 0) velocity -= BRAKE_DECEL * dt;
+      else velocity -= ACCEL * 0.6 * dt;
+    }
+    if (!throttle && !brake) {
+      const dec = COAST * dt * (handbrake ? 4 : 1) * (isOffRoad ? 2.2 : 1);
+      if (velocity > 0) velocity = Math.max(0, velocity - dec);
+      else if (velocity < 0) velocity = Math.min(0, velocity + dec);
+    }
+    if (handbrake) velocity *= (1 - 2.4 * dt);
+
+    const topMs = mphToMs(MAX_SPEED_MPH) * offroadFactor;
+    velocity = Math.max(-mphToMs(MAX_REVERSE_MPH), Math.min(topMs, velocity));
+
+    // ---- Steering with return-to-center ----
+    const targetSteer = stIn * MAX_STEER;
+    const sDelta = targetSteer - steer;
+    const ease = stIn === 0 ? STEER_RETURN : STEER_RATE;
+    const stepMag = Math.min(Math.abs(sDelta), ease * dt);
+    steer += Math.sign(sDelta || 0) * stepMag;
+    if (Math.abs(steer) < 0.001) steer = 0;
+
+    // ---- Heading + position update ----
+    const speed = velocity;
+    const yaw = (speed / 8) * steer * dt;
+    car.group.rotation.y += yaw;
+
+    const fwd = new THREE.Vector3(0, 0, 1).applyEuler(car.group.rotation);
+    const proposedX = car.group.position.x + fwd.x * speed * dt;
+    const proposedZ = car.group.position.z + fwd.z * speed * dt;
+
+    // Building collision — push-back on AABB intersection, kills speed.
+    const push = buildingPushBack(proposedX, proposedZ);
+    car.group.position.x = proposedX + push.x;
+    car.group.position.z = proposedZ + push.z;
+    if (push.hit) {
+      velocity *= 0.18; // bonk
+      if (!shookAt || (performance.now() - shookAt) > 250) {
+        shookAt = performance.now();
+        const stage = document.getElementById('stage');
+        stage.style.transition = 'transform 0.06s';
+        stage.style.transform = 'translate(' + (Math.random() * 6 - 3) + 'px,' + (Math.random() * 6 - 3) + 'px)';
+        setTimeout(() => { stage.style.transform = ''; }, 90);
+      }
+    }
+
+    // OOB respawn — beyond the soft boundary, spawn back on the central road.
+    if (Math.abs(car.group.position.x) > WORLD_HALF || Math.abs(car.group.position.z) > WORLD_HALF) {
+      car.group.position.set(0, 0, -BLOCK + 8);
+      car.group.rotation.y = 0;
+      velocity = 0;
+      showToast('OUT OF BOUNDS — RESPAWNED');
+    }
+
+    // ---- Wheels: cylinder geo was rotateZ(PI/2), so its long-axis now points along X.
+    // To "roll" the wheel, spin the inner mesh around its local X. The pivot group rotates
+    // Y so front wheels visibly steer.
+    const wheelRot = (speed * dt) / 0.36;
+    car.wheels.forEach(w => {
+      w.mesh.rotation.x += wheelRot;
+      if (w.pivot) w.pivot.rotation.y = steer * 0.85;
+    });
+
+    // brake lights
+    const isBraking = brake > 0 || handbrake > 0;
+    car.brakeMats.forEach(m => { m.emissiveIntensity = isBraking ? 1.4 : 0.0; });
+
+    // turn-signal blinking (~2 Hz cycle, on/off)
+    const blink = (Math.floor(performance.now() / 320) % 2) === 0 ? 1.7 : 0.0;
+    if (car.signalLeftMats)  car.signalLeftMats.forEach(m  => { m.emissiveIntensity = leftSignal  ? blink : 0.0; });
+    if (car.signalRightMats) car.signalRightMats.forEach(m => { m.emissiveIntensity = rightSignal ? blink : 0.0; });
+
+    // ---- Driving rubric: speeding ----
+    const mphNow = Math.max(0, Math.abs(msToMph(velocity)));
+    const over = mphNow > speedLimitMph + 2;
+    document.getElementById('speedLimit').classList.toggle('over', over);
+    if (over && getCheck('within_limit') && getCheck('within_limit').status !== 'fail') {
+      setCheck('within_limit', 'fail',
+        'Exceeded ' + speedLimitMph + ' mph — peaked at ' + Math.round(topSpeedReached) + ' mph',
+        'Pasaste ' + speedLimitMph + ' mph');
+      flashViolation('SPEEDING', 'EXCESO DE VELOCIDAD',
+        'You went over the ' + speedLimitMph + ' mph limit.',
+        'Pasaste el límite de ' + speedLimitMph + ' mph.');
+    }
+
+    // ---- Driving rubric: stop bar (full stop + 3-second hold) ----
+    if (stopBar) {
+      const sdx = stopBar.x - car.group.position.x;
+      const sdz = stopBar.z - car.group.position.z;
+      const inZone = (sdx*sdx + sdz*sdz) < (stopBar.radius * stopBar.radius);
+      const stoppedNow = mphNow < 1.0;
+      if (inZone) {
+        if (stoppedNow) {
+          if (stopHoldStart === null) {
+            stopHoldStart = performance.now();
+            setCheck('full_stop_at_bar', 'pass');
+            document.getElementById('stopHold').classList.add('show');
+          }
+          const elapsed = performance.now() - stopHoldStart;
+          const ratio = Math.min(1, elapsed / stopBar.holdMs);
+          const remaining = Math.max(0, Math.ceil((stopBar.holdMs - elapsed) / 1000));
+          document.getElementById('stopHoldCount').textContent = String(remaining || 0);
+          document.getElementById('stopHoldFg').setAttribute('stroke-dashoffset', String(169.6 * (1 - ratio)));
+          if (elapsed >= stopBar.holdMs && !stopBar.satisfied) {
+            stopBar.satisfied = true;
+            setCheck('held_stop_3sec', 'pass');
+            showCoach('✅', 'GOOD STOP', 'Full 3-second stop. You can roll forward now.');
+          }
+        } else {
+          // Rolling through the zone — fail full-stop unless already satisfied.
+          if (!stopBar.satisfied && stopHoldStart === null && !stopBarOverrunWarned && mphNow > 5) {
+            stopBarOverrunWarned = true;
+            setCheck('full_stop_at_bar', 'fail',
+              'You rolled through at ' + Math.round(mphNow) + ' mph',
+              'Pasaste rodando a ' + Math.round(mphNow) + ' mph');
+            flashViolation('INCOMPLETE STOP', 'ALTO INCOMPLETO',
+              "You can't just slow down. Stop fully behind the line.",
+              'No basta con frenar. Para por completo detrás de la línea.');
+          }
+          // Reset the hold timer if they started moving before completing 3s.
+          if (stopHoldStart !== null && !stopBar.satisfied) {
+            stopHoldStart = null;
+            document.getElementById('stopHold').classList.remove('show');
+            setCheck('held_stop_3sec', 'fail', 'Rolled off before 3 seconds', 'Te moviste antes de los 3 seg');
+            flashViolation('HELD TOO SHORT', 'ALTO MUY CORTO',
+              'You moved before the 3-second hold finished — start over.',
+              'Te moviste antes de completar 3 seg. Reinicia.');
+          }
+        }
+      } else {
+        document.getElementById('stopHold').classList.remove('show');
+        // Past the bar without stopping → fail (sticky)
+        if (!stopBar.satisfied && car.group.position.z > stopBar.z + 1.5) {
+          if (getCheck('full_stop_at_bar') && getCheck('full_stop_at_bar').status !== 'pass') {
+            setCheck('full_stop_at_bar', 'fail', 'Passed the line without stopping', 'Pasaste sin parar');
+          }
+        }
+      }
+    }
+
+    // ---- Collision tracking ----
+    if (push && push.hit) {
+      setCheck('no_collision', 'fail', 'Hit an object', 'Chocaste con un objeto');
+      flashViolation('COLLISION', 'COLISIÓN', 'You hit something — drive more carefully.', 'Chocaste con algo — maneja con más cuidado.');
+    }
+
+    // engine audio tied to speed
+    updateEngineAudio(velocity);
+
+    // HUD
+    const mph = Math.max(0, Math.abs(msToMph(speed)));
+    document.getElementById('speedVal').textContent = String(Math.round(mph)).padStart(3, '0');
+    document.getElementById('throttleFill').style.height = (throttle * 100) + '%';
+    document.getElementById('brakeFill').style.height = ((brake || handbrake) * 100) + '%';
+    const goingFwd = speed > 0.5, goingRev = speed < -0.5;
+    document.getElementById('gear-d').classList.toggle('active', goingFwd || (speed >= -0.5 && !goingRev));
+    document.getElementById('gear-r').classList.toggle('active', goingRev);
+    document.getElementById('gear-n').classList.toggle('active', Math.abs(speed) <= 0.5);
+    if (mph > topSpeedReached) topSpeedReached = mph;
+
+    // Checkpoints
+    if (checkpoints.length && !runEnded) {
+      const carPos = car.group.position;
+      for (const cp of checkpoints) {
+        if (cp.userData.hit) continue;
+        const dx = carPos.x - cp.position.x, dz = carPos.z - cp.position.z;
+        if (dx*dx + dz*dz < 4 * 4) {
+          cp.userData.hit = true;
+          cp.children[0].material.color.setHex(0xc8d0d8);
+          cp.children[0].material.emissive.setHex(0x000000);
+          cp.children[0].material.emissiveIntensity = 0;
+          // grey out the inner disc + flag too
+          if (cp.children[1]) cp.children[1].material.color.setHex(0xc8d0d8);
+          if (cp.children[3]) cp.children[3].material.color.setHex(0xc8d0d8);
+          showToast(cp.userData.isFinal ? 'FINAL CHECKPOINT' : `CHECKPOINT ${cp.userData.idx + 1}`);
+          updateCheckpointBadge();
+          // Advance the guide bar to the next stop
+          const remaining = checkpoints.filter(c => !c.userData.hit);
+          const total = checkpoints.length;
+          const done = total - remaining.length;
+          if (remaining.length === 0) {
+            setGuide('✓', 'All stops cleared. Run finishing…', 'Score saving to your account.');
+          } else {
+            const nextNum = done + 1;
+            const nextIsFinal = remaining.length === 1 && checkpoints[total - 1].userData.isFinal;
+            setGuide(nextNum,
+              nextIsFinal ? `Final stop · drive to the amber flagpole.` : `Stop ${nextNum} of ${total}: head to the next green flagpole.`,
+              `Compass below points at it. ${remaining.length - 1} more after this.`);
+          }
+          if (cp.userData.isFinal || checkpoints.every(c => c.userData.hit)) {
+            if (getCheck('full_completion')) setCheck('full_completion', 'pass');
+            endRun();
+          }
+        }
+      }
+    }
+
+    // Compass + guide
+    updateCompass();
+    checkScenarioStep();
+    checkContextTips();
+
+    // Camera
+    updateCamera(dt);
+
+    // Reticle visibility
+    document.getElementById('reticle').classList.toggle('show', cameraMode === 'first');
+  }
+
+  // ---------- Camera follow ----------
+  const camTarget = new THREE.Vector3();
+  const camPos = new THREE.Vector3();
+  const camLook = new THREE.Vector3();
+
+  function updateCamera(dt) {
+    if (cameraMode === 'third') {
+      const offset = new THREE.Vector3(0, 3.4, -8.5).applyEuler(car.group.rotation);
+      camTarget.copy(car.group.position).add(offset);
+      camPos.lerp(camTarget, Math.min(1, dt * 7));
+      camera.position.copy(camPos);
+      const lookAt = new THREE.Vector3(0, 1.2, 6).applyEuler(car.group.rotation).add(car.group.position);
+      camLook.lerp(lookAt, Math.min(1, dt * 9));
+      camera.lookAt(camLook);
+    } else {
+      // First person — at the driver's head position
+      const offset = new THREE.Vector3(-0.35, 1.18, 0.35).applyEuler(car.group.rotation);
+      camera.position.copy(car.group.position).add(offset);
+      const lookAt = new THREE.Vector3(0, 1.0, 25).applyEuler(car.group.rotation).add(car.group.position);
+      camera.lookAt(lookAt);
+    }
+  }
+
+  function toggleCamera() {
+    cameraMode = cameraMode === 'third' ? 'first' : 'third';
+    document.getElementById('cameraBtn').textContent = 'CAM · ' + (cameraMode === 'third' ? '3RD' : '1ST');
+  }
+
+  // ---------- Mini-map ----------
+  const mmCanvas = document.getElementById('minimap');
+  const mmCtx = mmCanvas.getContext('2d');
+  function drawMinimap() {
+    const w = mmCanvas.width, h = mmCanvas.height;
+    mmCtx.clearRect(0, 0, w, h);
+    // background tint
+    mmCtx.fillStyle = '#f3efe6';
+    mmCtx.fillRect(0, 0, w, h);
+    // grid roads
+    mmCtx.strokeStyle = '#5d6776';
+    mmCtx.lineWidth = 2;
+    const scale = w / (BLOCK * 5);
+    const cx = w / 2, cy = h / 2;
+    mmCtx.beginPath();
+    for (let i = -2; i <= 2; i++) {
+      mmCtx.moveTo(0, cy + i * BLOCK * scale);
+      mmCtx.lineTo(w, cy + i * BLOCK * scale);
+      mmCtx.moveTo(cx + i * BLOCK * scale, 0);
+      mmCtx.lineTo(cx + i * BLOCK * scale, h);
+    }
+    mmCtx.stroke();
+    // checkpoints
+    checkpoints.forEach(cp => {
+      mmCtx.fillStyle = cp.userData.hit ? '#b3bac8' : (cp.userData.isFinal ? '#f59e0b' : '#1d4ed8');
+      const px = cx + cp.position.x * scale, py = cy + cp.position.z * scale;
+      mmCtx.beginPath(); mmCtx.arc(px, py, 4, 0, Math.PI * 2); mmCtx.fill();
+    });
+    // player
+    const pxp = cx + car.group.position.x * scale;
+    const pyp = cy + car.group.position.z * scale;
+    mmCtx.save();
+    mmCtx.translate(pxp, pyp);
+    mmCtx.rotate(-car.group.rotation.y);
+    mmCtx.fillStyle = '#1d4ed8';
+    mmCtx.strokeStyle = '#ffffff';
+    mmCtx.lineWidth = 1.5;
+    mmCtx.beginPath();
+    mmCtx.moveTo(0, -7);
+    mmCtx.lineTo(5, 5);
+    mmCtx.lineTo(-5, 5);
+    mmCtx.closePath(); mmCtx.fill(); mmCtx.stroke();
+    mmCtx.restore();
+  }
+
+  // ---------- Toast ----------
+  let toastTimer = null;
+  function showToast(text) {
+    const t = document.getElementById('toast');
+    t.textContent = '▸ ' + text;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 1400);
+  }
+
+  // ---------- Run lifecycle ----------
+  let runStart = performance.now();
+  let runEnded = false;
+  let topSpeedReached = 0;
+  let currentScenario = 'freedrive';
+
+  function endRun() {
+    if (runEnded) return;
+    runEnded = true;
+    const durationSec = Math.max(1, Math.floor((performance.now() - runStart) / 1000));
+    const hit = checkpoints.filter(cp => cp.userData.hit).length;
+    const total = checkpoints.length;
+
+    // Auto-promote any remaining 'pending' checks to 'pass' — survived the run
+    // without ever tripping the failure condition. (Fails are sticky, set earlier.)
+    rubric.forEach(r => { if (r.status === 'pending') r.status = 'pass'; });
+    const rubricEarned = rubric.filter(r => r.status === 'pass').reduce((s, r) => s + r.points, 0);
+    const rubricMax    = rubric.reduce((s, r) => s + r.points, 0);
+    const failedCount  = rubric.filter(r => r.status === 'fail').length;
+
+    // Final score blends checkpoint progress, time bonus, and the rubric.
+    const baseScore = hit * 100 + Math.max(0, 600 - durationSec * 4);
+    const score = baseScore + rubricEarned * 4;
+    const xp = Math.min(150, hit * 10 + Math.floor(score / 20));
+
+    document.getElementById('endTitle').textContent =
+      failedCount === 0 ? (currentScenario === 'finaltest' ? 'Road test cleared.' : 'Run complete — clean.') :
+      (failedCount === 1 ? '1 thing to fix.' : failedCount + ' things to fix.');
+    document.getElementById('endBlurb').textContent =
+      (rubricMax > 0)
+        ? `Driving score ${rubricEarned} / ${rubricMax} · ${durationSec}s`
+        : (total > 0 ? `${hit}/${total} checkpoints · ${durationSec}s` : `Free drive · ${durationSec}s`);
+    document.getElementById('endTime').textContent = durationSec + 's';
+    document.getElementById('endTopSpeed').textContent = Math.round(topSpeedReached);
+    document.getElementById('endXp').textContent = '+' + xp;
+
+    // Render rubric rows (pass first, then fail) so the user sees fails at a glance.
+    const lang = (window.APEX_TOPICS && window.APEX_TOPICS.lang()) || 'en';
+    const list = document.getElementById('rubricList');
+    list.innerHTML = '';
+    if (rubric.length === 0) {
+      list.style.display = 'none';
+    } else {
+      list.style.display = 'flex';
+      const ordered = rubric.slice().sort((a, b) =>
+        (a.status === 'fail' ? 0 : 1) - (b.status === 'fail' ? 0 : 1));
+      ordered.forEach(r => {
+        const label = (lang === 'es' ? r.label_es : r.label_en) || r.label_en || r.id;
+        const det   = (lang === 'es' ? r.detail_es : r.detail_en) || '';
+        const mark  = r.status === 'pass' ? '✓' : r.status === 'fail' ? '✕' : '·';
+        const row = document.createElement('div');
+        row.className = 'rubric-row ' + r.status;
+        row.innerHTML =
+          '<div class="mark">' + mark + '</div>' +
+          '<div class="body"><div class="lbl">' + label + '</div>' +
+            (det ? '<div class="det">' + det + '</div>' : '') +
+          '</div>' +
+          '<div class="pts">' + (r.status === 'pass' ? '+' : '−') + r.points + '</div>';
+        list.appendChild(row);
+      });
+    }
+    document.getElementById('endOverlay').classList.add('show');
+    if (window.fireXpBurst) fireXpBurst(xp);
+    if (window.fireConfetti) fireConfetti(80);
+    // Send to backend (best-effort)
+    fetch('/api/drives', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        scenario: currentScenario, car_id: carDef.id,
+        duration_sec: durationSec, distance_m: 0, top_speed: topSpeedReached,
+        checkpoints_hit: hit, checkpoints_total: total, score,
+      })
+    }).catch(() => {});
+    try { sessionStorage.setItem('apex_just_completed', '1'); } catch(e){}
+    if (window.Goodlane) APEX.awardXP(xp);
+    // Hook into topic progress: a guided drill maps back to its topic
+    const topicId = new URLSearchParams(location.search).get('topic');
+    if (topicId && window.APEX_TOPICS && hit >= total && total > 0) {
+      try { window.APEX_TOPICS.recordDriveDone(topicId); window.APEX_TOPICS.markCompleteIfReady(topicId); } catch(e){}
+    }
+  }
+
+  function restart() { setupScenario(currentScenario); document.getElementById('endOverlay').classList.remove('show'); }
+  window.restart = restart;
+
+  document.getElementById('cameraBtn').addEventListener('click', toggleCamera);
+  document.getElementById('restartBtn').addEventListener('click', restart);
+  document.getElementById('scenarioPicker').addEventListener('change', (e) => {
+    currentScenario = e.target.value;
+    setupScenario(currentScenario);
+  });
+
+  // ---------- Resize ----------
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // ---------- Boot done ----------
+  // Scenario can be deep-linked via ?scenario=...
+  const initialScenario = (() => {
+    const v = new URLSearchParams(location.search).get('scenario');
+    const ALLOWED = ['freedrive','parking','parallel_park','three_point','pedestrian','yellow','lane_change','four_way','wet_weather','skid','checkpoint','finaltest'];
+    return ALLOWED.includes(v) ? v : 'freedrive';
+  })();
+  currentScenario = initialScenario;
+  document.getElementById('scenarioPicker').value = initialScenario;
+  setupScenario(initialScenario);
+  bootEl.style.display = 'none';
+
+  // Show onboarding once per user (skipped on subsequent visits or when deep-linking with ?scenario=)
+  window.closeOnboarding = function () {
+    document.getElementById('onboardMask').classList.remove('show');
+    try { localStorage.setItem('apex_drive_onboarded', '1'); } catch (e) {}
+  };
+  if (!new URLSearchParams(location.search).get('scenario')) {
+    try {
+      if (!localStorage.getItem('apex_drive_onboarded')) {
+        document.getElementById('onboardMask').classList.add('show');
+      }
+    } catch (e) {}
+  }
+
+  let last = performance.now();
+  let mmAccum = 0;
+  function loop() {
+    const now = performance.now();
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    tick(dt);
+    mmAccum += dt;
+    if (mmAccum > 0.1) { drawMinimap(); mmAccum = 0; }
+    renderer.render(scene, camera);
+    requestAnimationFrame(loop);
+  }
+  loop();
+</script>
+<script src="scripts/i18n.js"></script>
+<script src="scripts/lang-toggle.js"></script>
+<script type="module">
+  // TDLR compliance: anti-skip timer + tamper signals + identity challenge
+  import { startTimer } from './scripts/compliance/timer.js';
+  import { startTamperWatch } from './scripts/compliance/tamper.js';
+  import { maybeChallenge } from './scripts/compliance/identity.js';
+  const _scenario = new URLSearchParams(location.search).get('scenario') || 'free';
+  const _lessonId = 'drive:' + _scenario;
+  startTimer(_lessonId).catch(() => {});
+  startTamperWatch(_lessonId);
+  maybeChallenge(_lessonId);
+</script>
+<script type="module" src="scripts/compliance/bootstrap.js"></script>
+<script>if(window.APEX&&APEX.requireTrack)APEX.requireTrack("teen");</script>
+</body>
+</html>

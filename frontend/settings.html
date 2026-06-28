@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/app.css" />
+<style>
+  body { background: var(--paper-2, #faf6ec); padding: 0; min-height: 100vh; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 28px 22px 100px; }
+  .back { color: var(--ink-500); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 7px; }
+  .back:hover { background: var(--bg-3); color: var(--ink-50); }
+  .crumb { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; color: var(--signal-deep); letter-spacing: 0.20em; text-transform: uppercase; font-weight: 700; margin-top: 18px; }
+  h1 { font-family: 'Inter', system-ui, sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink-50); margin: 4px 0 26px; }
+  .card {
+    background: var(--bg-2); border: 1px solid var(--hairline); border-radius: 14px;
+    padding: 22px 22px 24px; margin-bottom: 18px;
+    box-shadow: 0 4px 16px -8px rgba(15,17,22,0.08);
+  }
+  .card-head {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 4px;
+  }
+  .card-icon {
+    width: 36px; height: 36px; border-radius: 9px;
+    background: var(--signal-bg); color: var(--signal-deep); border: 1px solid var(--signal-soft);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .card-icon.warn { background: #fff7e6; color: #f59e0b; border-color: #fde68a; }
+  .card-icon.bad  { background: #fce8e8; color: var(--danger); border-color: #f5c6c6; }
+  .card-title { font-family: 'Inter', system-ui, sans-serif; font-size: 18px; font-weight: 700; color: var(--ink-50); margin: 0; }
+  .card-sub   { font-size: 13.5px; color: var(--ink-500); margin: 2px 0 14px; line-height: 1.5; }
+
+  label { display: block; font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; font-weight: 600; margin-bottom: 6px; color: var(--ink-500); letter-spacing: 0.14em; text-transform: uppercase; }
+  input[type=text], input[type=email], input[type=password] {
+    width: 100%; padding: 11px 13px; border-radius: 9px;
+    border: 1px solid var(--hairline); background: var(--bg-2); color: var(--ink-50);
+    font-size: 14px; font-family: inherit;
+    transition: border-color 0.14s, box-shadow 0.14s;
+  }
+  input:focus { outline: none; border-color: var(--signal); box-shadow: 0 0 0 3px rgba(29,78,216,0.15); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+  .one  { margin-bottom: 14px; }
+  .row-tight { display: flex; gap: 10px; align-items: center; }
+
+  .btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+  .pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    padding: 8px 14px; border-radius: 999px; border: 1px solid var(--hairline);
+    background: var(--bg-2); color: var(--ink-300); font-weight: 600; font-size: 13px;
+    cursor: pointer; font-family: inherit;
+  }
+  .pill.active { background: var(--signal); color: #fff; border-color: var(--signal); }
+
+  .status { font-family: 'Inter', system-ui, sans-serif; font-size: 11.5px; padding: 8px 12px; border-radius: 7px; margin-top: 10px; letter-spacing: 0.06em; display: none; }
+  .status.show { display: block; }
+  .status.ok  { background: var(--signal-bg); color: var(--signal-deep); border: 1px solid var(--signal-soft); }
+  .status.err { background: #fce8e8; color: var(--danger); border: 1px solid #f5c6c6; }
+
+  .danger-zone {
+    border-color: #f5c6c6;
+    background: linear-gradient(180deg, #fff6f6 0%, #ffffff 100%);
+  }
+  .btn-danger {
+    background: var(--danger); color: #fff; border: 0;
+    padding: 12px 18px; border-radius: 10px; font-weight: 700; font-family: inherit; font-size: 14px;
+    cursor: pointer;
+  }
+  .btn-danger:hover { filter: brightness(0.92); }
+  .btn-ghost-danger {
+    background: transparent; color: var(--danger); border: 1px solid #f5c6c6;
+    padding: 11px 16px; border-radius: 10px; font-weight: 700; font-family: inherit; font-size: 13.5px;
+    cursor: pointer;
+  }
+
+  .helper-mono { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; color: var(--ink-500); letter-spacing: 0.06em; margin-top: 6px; }
+  .who {
+    display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+    background: var(--bg-3); border: 1px solid var(--hairline); border-radius: 10px; margin-bottom: 16px;
+    font-size: 13.5px;
+  }
+  .who .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--signal); color: #fff;
+                 display: flex; align-items: center; justify-content: center; font-weight: 800; font-family: 'Inter', system-ui, sans-serif; }
+  .who .em { color: var(--ink-500); font-family: 'Inter', system-ui, sans-serif; font-size: 12px; }
+
+  /* Modal for destructive actions */
+  .modal {
+    position: fixed; inset: 0; background: rgba(13,17,23,0.55); backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px;
+  }
+  .modal.show { display: flex; }
+  .modal-card {
+    background: #fff; border: 1px solid var(--hairline); border-radius: 14px;
+    padding: 24px; max-width: 440px; width: 100%;
+    box-shadow: var(--shadow-lg);
+  }
+  .modal-card h3 { font-family: 'Inter', system-ui, sans-serif; font-size: 22px; font-weight: 800; color: var(--ink-50); margin: 0 0 6px; }
+  .modal-card p { color: var(--ink-500); font-size: 14px; line-height: 1.55; margin: 0 0 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="dashboard.html">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    <span data-en="Back to dashboard" data-es="Regresar al panel">Back to dashboard</span>
+  </a>
+
+  <div class="crumb">/ <span data-en="Settings" data-es="Ajustes">Settings</span></div>
+  <h1 data-en="Settings" data-es="Ajustes">Settings</h1>
+
+  <div class="who" id="who">
+    <div class="avatar" id="avatar">?</div>
+    <div>
+      <div style="font-weight:700;" id="whoName">—</div>
+      <div class="em" id="whoEmail">—</div>
+    </div>
+  </div>
+
+  <!-- ACCOUNT -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M3 21c0-4 4-7 9-7s9 3 9 7"/></svg>
+      </div>
+      <h2 class="card-title" data-en="Account" data-es="Cuenta">Account</h2>
+    </div>
+    <p class="card-sub" data-en="Update your name. Your email is shown — contact us to change it (KYC for the course certificate)."
+                       data-es="Actualiza tu nombre. Tu correo se muestra — escríbenos para cambiarlo (verificación para el certificado).">
+      Update your name. Your email is shown — contact us to change it (KYC for the course certificate).
+    </p>
+    <div class="one">
+      <label data-en="Name" data-es="Nombre">Name</label>
+      <input type="text" id="acctName" maxlength="80" />
+    </div>
+    <div class="one">
+      <label data-en="Email" data-es="Correo">Email</label>
+      <input type="email" id="acctEmail" disabled />
+      <div class="helper-mono" data-en="Locked — contact privacy@goodlane.example to change."
+                                data-es="Bloqueado — escribe a privacy@goodlane.example para cambiarlo.">Locked — contact privacy@goodlane.example to change.</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="saveAcct" data-en="Save changes" data-es="Guardar cambios">Save changes</button>
+    </div>
+    <div class="status" id="acctStatus"></div>
+  </div>
+
+  <!-- LANGUAGE -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2c3 4 3 16 0 20M12 2c-3 4-3 16 0 20"/></svg>
+      </div>
+      <h2 class="card-title" data-en="Language" data-es="Idioma">Language</h2>
+    </div>
+    <p class="card-sub" data-en="Pick the language for course content and chrome." data-es="Elige el idioma del curso y la interfaz.">Pick the language for course content and chrome.</p>
+    <div class="pill-row">
+      <button class="pill" data-pick="en" id="pickEn">English</button>
+      <button class="pill" data-pick="es" id="pickEs">Español</button>
+    </div>
+  </div>
+
+  <!-- PASSWORD -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h2 class="card-title" data-en="Password" data-es="Contraseña">Password</h2>
+    </div>
+    <p class="card-sub" data-en="Change your password. At least 10 characters, with a mix of letters and numbers. Changing it signs you out of every other device."
+                       data-es="Cambia tu contraseña. Mínimo 10 caracteres con mezcla de letras y números. Te cerrará sesión en cualquier otro dispositivo.">
+      Change your password. At least 10 characters, with a mix of letters and numbers. Changing it signs you out of every other device.
+    </p>
+    <div class="one">
+      <label data-en="Current password" data-es="Contraseña actual">Current password</label>
+      <input type="password" id="pwCurrent" autocomplete="current-password" />
+    </div>
+    <div class="row">
+      <div>
+        <label data-en="New password" data-es="Nueva contraseña">New password</label>
+        <input type="password" id="pwNew" autocomplete="new-password" minlength="10" />
+      </div>
+      <div>
+        <label data-en="Confirm new password" data-es="Confirma">Confirm new password</label>
+        <input type="password" id="pwConfirm" autocomplete="new-password" minlength="10" />
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="savePw" data-en="Change password" data-es="Cambiar contraseña">Change password</button>
+    </div>
+    <div class="status" id="pwStatus"></div>
+  </div>
+
+  <!-- SESSIONS -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon warn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 2"/></svg>
+      </div>
+      <h2 class="card-title" data-en="Active sessions" data-es="Sesiones activas">Active sessions</h2>
+    </div>
+    <p class="card-sub" data-en="Think someone else got into your account? Sign out of every device. You'll have to sign back in on this one too."
+                       data-es="¿Alguien más entró a tu cuenta? Cierra sesión en todos lados. Vas a tener que volver a entrar aquí también.">
+      Think someone else got into your account? Sign out of every device. You'll have to sign back in on this one too.
+    </p>
+    <div class="btn-row">
+      <button class="btn-ghost-danger" id="signoutAll" data-en="Sign out everywhere" data-es="Cerrar sesión en todos lados">Sign out everywhere</button>
+    </div>
+    <div class="status" id="sessStatus"></div>
+  </div>
+
+  <!-- DATA -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
+      </div>
+      <h2 class="card-title" data-en="Your data" data-es="Tus datos">Your data</h2>
+    </div>
+    <p class="card-sub" data-en="Download everything we have on you, as a single JSON file. It includes account info, course progress, audit events, and your behind-the-wheel log."
+                       data-es="Descarga todo lo que tenemos de ti, en un solo archivo JSON. Incluye datos de cuenta, progreso, eventos de auditoría y bitácora de manejo.">
+      Download everything we have on you, as a single JSON file. It includes account info, course progress, audit events, and your behind-the-wheel log.
+    </p>
+    <div class="btn-row">
+      <a class="btn btn-secondary" id="downloadData" href="/api/me/export" download data-en="Download my data" data-es="Descargar mis datos">Download my data</a>
+    </div>
+  </div>
+
+  <!-- DANGER ZONE -->
+  <div class="card danger-zone">
+    <div class="card-head">
+      <div class="card-icon bad">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 22h20L12 2z"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="18" r="0.8" fill="currentColor"/></svg>
+      </div>
+      <h2 class="card-title" style="color: var(--danger);" data-en="Delete account" data-es="Borrar cuenta">Delete account</h2>
+    </div>
+    <p class="card-sub" data-en="Permanent. Removes your name, email, course progress, drives, identity questions, and audit events. The only thing we keep is a tiny record TDLR requires (name + completion date) for 3 years. There is no recovery."
+                       data-es="Permanente. Borra tu nombre, correo, progreso, manejos, preguntas de identidad y eventos. Solo guardamos el registro mínimo que TDLR exige (nombre + fecha de finalización) por 3 años. No se puede recuperar.">
+      Permanent. Removes your name, email, course progress, drives, identity questions, and audit events. The only thing we keep is a tiny record TDLR requires (name + completion date) for 3 years. There is no recovery.
+    </p>
+    <div class="btn-row">
+      <button class="btn-danger" id="openDelete" data-en="Delete my account" data-es="Borrar mi cuenta">Delete my account</button>
+    </div>
+  </div>
+
+  <!-- Privacy / terms links -->
+  <p style="text-align: center; margin-top: 28px; font-size: 12px; color: var(--ink-500);">
+    <a href="privacy.html" style="color: var(--ink-500); text-decoration: underline;" data-en="Privacy" data-es="Privacidad">Privacy</a> ·
+    <a href="terms.html" style="color: var(--ink-500); text-decoration: underline;" data-en="Terms" data-es="Términos">Terms</a> ·
+    <a href="#" id="logoutLink" style="color: var(--ink-500); text-decoration: underline;" data-en="Sign out" data-es="Cerrar sesión">Sign out</a>
+  </p>
+</div>
+
+<!-- DELETE-ACCOUNT MODAL -->
+<div class="modal" id="deleteModal">
+  <div class="modal-card">
+    <h3 data-en="Delete your account?" data-es="¿Borrar tu cuenta?">Delete your account?</h3>
+    <p data-en="This is permanent. Type your password and the word DELETE to confirm."
+       data-es="Esto es permanente. Escribe tu contraseña y la palabra DELETE para confirmar.">
+      This is permanent. Type your password and the word DELETE to confirm.
+    </p>
+    <div class="one">
+      <label data-en="Password" data-es="Contraseña">Password</label>
+      <input type="password" id="delPw" autocomplete="current-password" />
+    </div>
+    <div class="one">
+      <label data-en="Type DELETE" data-es="Escribe DELETE">Type DELETE</label>
+      <input type="text" id="delConfirm" placeholder="DELETE" autocapitalize="characters" autocomplete="off" />
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="cancelDelete" data-en="Cancel" data-es="Cancelar">Cancel</button>
+      <button class="btn-danger" id="confirmDelete" data-en="Delete forever" data-es="Borrar para siempre">Delete forever</button>
+    </div>
+    <div class="status" id="delStatus"></div>
+  </div>
+</div>
+
+<script src="scripts/api.js"></script>
+<script src="scripts/app.js"></script>
+<script>
+(async function () {
+  // ---- i18n ----
+  function getLang() { try { const v = localStorage.getItem('apex_lang'); if (v === 'es' || v === 'en') return v; } catch (e) {} return 'en'; }
+  function applyLang(lang) {
+    document.querySelectorAll('[data-en]').forEach(el => {
+      const en = el.getAttribute('data-en'), es = el.getAttribute('data-es') || en;
+      el.textContent = lang === 'es' ? es : en;
+    });
+    document.documentElement.lang = lang;
+    document.title = lang === 'es' ? 'Goodlane — Ajustes' : 'Goodlane — Settings';
+    document.getElementById('pickEn').classList.toggle('active', lang === 'en');
+    document.getElementById('pickEs').classList.toggle('active', lang === 'es');
+  }
+  applyLang(getLang());
+
+  // ---- Status helpers ----
+  function setStatus(id, kind, msg) {
+    const el = document.getElementById(id);
+    el.className = 'status show ' + kind;
+    el.textContent = msg;
+  }
+  function clearStatus(id) {
+    const el = document.getElementById(id);
+    el.className = 'status';
+    el.textContent = '';
+  }
+
+  // ---- Bootstrap: must be signed in ----
+  const me = await APEX.refresh();
+  if (!me || !me.user) { location.href = 'login.html'; return; }
+  const u = me.user || {};
+  document.getElementById('whoName').textContent = u.name || (u.email || '').split('@')[0];
+  document.getElementById('whoEmail').textContent = u.email || '';
+  document.getElementById('avatar').textContent = (u.name || u.email || '?').trim().charAt(0).toUpperCase();
+  document.getElementById('acctName').value = u.name || '';
+  document.getElementById('acctEmail').value = u.email || '';
+
+  // ---- Account save ----
+  document.getElementById('saveAcct').addEventListener('click', async () => {
+    const newName = document.getElementById('acctName').value.trim();
+    if (!newName) { setStatus('acctStatus', 'err', getLang() === 'es' ? 'El nombre no puede estar vacío.' : 'Name cannot be empty.'); return; }
+    clearStatus('acctStatus');
+    try {
+      const r = await fetch('/api/me/profile', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName }),
+      });
+      if (r.ok) { setStatus('acctStatus', 'ok', getLang() === 'es' ? 'Guardado.' : 'Saved.'); await APEX.refresh(); }
+      else if (r.status === 404) {
+        // Profile endpoint not wired — just save name locally and let next /api/me push.
+        APEX.set({ user: newName });
+        setStatus('acctStatus', 'ok', getLang() === 'es' ? 'Guardado localmente.' : 'Saved locally.');
+      } else {
+        setStatus('acctStatus', 'err', getLang() === 'es' ? 'No se pudo guardar.' : 'Could not save.');
+      }
+    } catch (e) {
+      setStatus('acctStatus', 'err', getLang() === 'es' ? 'Sin conexión.' : 'Offline.');
+    }
+  });
+
+  // ---- Language ----
+  document.querySelectorAll('[data-pick]').forEach(b => {
+    b.addEventListener('click', () => {
+      const lang = b.getAttribute('data-pick');
+      try { localStorage.setItem('apex_lang', lang); } catch (e) {}
+      applyLang(lang);
+    });
+  });
+
+  // ---- Password change ----
+  document.getElementById('savePw').addEventListener('click', async () => {
+    clearStatus('pwStatus');
+    const cur = document.getElementById('pwCurrent').value;
+    const nw  = document.getElementById('pwNew').value;
+    const cf  = document.getElementById('pwConfirm').value;
+    const lang = getLang();
+    if (!cur || !nw) { setStatus('pwStatus', 'err', lang === 'es' ? 'Llena ambos campos.' : 'Fill in both fields.'); return; }
+    if (nw.length < 10) { setStatus('pwStatus', 'err', lang === 'es' ? 'Mínimo 10 caracteres.' : 'At least 10 characters.'); return; }
+    if (nw !== cf) { setStatus('pwStatus', 'err', lang === 'es' ? 'Las contraseñas no coinciden.' : 'Passwords do not match.'); return; }
+    try {
+      const r = await fetch('/api/me/password', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ current_password: cur, new_password: nw }),
+      });
+      const body = await r.json().catch(() => ({}));
+      if (r.ok) {
+        setStatus('pwStatus', 'ok', lang === 'es' ? 'Contraseña actualizada.' : 'Password updated. Other devices signed out.');
+        document.getElementById('pwCurrent').value = '';
+        document.getElementById('pwNew').value = '';
+        document.getElementById('pwConfirm').value = '';
+      } else {
+        const detail = typeof body.detail === 'string' ? body.detail : (lang === 'es' ? 'No se pudo cambiar.' : 'Could not change.');
+        setStatus('pwStatus', 'err', detail);
+      }
+    } catch (e) { setStatus('pwStatus', 'err', lang === 'es' ? 'Sin conexión.' : 'Offline.'); }
+  });
+
+  // ---- Sign out everywhere ----
+  document.getElementById('signoutAll').addEventListener('click', async () => {
+    const lang = getLang();
+    if (!confirm(lang === 'es' ? '¿Cerrar sesión en todos los dispositivos?' : 'Sign out of every device?')) return;
+    try {
+      await fetch('/api/me/sessions/signout-all', { method: 'POST', credentials: 'include' });
+      location.href = 'login.html';
+    } catch (e) { setStatus('sessStatus', 'err', lang === 'es' ? 'No se pudo cerrar sesión.' : 'Could not sign out.'); }
+  });
+
+  // ---- Delete account modal ----
+  const dm = document.getElementById('deleteModal');
+  document.getElementById('openDelete').addEventListener('click', () => { dm.classList.add('show'); document.getElementById('delPw').focus(); });
+  document.getElementById('cancelDelete').addEventListener('click', () => { dm.classList.remove('show'); clearStatus('delStatus'); });
+  document.getElementById('confirmDelete').addEventListener('click', async () => {
+    const lang = getLang();
+    const pw = document.getElementById('delPw').value;
+    const cf = document.getElementById('delConfirm').value.trim();
+    if (!pw || cf.toUpperCase() !== 'DELETE') { setStatus('delStatus', 'err', lang === 'es' ? 'Llena la contraseña y escribe DELETE.' : 'Fill in the password and type DELETE.'); return; }
+    try {
+      const r = await fetch('/api/me/delete', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw, confirm: cf }),
+      });
+      const body = await r.json().catch(() => ({}));
+      if (r.ok) {
+        APEX.reset();
+        location.href = 'index.html?deleted=1';
+      } else {
+        const detail = typeof body.detail === 'string' ? body.detail : (lang === 'es' ? 'No se pudo borrar.' : 'Could not delete.');
+        setStatus('delStatus', 'err', detail);
+      }
+    } catch (e) { setStatus('delStatus', 'err', lang === 'es' ? 'Sin conexión.' : 'Offline.'); }
+  });
+
+  // ---- Sign out (single) ----
+  document.getElementById('logoutLink').addEventListener('click', async (e) => {
+    e.preventDefault();
+    try { await APEX.logout(); } catch (err) {}
+    location.href = 'index.html';
+  });
+})();
+</script>
+</body>
+</html>

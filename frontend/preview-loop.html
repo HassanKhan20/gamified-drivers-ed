@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — Loop Player Preview (Ch 3.3)</title>
+<style>
+  :root {
+    --paper: #fbfaf6; --card: #ffffff; --ink: #15191f; --muted: #5d6776;
+    --emerald: #1d4ed8; --emerald-soft: #3b82f6; --amber: #f59e0b; --hair: #e6dfcc;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif; line-height: 1.6; }
+  .topbar { position: sticky; top: 0; z-index: 10; background: #ebf7f1;
+    border-bottom: 3px solid var(--emerald); padding: 10px 16px; }
+  .topbar .inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
+  .pill { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 700;
+    color: var(--emerald); white-space: nowrap; letter-spacing: 0.04em; }
+  .track { flex: 1; height: 8px; background: rgba(0,0,0,0.08); border-radius: 999px; overflow: hidden; }
+  .fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--emerald), var(--emerald-soft));
+    transition: width 0.4s cubic-bezier(.16,1,.3,1); }
+  .counter { font-family: 'Inter', system-ui, sans-serif; font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 28px 20px 120px; }
+  .kicker { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; letter-spacing: 0.16em;
+    text-transform: uppercase; font-weight: 700; margin-bottom: 10px; }
+  .kicker.teach { color: var(--emerald); }
+  .kicker.check { color: var(--amber); }
+  .kicker.worked { color: #1e3a8a; }
+  .kicker.scenario { color: #7c3aed; }
+  .kicker.recap { color: var(--muted); }
+  h1.title { font-size: 20px; font-weight: 700; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 24px; }
+  .card { background: var(--card); border: 1px solid var(--hair); border-radius: 16px;
+    padding: 26px; box-shadow: 0 8px 28px -16px rgba(15,17,22,0.12); min-height: 180px;
+    animation: rise .35s cubic-bezier(.16,1,.3,1); }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .teach-text { font-size: 18px; line-height: 1.7; }
+  .q { font-size: 18px; font-weight: 700; margin: 0 0 18px; }
+  .opt { display: block; width: 100%; text-align: left; padding: 14px 16px; margin: 8px 0;
+    border: 1.5px solid var(--hair); border-radius: 12px; background: #fff; cursor: pointer;
+    font: inherit; font-size: 15px; transition: all .12s; }
+  .opt:hover:not(:disabled) { border-color: var(--emerald); transform: translateX(2px); }
+  .opt:disabled { cursor: default; }
+  .opt.correct { border-color: var(--emerald); background: #ebf7f1; }
+  .opt.wrong { border-color: #dc2626; background: #fef2f2; }
+  .fb { margin-top: 16px; padding: 14px 16px; border-radius: 12px; font-size: 14.5px; display: none; }
+  .fb.show { display: block; animation: rise .25s ease; }
+  .fb.good { background: #ebf7f1; color: #1e3a8a; border: 1px solid #b9e0cf; }
+  .fb.bad { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+  .worked-setup { background: #fef3c7; border: 1px solid #f3d7b1; border-radius: 12px;
+    padding: 16px; margin-bottom: 16px; font-size: 15px; }
+  .worked-setup b { color: var(--amber); }
+  .keypoints { list-style: none; padding: 0; margin: 0; }
+  .keypoints li { padding: 10px 0 10px 28px; position: relative; border-bottom: 1px solid var(--hair); }
+  .keypoints li:before { content: '✓'; position: absolute; left: 0; color: var(--emerald); font-weight: 700; }
+  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--paper);
+    border-top: 1px solid var(--hair); padding: 14px 20px; }
+  .nav .inner { max-width: 720px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .btn { padding: 12px 24px; border-radius: 12px; font: inherit; font-weight: 700; font-size: 15px;
+    border: 0; cursor: pointer; }
+  .btn.primary { background: var(--emerald); color: #fff; }
+  .btn.primary:disabled { background: #a4b8b0; cursor: not-allowed; }
+  .btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--hair); }
+  .note { font-size: 12px; color: var(--muted); }
+  .pretest { background: #fff; border: 1px dashed var(--emerald); border-radius: 12px; padding: 14px 16px;
+    margin-bottom: 20px; font-size: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+</style>
+</head>
+<body>
+  <div class="topbar"><div class="inner">
+    <span class="pill">⏱ TX §84.501</span>
+    <div class="track"><div class="fill" id="fill"></div></div>
+    <span class="counter" id="counter">Beat 1</span>
+  </div></div>
+
+  <div class="wrap">
+    <div class="kicker teach" id="kicker">CHAPTER 3.3 · MODULE 3</div>
+    <h1 class="title">Stability, traction, and weight transfer</h1>
+    <p class="sub">Loop-player preview — this is the format every chapter gets rebuilt to.</p>
+
+    <div class="pretest" id="pretest">
+      <span>Already know this? You can test out of the reading.</span>
+      <button class="btn ghost" onclick="alert('Pre-test flow: you would answer the 8 checks cold; whatever you nail collapses to skimmable. (Not wired in this static preview.)')">Test out</button>
+    </div>
+
+    <div class="card" id="card"></div>
+  </div>
+
+  <div class="nav"><div class="inner">
+    <button class="btn ghost" id="prev" onclick="go(-1)">← Back</button>
+    <span class="note" id="hint">Read the beat, then continue</span>
+    <button class="btn primary" id="next" onclick="go(1)">Continue →</button>
+  </div></div>
+
+<script>
+// ---- The reference chapter (3.3 expanded) ----
+const CH = {
+  title: 'Stability, traction, and weight transfer', minutes: 50,
+  body: [
+    "Here is the single most useful idea in this entire course: your tires only have so much grip, and everything you do with the car spends it. Accelerating spends grip. Braking spends grip. Turning spends grip. The crashes that kill new drivers almost always come down to one mistake — asking the tires for more grip than they have, all at once.",
+    "Picture each tire with a \"grip budget\" of 100 units. On dry pavement a good tire might have all 100 available. Braking in a straight line might spend 90 of those units — fine, you have 90, the car stops. Turning gently through a curve might spend 40 units — also fine. The danger is doing both at the same time: 90 for braking plus 40 for turning is 130 units of grip demanded from a tire that only has 100. The tire can't deliver it, so it stops gripping and starts sliding. That slide is a skid.",
+    "This is why the phrase \"slamming the brakes in a turn\" is shorthand for \"losing the car.\" You were already spending grip to turn. Stack hard braking on top and you blow past 100%. The front tires give up, and now you're a 3,000-pound object traveling in whatever direction physics chose, not you.",
+    "The grip budget shrinks when conditions get worse. Rain might cut your total from 100 to 50. Ice can take it to 10. Gravel, wet leaves, oil patches, the first ten minutes of light rain on a road that hasn't rained in weeks — all of these quietly lower the budget. The mistake isn't driving on a low-grip surface; it's driving on one as if you still had 100 units to spend.",
+    "Now, weight transfer. A car is not a rigid block; its weight shifts as you drive, and grip follows weight. When you brake, the nose dives and weight shifts forward. That loads the front tires (more grip — good, the front brakes do most of the work) while unloading the rear tires (less grip, they can step out).",
+    "When you accelerate, the opposite happens: weight shifts rearward, the front gets light, and the front tires lose grip. Flooring it mid-corner pushes the nose wide — the tires you steer with just got unloaded. When you turn, weight shifts to the outside tires (turn left, weight goes right).",
+    "The pattern underneath all of it: weight transfers toward whatever direction the car is trying to NOT go. Brake → weight forward. Turn left → weight right. Once you feel this, you stop being surprised by the car.",
+    "So what do you DO with this? Separate your inputs. Brake first, in a straight line. Get your speed off BEFORE the corner. Ease off the brake, let the car settle, steer through with grip to spare, then get back on the gas as the wheel comes straight. Brake — settle — steer — settle — accelerate.",
+    "Race drivers call the smooth version \"slow hands, slow feet.\" Every input is gradual. You can induce a skid with a violent stab at any control — a panic brake, a yank of the wheel, a stomp on the gas. The same maneuver done smoothly stays inside the budget. Smoothness is how you stay under 100%.",
+    "If you DO exceed the budget and the car slides, the recovery is simple: ease off whatever you were overdoing. Give grip back to the tire by asking less of it. Panic does the opposite — which is why panic crashes.",
+  ],
+  quiz: [
+    { q: "Your tires' total available grip is best described as:", options: ["Unlimited on dry pavement","A fixed \"budget\" shared across braking, turning, and accelerating","Only relevant when braking","Determined by how new the tires look"], correct: 1, why: "Grip is a finite budget. Every input spends from the same ~100% pool at each tire." },
+    { q: "Braking hard AND steering hard at the same time tends to:", options: ["Stop the car faster","Cause a skid because you demand more grip than the tire has","Automatically engage ABS","Improve cornering grip"], correct: 1, why: "Stacking two high-demand inputs exceeds the ~100% budget, so the tire slides." },
+    { q: "In rain, your grip budget might drop to roughly:", options: ["90%","50%","5%","It does not change"], correct: 1, why: "Wet pavement roughly halves available grip." },
+    { q: "When you brake, weight transfers:", options: ["Forward, loading the front tires","Backward, loading the rear tires","To the outside tires","It stays evenly distributed"], correct: 0, why: "Braking pitches the nose down and loads the front tires." },
+    { q: "Weight shifts toward:", options: ["Whatever direction the car is trying to go","Whatever direction the car is trying NOT to go","Always the front","Always the heaviest corner"], correct: 1, why: "Brake → weight forward. Turn left → weight right." },
+    { q: "The safe input pattern through a corner is:", options: ["Brake and steer together, hard","Brake → settle → steer → settle → accelerate","Accelerate through the whole corner","Steer first, then brake mid-corner"], correct: 1, why: "Separating inputs gives each its own share of the grip budget." },
+    { q: "If a tire starts to skid, the recovery principle is to:", options: ["Add more of the input that caused it","Ease off whatever you were overdoing, giving grip back","Close your eyes and brace","Always brake harder"], correct: 1, why: "Reducing the offending input drops demand back under 100% and the tire grips again." },
+  ],
+  worked: {
+    setup: "You're on a 45 mph access road in Houston. It's the first light rain in three weeks, so the road is greasy with oil. A light ahead turns red and you need to make the right turn just before it.",
+    walkthrough: "Wrong way: you carry 45 mph toward the turn, then brake AND crank the wheel together. Today the grip budget is ~50%, you demand ~130%, the front washes out, and you slide into the curb. Right way: brake early and hard while still pointed straight, bleed off to ~15 mph BEFORE the turn, release the brake, let the nose come back up, then steer through with grip to spare. Same corner, same rain, opposite outcome.",
+  },
+  miniScenario: {
+    prompt: "You're turning left through a curve at 35 mph and realize halfway through you're carrying too much speed — the curve is tightening. What do you do?",
+    options: ["Brake hard NOW, mid-corner, to scrub the speed.","Ease off the gas gently and tighten your steering line smoothly.","Keep the gas steady and hope the tires hold."],
+    correct: 1,
+    feedback: {
+      0: "Hard braking mid-corner stacks braking grip on top of cornering grip → you blow the budget and the car lets go.",
+      1: "A gentle lift shifts weight forward for more steering grip and sheds speed without a violent input. Smooth and survivable.",
+      2: "Hoping is not an input. If the curve is tightening and you're over budget, doing nothing means running wide into oncoming traffic.",
+    },
+  },
+  keyPoints: [
+    "Each tire has ~100% of grip to share across braking + turning + accelerating",
+    "Combining hard inputs (brake + turn) demands >100% → skid",
+    "Grip budget shrinks with rain (~50%), ice (~10%), gravel, oil",
+    "Weight transfers toward the direction the car is trying NOT to go",
+    "Separate inputs: brake → settle → steer → settle → accelerate",
+    "Recovery = ease off whatever you were overdoing (give grip back)",
+  ],
+};
+
+// ---- Build the beat sequence: teach beats with checks interleaved, then worked, scenario, recap ----
+// Map: after teach beat index i, optionally show quiz question q.
+const checkAfter = { 1: 0, 2: 1, 3: 2, 4: 3, 6: 4, 7: 5, 9: 6 }; // beatIndex -> quiz index
+const beats = [];
+CH.body.forEach((p, i) => {
+  beats.push({ type: 'teach', text: p, n: i });
+  if (checkAfter[i] !== undefined) beats.push({ type: 'check', q: CH.quiz[checkAfter[i]] });
+});
+beats.push({ type: 'worked', w: CH.worked });
+beats.push({ type: 'scenario', s: CH.miniScenario });
+beats.push({ type: 'recap', kp: CH.keyPoints });
+
+let idx = 0;
+let answered = {}; // beat idx -> true once a check/scenario is answered
+
+const card = document.getElementById('card');
+const kicker = document.getElementById('kicker');
+const counter = document.getElementById('counter');
+const fill = document.getElementById('fill');
+const nextBtn = document.getElementById('next');
+const prevBtn = document.getElementById('prev');
+const hint = document.getElementById('hint');
+
+function render() {
+  const b = beats[idx];
+  fill.style.width = Math.round((idx) / (beats.length - 1) * 100) + '%';
+  counter.textContent = `Beat ${idx + 1} / ${beats.length}`;
+  prevBtn.style.visibility = idx === 0 ? 'hidden' : 'visible';
+  nextBtn.textContent = idx === beats.length - 1 ? 'Finish ✓' : 'Continue →';
+
+  if (b.type === 'teach') {
+    kicker.className = 'kicker teach'; kicker.textContent = 'LEARN';
+    card.innerHTML = `<div class="teach-text">${b.text}</div>`;
+    setNext(true); hint.textContent = 'Read the beat, then continue';
+  } else if (b.type === 'check') {
+    kicker.className = 'kicker check'; kicker.textContent = 'QUICK CHECK';
+    renderChoices(b.q.q, b.q.options, b.q.correct, (i) => b.q.why, false);
+  } else if (b.type === 'worked') {
+    kicker.className = 'kicker worked'; kicker.textContent = 'WORKED EXAMPLE';
+    card.innerHTML = `<div class="worked-setup"><b>Setup.</b> ${b.w.setup}</div><div class="teach-text">${b.w.walkthrough}</div>`;
+    setNext(true); hint.textContent = 'See how it plays out, then continue';
+  } else if (b.type === 'scenario') {
+    kicker.className = 'kicker scenario'; kicker.textContent = 'YOU DECIDE';
+    renderChoices(b.s.prompt, b.s.options, b.s.correct, (i) => b.s.feedback[i], true);
+  } else if (b.type === 'recap') {
+    kicker.className = 'kicker recap'; kicker.textContent = 'RECAP';
+    card.innerHTML = `<p style="margin:0 0 14px;font-weight:600;">The six things that matter from this chapter:</p>
+      <ul class="keypoints">${b.kp.map(k => `<li>${k}</li>`).join('')}</ul>
+      <p class="note" style="margin-top:16px;">In the real player, any questions you missed in earlier chapters resurface here as spaced-repetition warmups.</p>`;
+    setNext(true); hint.textContent = 'End of chapter preview';
+  }
+}
+
+function renderChoices(question, options, correct, fbFor, perOption) {
+  const answeredHere = answered[idx];
+  card.innerHTML = `<p class="q">${question}</p>
+    <div id="opts">${options.map((o, i) => `<button class="opt" data-i="${i}" onclick="answer(${i},${correct},${perOption})">${o}</button>`).join('')}</div>
+    <div class="fb" id="fb"></div>`;
+  setNext(!!answeredHere);
+  hint.textContent = answeredHere ? 'Continue when ready' : 'Pick an answer';
+  card._opts = options; card._correct = correct; card._fbFor = fbFor; card._perOption = perOption;
+}
+
+window.answer = function(i, correct, perOption) {
+  if (answered[idx]) return;
+  answered[idx] = true;
+  const opts = [...document.querySelectorAll('.opt')];
+  opts.forEach(o => o.disabled = true);
+  const chosen = opts[i];
+  const isRight = i === correct;
+  chosen.classList.add(isRight ? 'correct' : 'wrong');
+  if (!isRight) opts[correct].classList.add('correct');
+  const fb = document.getElementById('fb');
+  const msg = card._fbFor(i);
+  fb.className = 'fb show ' + (isRight ? 'good' : 'bad');
+  fb.innerHTML = (isRight ? '✓ ' : '✗ ') + msg;
+  setNext(true);
+  hint.textContent = 'Continue when ready';
+};
+
+function setNext(on) { nextBtn.disabled = !on; }
+window.go = function(d) {
+  const b = beats[idx];
+  // gate: must answer checks/scenarios before advancing
+  if (d > 0 && (b.type === 'check' || b.type === 'scenario') && !answered[idx]) return;
+  idx = Math.max(0, Math.min(beats.length - 1, idx + d));
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+render();
+</script>
+</body>
+</html>

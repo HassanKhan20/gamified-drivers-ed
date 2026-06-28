@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — Lesson</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/app.css" />
+<style>
+  body { background: var(--paper-2); }
+  .lesson-frame { max-width: 720px; margin: 0 auto; padding: 28px 20px 80px; }
+  .lesson-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .back-link { color: var(--ink-500); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+  .back-link:hover { color: var(--ink-900); }
+  .lesson-title { font-family: 'Inter', system-ui, sans-serif; font-size: 24px; font-weight: 700; margin: 14px 0 6px; letter-spacing: -0.02em; }
+  .lesson-sub { color: var(--ink-500); font-size: 14px; margin: 0 0 24px; }
+
+  .step { display: none; }
+  .step.active { display: block; }
+
+  .question { font-family: 'Inter', system-ui, sans-serif; font-size: 22px; font-weight: 700; margin: 24px 0 18px; letter-spacing: -0.02em; }
+  .lesson-actions { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+
+  .feedback { padding: 18px; border-radius: 12px; margin-top: 20px; border: 1px solid; display: flex; gap: 14px; align-items: flex-start; backdrop-filter: blur(20px); }
+  .feedback.good { background: var(--signal-bg); border-color: rgba(0,245,160,0.30); color: var(--signal-soft); }
+  .feedback.bad  { background: rgba(255,59,92,0.08); border-color: rgba(255,59,92,0.30); color: #ff8095; }
+  .feedback-icon { width: 36px; height: 36px; flex-shrink: 0; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .feedback.good .feedback-icon { background: var(--signal); color: var(--bg-0); box-shadow: 0 0 18px var(--signal-glow); }
+  .feedback.bad  .feedback-icon { background: var(--danger); color: var(--bg-0); }
+
+  .rule-card { background: linear-gradient(180deg, rgba(0,245,160,0.06) 0%, var(--glass) 100%); border: 1px solid rgba(0,245,160,0.25); border-radius: 14px; padding: 24px; margin: 22px 0; backdrop-filter: blur(20px); }
+  .rule-tag {
+    display: inline-block; background: var(--signal-bg); color: var(--signal);
+    padding: 4px 10px; border-radius: 6px;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.16em; margin-bottom: 12px; text-transform: uppercase;
+    border: 1px solid rgba(0,245,160,0.30);
+  }
+  .rule-card p { color: var(--ink-300); }
+  .rule-card strong { color: var(--ink-50); }
+  .rule-stat { background: var(--bg-2); border: 1px solid var(--hairline); border-radius: 10px; padding: 14px; margin-top: 16px; display: flex; align-items: center; gap: 14px; }
+  .rule-stat-num { font-family: 'Inter', system-ui, sans-serif; font-size: 30px; font-weight: 800; color: var(--signal); line-height: 1; }
+  .rule-stat > div { color: var(--ink-300); }
+
+  .reading-card { background: var(--glass); border: 1px solid var(--hairline); border-radius: 14px; padding: 24px; line-height: 1.65; color: var(--ink-300); backdrop-filter: blur(20px); }
+  .reading-card h3 { font-family: 'Inter', system-ui, sans-serif; font-size: 18px; margin: 0 0 8px; color: var(--ink-50); }
+  .reading-card p { margin: 10px 0; }
+  .reading-card ul { margin: 8px 0 8px 18px; padding: 0; }
+
+  .draft-banner {
+    background: rgba(255,176,32,0.08); border: 1px dashed rgba(255,176,32,0.40);
+    color: var(--warn); border-radius: 10px; padding: 12px 14px;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 12px; letter-spacing: 0.04em; margin-bottom: 18px;
+  }
+
+  .complete-frame { text-align: center; padding: 40px 0; }
+  .complete-circle {
+    width: 100px; height: 100px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--signal), var(--cyan));
+    margin: 0 auto 22px; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 1px rgba(0,245,160,0.4), 0 24px 60px -10px var(--signal-glow);
+    animation: pop 0.6s cubic-bezier(0.16,1,0.3,1);
+  }
+  @keyframes pop { 0% { transform: scale(0); } 60% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+  .reward-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 24px 0; }
+  .reward { background: var(--glass); border: 1px solid var(--hairline); border-radius: 10px; padding: 16px; text-align: center; }
+  .reward .num { font-family: 'Inter', system-ui, sans-serif; font-size: 26px; font-weight: 800; color: var(--signal); }
+  .reward .lbl { font-family: 'Inter', system-ui, sans-serif; font-size: 10px; color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.14em; font-weight: 700; margin-top: 6px; }
+
+  .time-pill {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px;
+    background: var(--glass); border: 1px solid var(--hairline);
+    font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; font-weight: 700;
+    color: var(--signal); letter-spacing: 0.10em; text-transform: uppercase;
+  }
+
+  /* Loop-player Finish button: grey + disabled until the §84.501 floor is met. */
+  #lpNext.floor-pending {
+    background: var(--bg-3) !important;
+    color: var(--ink-500) !important;
+    border-color: var(--hairline) !important;
+    box-shadow: none !important;
+    cursor: not-allowed !important;
+    opacity: 1 !important;
+  }
+  #lpNext.floor-pending::after { content: ''; }
+
+  /* ---------- Inline Shorts feed (within a lesson) ---------- */
+  .shorts-feed {
+    position: relative;
+    height: 540px;
+    border-radius: 16px;
+    overflow-y: scroll; scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--hairline);
+    background: #0d1117;
+    box-shadow: var(--shadow);
+  }
+  .shorts-feed::-webkit-scrollbar { width: 0; }
+  .ls-card {
+    height: 540px; scroll-snap-align: start; scroll-snap-stop: always;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  .ls-card .scene { position: absolute; inset: 0; }
+  .ls-card .scene svg { width: 100%; height: 100%; display: block; }
+  .ls-card::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(180deg, rgba(13,17,23,0.05) 0%, rgba(13,17,23,0.45) 55%, rgba(13,17,23,0.92) 100%);
+  }
+  .ls-progress {
+    position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 4;
+    background: rgba(255,255,255,0.18);
+  }
+  .ls-progress > .bar { height: 100%; width: 0; background: var(--signal-soft); transition: width 0.1s linear; }
+  .ls-top {
+    position: absolute; top: 14px; left: 14px; right: 14px; z-index: 5;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  }
+  .ls-pill {
+    padding: 5px 10px; border-radius: 999px;
+    background: rgba(255,255,255,0.18); backdrop-filter: blur(10px); color: #fff;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .ls-content {
+    position: relative; z-index: 5; padding: 18px 20px 64px; color: #fff;
+  }
+  .ls-tag {
+    font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; color: var(--signal-soft);
+    letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; margin-bottom: 8px;
+  }
+  .ls-content h3 {
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 22px;
+    letter-spacing: -0.015em; margin: 0 0 10px;
+    text-shadow: 0 2px 18px rgba(0,0,0,0.6);
+  }
+  .ls-content p { font-size: 14.5px; line-height: 1.55; margin: 0 0 10px; opacity: 0.93; }
+  .ls-keypoints {
+    margin-top: 6px; padding: 12px 14px; border-radius: 10px;
+    background: rgba(255,255,255,0.92); color: var(--ink-50);
+    box-shadow: 0 12px 28px -12px rgba(0,0,0,0.5);
+  }
+  .ls-keypoints .kt {
+    font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px;
+    color: var(--signal-deep); letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; margin-bottom: 6px;
+  }
+  .ls-keypoints ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+  .ls-keypoints li {
+    display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.4;
+  }
+  .ls-keypoints li::before { content: '✓'; color: var(--signal); font-weight: 800; flex-shrink: 0; }
+
+  .ls-hint {
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 4;
+    color: rgba(255,255,255,0.65);
+    font-family: 'Inter', system-ui, sans-serif; font-size: 10px; letter-spacing: 0.20em; text-transform: uppercase;
+    animation: lshint 1.6s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .ls-card.viewed .ls-hint { opacity: 0; }
+  @keyframes lshint { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-6px); } }
+
+  /* End-of-shorts splash (last card in the feed) */
+  .ls-end {
+    background: linear-gradient(180deg, #1a2230 0%, #0d1117 100%);
+    color: #fff; text-align: center; padding: 40px 24px; gap: 12px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .ls-end h3 { font-family: 'Inter', system-ui, sans-serif; font-size: 22px; font-weight: 800; margin: 0; letter-spacing: -0.015em; }
+  .ls-end p { color: rgba(255,255,255,0.7); margin: 0; max-width: 320px; line-height: 1.5; font-size: 14px; }
+  .ls-end .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 12px; }
+  .ls-end button {
+    padding: 11px 18px; border-radius: 10px; cursor: pointer;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 13.5px; border: 0;
+  }
+  .ls-end .primary { background: var(--signal); color: #fff; box-shadow: var(--shadow-primary); }
+  .ls-end .ghost { background: rgba(255,255,255,0.16); color: #fff; backdrop-filter: blur(8px); }
+
+  /* Article details disclosure */
+  .article-disclosure {
+    margin-top: 18px; border: 1px solid var(--hairline); border-radius: 12px;
+    background: var(--bg-2); box-shadow: var(--shadow-sm); overflow: hidden;
+  }
+  .article-disclosure summary {
+    list-style: none; cursor: pointer; padding: 14px 18px;
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 700; color: var(--ink-50);
+  }
+  .article-disclosure summary::-webkit-details-marker { display: none; }
+  .article-disclosure summary .chev { transition: transform 0.2s; color: var(--ink-500); }
+  .article-disclosure[open] summary .chev { transform: rotate(180deg); }
+  .article-disclosure .body { padding: 0 18px 18px; }
+  .article-disclosure .body p { color: var(--ink-300); margin: 8px 0; line-height: 1.6; font-size: 14px; }
+
+  .skip-row {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--hairline);
+  }
+</style>
+</head>
+<body>
+<div class="lesson-frame">
+
+  <div class="lesson-header">
+    <a href="roadmap.html" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to path
+    </a>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <button id="readAloud" class="time-pill" style="border:0;cursor:pointer;font-family: 'Inter', system-ui, sans-serif;" onclick="toggleReadAloud()" title="Read this chapter aloud">🔊</button>
+      <div class="lang-pill" style="display:inline-flex;padding:3px;border-radius:7px;background:var(--bg-3);border:1px solid var(--hairline);">
+        <button data-lang="en" onclick="setLang('en')" class="lp" style="border:0;background:transparent;font-family: 'Inter', system-ui, sans-serif;font-size:10.5px;font-weight:700;letter-spacing:0.10em;padding:5px 9px;border-radius:5px;cursor:pointer;color:var(--ink-700);">EN</button>
+        <button data-lang="es" onclick="setLang('es')" class="lp" style="border:0;background:transparent;font-family: 'Inter', system-ui, sans-serif;font-size:10.5px;font-weight:700;letter-spacing:0.10em;padding:5px 9px;border-radius:5px;cursor:pointer;color:var(--ink-700);">ES</button>
+      </div>
+      <span class="time-pill" id="timePill">0 MIN</span>
+      <div style="font-size: 12px; font-weight: 700; color: var(--ink-500); letter-spacing: 0.08em;">CHAPTER <span id="chapNum">—</span></div>
+    </div>
+  </div>
+
+  <h1 class="lesson-title" id="lessonTitle">Loading…</h1>
+  <p class="lesson-sub" id="lessonSub"></p>
+
+  <div class="steps" id="steps"></div>
+
+  <!-- Steps render dynamically -->
+  <div id="stepHost"></div>
+
+</div>
+
+<script src="scripts/api.js"></script>
+<script src="scripts/app.js"></script>
+<script src="scripts/curriculum.js"></script>
+<script src="scripts/curriculum_es.js"></script>
+<script src="scripts/shorts.js"></script>
+<script src="scripts/topics.js"></script>
+<script src="scripts/slides.js"></script>
+<script src="scripts/i18n.js"></script>
+<script src="scripts/loop-player.js"></script>
+<script>
+  const s = APEX.guard();
+
+  // Lesson lookup from URL ?id=
+  const params = new URLSearchParams(location.search);
+  const lessonId = params.get('id') || '1.3';
+  const baseChapter = APEX_CURRICULUM.byId(lessonId);
+
+  if (!baseChapter) {
+    document.getElementById('lessonTitle').textContent = 'Chapter not found';
+    document.getElementById('lessonSub').textContent = 'Try going back to the path.';
+    throw new Error('No chapter ' + lessonId);
+  }
+
+  // Apply Spanish overlay if user language is ES and a translation exists for this chapter.
+  let chapter = baseChapter;
+
+  // Lightweight lang helper for the lesson chrome the loop player doesn't own.
+  function L2(en, es) { return (window.APEX_LANG && window.APEX_LANG.get() === 'es') ? es : en; }
+  const ES_MODULE_TITLES = {
+    1: 'Educación Vial y el Sistema de Transporte',
+    2: 'Tareas y Procedimientos de Manejo',
+    3: 'Operación del Vehículo',
+    4: 'Maniobras Básicas',
+    5: 'Compartir el Camino',
+    6: 'Condiciones Peligrosas',
+    7: 'Alcohol, Drogas e Impedimentos',
+    8: 'Comprar y Mantener un Vehículo',
+    9: 'Leyes Específicas de Texas',
+    10: 'Emergencias y Choques',
+    11: 'Responsabilidades Cívicas de Texas',
+    12: 'Responsabilidades Personales',
+  };
+  function moduleTitleFor(ch) {
+    return (window.APEX_LANG && window.APEX_LANG.get() === 'es' && ES_MODULE_TITLES[ch.moduleNum]) || ch.moduleTitle;
+  }
+  function applyLang() {
+    const lang = window.APEX_LANG ? window.APEX_LANG.get() : 'en';
+    document.querySelectorAll('.lp').forEach(b => {
+      const on = b.dataset.lang === lang;
+      b.style.background = on ? 'var(--signal-bg)' : 'transparent';
+      b.style.color = on ? 'var(--signal-deep)' : 'var(--ink-700)';
+    });
+    if (lang === 'es' && window.APEX_CHAPTER_ES) {
+      const es = window.APEX_CHAPTER_ES(baseChapter.id);
+      if (es) {
+        // Merge Spanish overlay onto base chapter
+        chapter = Object.assign({}, baseChapter, {
+          title: es.title || baseChapter.title,
+          body: es.body || baseChapter.body,
+          keyPoints: es.keyPoints || baseChapter.keyPoints,
+          quiz: es.quiz || baseChapter.quiz,
+          exam: es.exam || baseChapter.exam,
+          options: es.options || baseChapter.options,
+          consequences: es.consequences || baseChapter.consequences,
+          rule: es.rule || baseChapter.rule,
+          worked: es.worked || baseChapter.worked,
+          miniScenario: es.miniScenario || baseChapter.miniScenario,
+          scene: baseChapter.scene ? Object.assign({}, baseChapter.scene, {
+            description: es.sceneDescription || baseChapter.scene.description,
+            tag: es.sceneTag || baseChapter.scene.tag,
+            meta: es.sceneMeta || baseChapter.scene.meta,
+          }) : baseChapter.scene,
+          _translatedFrom: 'es',
+        });
+      } else {
+        chapter = baseChapter; // fallback to EN
+      }
+    } else {
+      chapter = baseChapter;
+    }
+    document.getElementById('chapNum').textContent = chapter.id;
+    document.getElementById('lessonTitle').textContent = chapter.title;
+    document.getElementById('lessonSub').textContent =
+      `${L2('Module','Módulo')} ${chapter.moduleNum} · ${moduleTitleFor(chapter)} · ~${chapter.minutes} min`;
+  }
+
+  // Voice tutor — speak the body of the current chapter aloud.
+  window.toggleReadAloud = function () {
+    if (!window.APEX_SPEAK) return;
+    const btn = document.getElementById('readAloud');
+    if (window.APEX_SPEAK.speaking()) {
+      window.APEX_SPEAK.stop();
+      btn.textContent = '🔊';
+      return;
+    }
+    let text = chapter.title + '. ';
+    if (chapter.body) text += chapter.body.join(' ');
+    else if (chapter.scene && chapter.scene.description) text += chapter.scene.description;
+    if (chapter.keyPoints && chapter.keyPoints.length) text += ' ' + chapter.keyPoints.join('. ');
+    btn.textContent = '⏹';
+    window.APEX_SPEAK.speak(text);
+  };
+
+  // Language toggle — persist the choice and reload. A full reload (matching the
+  // global lang-toggle) is required because the page's one-way phrase translator
+  // can't reverse already-translated chrome; an in-place re-render leaves stale
+  // text from the other language. Reload guarantees a clean single-language page.
+  window.setLang = function (lang) {
+    if (!window.APEX_LANG) return;
+    if (window.APEX_SPEAK) window.APEX_SPEAK.stop();
+    window.APEX_LANG.set(lang);
+    location.reload();
+  };
+
+  applyLang();
+
+  // Engagement-minute timer (counts toward TDLR 32 hr requirement). Pauses when tab is hidden.
+  let engagedSec = 0;
+  let timerHandle = null;
+  function startTimer() { if (!timerHandle) timerHandle = setInterval(tickSec, 1000); }
+  function stopTimer()  { if (timerHandle) { clearInterval(timerHandle); timerHandle = null; } }
+  function tickSec() {
+    engagedSec += 1;
+    document.getElementById('timePill').textContent = Math.floor(engagedSec / 60) + ' MIN';
+  }
+  document.addEventListener('visibilitychange', () => { document.hidden ? stopTimer() : startTimer(); });
+  startTimer();
+
+  // Build the right experience based on chapter type.
+  // New: the Loop Player renders every chapter type as one-idea beats with
+  // interleaved checks. Falls back to the legacy renderers only if the loop
+  // player or required data is unavailable.
+  function render() {
+    const host = document.getElementById('stepHost');
+    const stepsEl = document.getElementById('steps');
+    if (window.APEX_LOOP && (chapter.body || chapter.exam || chapter.options)) {
+      if (stepsEl) stepsEl.innerHTML = '';
+      const mastery = (window.APEX_COMPLIANCE_CONFIG && window.APEX_COMPLIANCE_CONFIG.mastery_threshold) || 0.70;
+      window.APEX_LOOP.play(chapter, host, {
+        masteryThreshold: mastery,
+        lang: (window.APEX_LANG ? window.APEX_LANG.get() : 'en'),
+        onFinish: finishLesson,
+        onAttempt: function (questionKey, correct) {
+          try {
+            fetch('/api/compliance/spacedrep/attempt', {
+              method: 'POST', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ question_key: questionKey, correct: !!correct }),
+            });
+          } catch (e) {}
+        },
+      });
+      installFinishFloorGate();
+      return;
+    }
+    // ---- legacy fallback ----
+    if (chapter.type === 'scenario') {
+      if (chapter.options && chapter.consequences && chapter.rule && chapter.quiz) renderScenarioFlow();
+      else renderDraftScenario();
+    } else if (chapter.type === 'reading') {
+      renderReading();
+    } else if (chapter.type === 'checkpoint') {
+      renderCheckpoint();
+    }
+  }
+
+  // ---------- SCENARIO FLOW (5-step: scenario -> choice -> consequence -> rule -> quiz -> complete) ----------
+  function renderScenarioFlow() {
+    document.getElementById('steps').innerHTML = `
+      <div class="step-dot current"></div><div class="step-dot"></div><div class="step-dot"></div>
+      <div class="step-dot"></div><div class="step-dot"></div>
+    `;
+    const meta = (chapter.scene && chapter.scene.meta) || [];
+    const tag = (chapter.scene && chapter.scene.tag) || 'SCENARIO';
+    const desc = (chapter.scene && chapter.scene.description) || '';
+
+    document.getElementById('stepHost').innerHTML = `
+      <section class="step active" data-step="1">
+        <div class="scenario-stage" style="margin-top: 22px;">
+          <span class="scenario-tag">${tag}</span>
+          <div class="scenario-meta">${meta.map(m => `<span class="scenario-meta-pill">${m}</span>`).join('')}</div>
+          <div class="scenario-road"></div>
+        </div>
+        <p class="question">${desc}</p>
+        <p style="color: var(--ink-500); font-size: 13px; margin: -10px 0 18px;">Pick the response a defensive driver would make. Don't worry about being wrong — that's how you learn.</p>
+        <div class="lesson-actions"><button class="btn btn-primary btn-lg" onclick="goStep(2)">See my options →</button></div>
+      </section>
+      <section class="step" data-step="2">
+        <p class="question">Pick one:</p>
+        <div id="choiceList" style="display: flex; flex-direction: column; gap: 10px;">
+          ${chapter.options.map(o => `
+            <button class="choice" onclick="pickChoice('${o.letter}')">
+              <span class="choice-letter">${o.letter}</span>${o.text}
+            </button>
+          `).join('')}
+        </div>
+      </section>
+      <section class="step" data-step="3">
+        <h2 class="font-display" style="font-size: 22px; font-weight: 700; margin: 18px 0 10px;">Here's what happens.</h2>
+        <div id="consequence"></div>
+        <div class="skip-row">
+          <button class="btn btn-secondary btn-lg" onclick="goStep(4)">Why? Show me the rule</button>
+          <button class="btn btn-primary btn-lg" onclick="goStep(5)">Skip to quiz →</button>
+        </div>
+      </section>
+      <section class="step" data-step="4">
+        <div class="rule-card">
+          <span class="rule-tag">${chapter.rule.tag}</span>
+          <h2 class="font-display" style="font-size: 24px; font-weight: 700; margin: 0 0 10px;">${chapter.rule.title}</h2>
+          <p style="margin: 0; line-height: 1.6; color: var(--ink-700);">${chapter.rule.body}</p>
+          ${chapter.rule.stat ? `
+            <div class="rule-stat">
+              <div class="rule-stat-num">${chapter.rule.stat.num}</div>
+              <div style="font-size: 13px; color: var(--ink-700);">${chapter.rule.stat.body}</div>
+            </div>` : ''}
+        </div>
+        <p style="font-size: 13px; color: var(--ink-500); margin-top: 16px;">Quick mastery quiz next — ${chapter.quiz.length} questions. Get them all right and Chapter ${chapter.id} is yours.</p>
+        <div class="skip-row">
+          <button class="btn btn-secondary btn-lg" onclick="goStep(3)">↩ Re-read consequence</button>
+          <button class="btn btn-primary btn-lg" onclick="goStep(5)">Take the quiz →</button>
+        </div>
+      </section>
+      <section class="step" data-step="5">
+        <h2 class="font-display" style="font-size: 22px; font-weight: 700; margin: 18px 0 4px;">Mastery quiz · <span id="qNum">1</span>/${chapter.quiz.length}</h2>
+        <p style="color: var(--ink-500); font-size: 13px; margin: 0 0 22px;">Get all of them right to pass. Wrong answers loop back. No fake timers.</p>
+        <div id="quizContent"></div>
+      </section>
+      <section class="step" data-step="6">${completePanel()}</section>
+    `;
+    renderQuiz();
+  }
+
+  // ---------- DRAFT SCENARIO (chapter scaffolded but not yet authored) ----------
+  function renderDraftScenario() {
+    document.getElementById('steps').innerHTML = '';
+    document.getElementById('stepHost').innerHTML = `
+      <div class="draft-banner">
+        <strong>Authoring in progress.</strong> This scenario is in the licensed-instructor review queue.
+        Engagement time still counts toward your TDLR hours while you read the placeholder.
+      </div>
+      <div class="reading-card">
+        <h3>What this chapter will cover</h3>
+        <p>${chapter.title}. A real driving scenario in this topic area, taught the Goodlane way: see the moment first, decide, learn the rule.</p>
+        <p>Estimated time: <strong>${chapter.minutes} minutes</strong>.</p>
+      </div>
+      <div class="lesson-actions">
+        <button class="btn btn-primary btn-lg" onclick="finishLesson()">Mark chapter studied →</button>
+      </div>
+    `;
+  }
+
+  // ---------- READING CHAPTER ----------
+  // New flow:
+  //   Step 1: a couple of in-lesson Shorts (built from body paragraphs + key points)
+  //   Step 2: full article (collapsible & SKIPPABLE)
+  //   Step 3: final mastery quiz
+  function renderReading() {
+    if (!chapter.body || !chapter.quiz) { renderReadingStub(); return; }
+    document.getElementById('steps').innerHTML = `
+      <div class="step-dot current"></div><div class="step-dot"></div><div class="step-dot"></div>
+    `;
+    // New flow: animated SLIDE DECK → quiz → complete panel.
+    document.getElementById('stepHost').innerHTML = `
+      <section class="step active" data-step="1">
+        <div id="deckHost"></div>
+      </section>
+      <section class="step" data-step="2">
+        <h2 class="font-display" style="font-size: 22px; font-weight: 700; margin: 18px 0 4px;">Quick check · <span id="qNum">1</span>/${chapter.quiz.length}</h2>
+        <p style="color: var(--ink-500); font-size: 13px; margin: 0 0 22px;">Answer all ${chapter.quiz.length} correctly to complete the chapter. Wrong answers loop back.</p>
+        <div id="quizContent"></div>
+      </section>
+      <section class="step" data-step="3">${completePanel()}</section>
+    `;
+    if (window.APEX_SLIDES) {
+      window.APEX_SLIDES.render(document.getElementById('deckHost'), chapter, {
+        onComplete: () => goStep(2),
+      });
+    } else {
+      // Graceful fallback if slides.js failed to load
+      document.getElementById('deckHost').innerHTML =
+        '<p>' + escapeHtml(chapter.body.join(' ')) + '</p><div class="lesson-actions"><button class="btn btn-primary btn-lg" onclick="goStep(2)">Take the quiz →</button></div>';
+    }
+    renderQuiz();
+  }
+
+  // Generate 2-3 in-lesson Shorts cards from a reading chapter.
+  function buildLessonShorts(ch) {
+    const cards = [];
+    const body = (ch.body || []).slice();
+    if (body.length >= 1) cards.push({ tag: 'INTRO', heading: ch.title, text: body[0] });
+    if (body.length >= 2) cards.push({ tag: 'CORE',  heading: 'Why it matters', text: body.slice(1, body.length === 2 ? 2 : 3).join(' ') });
+    if (body.length >= 4) cards.push({ tag: 'DEPTH', heading: 'Deeper context', text: body.slice(3).join(' ') });
+    if (ch.keyPoints && ch.keyPoints.length) cards.push({ tag: 'TAKEAWAY', heading: 'Lock these in', keyPoints: ch.keyPoints });
+    return cards;
+  }
+
+  // Render the inline Shorts vertical scroll-snap feed.
+  function renderLessonShortsFeed(cards) {
+    const palettes = [
+      'linear-gradient(180deg, #2c4360 0%, #18242f 100%)',
+      'linear-gradient(180deg, #4a6b3a 0%, #1c2b1d 100%)',
+      'linear-gradient(180deg, #5a3e2b 0%, #251a14 100%)',
+      'linear-gradient(180deg, #314a5b 0%, #131e26 100%)',
+    ];
+    const feedHtml = cards.map((c, i) => `
+      <article class="ls-card" data-i="${i}" style="background: ${palettes[i % palettes.length]};">
+        <div class="ls-progress"><div class="bar"></div></div>
+        <div class="ls-top">
+          <span class="ls-pill">${chapter.id} · ${i + 1} / ${cards.length}</span>
+          <span class="ls-pill">${c.tag}</span>
+        </div>
+        <div class="ls-content">
+          <div class="ls-tag">${c.tag}</div>
+          <h3>${escapeHtml(c.heading)}</h3>
+          ${c.text ? `<p>${escapeHtml(c.text)}</p>` : ''}
+          ${c.keyPoints ? `<div class="ls-keypoints"><div class="kt">Key points</div><ul>${c.keyPoints.map(k => `<li>${escapeHtml(k)}</li>`).join('')}</ul></div>` : ''}
+        </div>
+        ${i < cards.length - 1 ? `<div class="ls-hint">SCROLL ↑</div>` : ''}
+      </article>
+    `).join('');
+    const endHtml = `
+      <article class="ls-card ls-end" data-end="1">
+        <h3>Shorts done.</h3>
+        <p>You can re-watch any of them or move on. The full article is up next, but you can skip straight to the quiz.</p>
+        <div class="row">
+          <button class="ghost" onclick="document.querySelector('.shorts-feed').scrollTo({top:0,behavior:'smooth'});">↑ Re-watch</button>
+          <button class="ghost" onclick="goStep(2)">Read article</button>
+          <button class="primary" onclick="goStep(3)">Skip to quiz →</button>
+        </div>
+      </article>
+    `;
+    return `<div class="shorts-feed" id="shortsFeed">${feedHtml}${endHtml}</div>
+      <div style="margin-top: 12px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+        <button class="btn btn-secondary" onclick="goStep(2)">Read the article</button>
+        <button class="btn btn-primary" onclick="goStep(3)">Skip to quiz →</button>
+      </div>`;
+  }
+
+  // Per-card autoplay timer + IntersectionObserver
+  let lsTimer = null, lsActive = null, lsStart = 0, lsDur = 12;
+  function initLessonShortsFeed() {
+    const feed = document.getElementById('shortsFeed');
+    if (!feed) return;
+    const cards = feed.querySelectorAll('.ls-card');
+    if (lsTimer) cancelAnimationFrame(lsTimer);
+    function loop() {
+      if (lsActive && !lsActive.classList.contains('ls-end')) {
+        const elapsed = (performance.now() - lsStart) / 1000;
+        const pct = Math.min(1, elapsed / lsDur);
+        const bar = lsActive.querySelector('.ls-progress > .bar');
+        if (bar) bar.style.width = (pct * 100) + '%';
+        if (pct >= 1 && lsActive.nextElementSibling) {
+          lsActive.nextElementSibling.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+      lsTimer = requestAnimationFrame(loop);
+    }
+    const io = new IntersectionObserver((entries) => {
+      let best = null;
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        if (!best || e.intersectionRatio > best.intersectionRatio) best = e;
+      }
+      if (!best) return;
+      const t = best.target;
+      if (t === lsActive) return;
+      lsActive = t;
+      lsActive.classList.add('viewed');
+      lsStart = performance.now();
+      const bar = t.querySelector('.ls-progress > .bar');
+      if (bar) bar.style.width = '0%';
+    }, { root: feed, threshold: [0.6] });
+    cards.forEach(c => io.observe(c));
+    loop();
+  }
+
+  // Article disclosure (the optional full article)
+  function renderArticleDisclosure(ch) {
+    const bodyHtml = (ch.body || []).map(p => `<p>${escapeHtml(p)}</p>`).join('');
+    const keyHtml = (ch.keyPoints || []).map(k =>
+      `<li style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--ink-300);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--signal)" stroke-width="2.5" style="flex-shrink:0;margin-top:3px;"><polyline points="20 6 9 17 4 12"/></svg><span>${escapeHtml(k)}</span></li>`).join('');
+    return `
+      <details class="article-disclosure" open>
+        <summary>
+          📄 Read the full article
+          <svg class="chev" style="margin-left:auto;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="body">
+          ${bodyHtml}
+          ${keyHtml ? `<div style="margin-top: 14px; padding: 14px; border-radius: 10px; background: var(--signal-bg); border: 1px solid rgba(29,78,216,0.30);">
+            <div style="font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--signal-deep); letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; margin-bottom: 8px;">Key points</div>
+            <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">${keyHtml}</ul>
+          </div>` : ''}
+        </div>
+      </details>
+    `;
+  }
+
+  function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  window.escapeHtml = escapeHtml;
+  function renderReadingStub() {
+    document.getElementById('steps').innerHTML = '';
+    document.getElementById('stepHost').innerHTML = `
+      <div class="reading-card">
+        <h3>${chapter.title}</h3>
+        <p>This chapter is part of <strong>Module ${chapter.moduleNum}: ${chapter.moduleTitle}</strong>.</p>
+        <p style="color: var(--ink-500); font-size: 13px;">Time credited: ${chapter.minutes} minutes.</p>
+      </div>
+      <div class="lesson-actions">
+        <button class="btn btn-primary btn-lg" onclick="finishLesson()">Done — credit me →</button>
+      </div>
+    `;
+  }
+
+  // ---------- CHECKPOINT (module exam) ----------
+  // 8 questions, pass at 6 correct. Failing the threshold lets the user retry.
+  function renderCheckpoint() {
+    if (!chapter.exam) {
+      renderCheckpointStub(); return;
+    }
+    document.getElementById('steps').innerHTML = `
+      <div class="step-dot current"></div><div class="step-dot"></div>
+    `;
+    const total = chapter.exam.length;
+    const passNeeded = Math.max(6, Math.ceil(total * 0.7));
+    document.getElementById('stepHost').innerHTML = `
+      <section class="step active" data-step="1">
+        <div class="reading-card">
+          <h3 style="margin: 0 0 10px;">Module ${chapter.moduleNum} checkpoint</h3>
+          <p>This is the mastery exam for <strong>Module ${chapter.moduleNum}: ${chapter.moduleTitle}</strong>. ${total} questions. Pass at <strong>${passNeeded} correct</strong>. You can retake if you don't pass.</p>
+        </div>
+        <div class="lesson-actions">
+          <button class="btn btn-primary btn-lg" onclick="goStep(2)">Start the exam →</button>
+        </div>
+      </section>
+      <section class="step" data-step="2">
+        <h2 class="font-display" style="font-size: 22px; font-weight: 700; margin: 18px 0 4px;">Question <span id="qNum">1</span> / ${total}</h2>
+        <div id="examScore" style="font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--ink-500); letter-spacing: 0.14em; margin-bottom: 18px;">CORRECT 0 · WRONG 0 · NEED ${passNeeded}</div>
+        <div id="quizContent"></div>
+      </section>
+      <section class="step" data-step="3">${completePanel()}</section>
+    `;
+    examState = { idx: 0, correct: 0, wrong: 0, passNeeded };
+    renderExamQuestion();
+  }
+  function renderCheckpointStub() {
+    document.getElementById('steps').innerHTML = '';
+    document.getElementById('stepHost').innerHTML = `
+      <div class="reading-card">
+        <h3>Module ${chapter.moduleNum} checkpoint</h3>
+        <p>Mastery exam for <strong>Module ${chapter.moduleNum}: ${chapter.moduleTitle}</strong>.</p>
+      </div>
+      <div class="lesson-actions">
+        <button class="btn btn-primary btn-lg" onclick="finishLesson()">Mark checkpoint complete →</button>
+      </div>
+    `;
+  }
+  let examState = null;
+  function renderExamQuestion() {
+    const q = chapter.exam[examState.idx];
+    document.getElementById('qNum').textContent = examState.idx + 1;
+    document.getElementById('examScore').textContent =
+      `CORRECT ${examState.correct} · WRONG ${examState.wrong} · NEED ${examState.passNeeded}`;
+    document.getElementById('quizContent').innerHTML = `
+      <p class="question" style="font-size: 18px;">${q.q}</p>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        ${q.options.map((opt, i) => `
+          <button class="choice" data-i="${i}" onclick="answerExam(${i})">
+            <span class="choice-letter">${String.fromCharCode(65 + i)}</span>${opt}
+          </button>
+        `).join('')}
+      </div>
+      <div id="quizFeedback"></div>
+    `;
+  }
+  window.answerExam = function (picked) {
+    const q = chapter.exam[examState.idx];
+    document.querySelectorAll('#quizContent .choice').forEach(c => c.disabled = true);
+    const correct = picked === q.correct;
+    const pickedBtn = document.querySelector('#quizContent .choice[data-i="' + picked + '"]');
+    pickedBtn.classList.add(correct ? 'correct' : 'wrong');
+    if (!correct) {
+      const correctBtn = document.querySelector('#quizContent .choice[data-i="' + q.correct + '"]');
+      if (correctBtn) correctBtn.classList.add('correct');
+      examState.wrong++;
+    } else {
+      examState.correct++;
+    }
+    document.getElementById('examScore').textContent =
+      `CORRECT ${examState.correct} · WRONG ${examState.wrong} · NEED ${examState.passNeeded}`;
+
+    document.getElementById('quizFeedback').innerHTML = `
+      <div class="feedback ${correct ? 'good' : 'bad'}" style="margin-top: 18px;">
+        <div class="feedback-icon">
+          ${correct ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'}
+        </div>
+        <div><div style="font-weight: 700;">${correct ? 'Correct.' : 'Not quite.'}</div></div>
+      </div>
+      <div class="lesson-actions">
+        <button class="btn btn-primary btn-lg" onclick="nextExam()">${examState.idx < chapter.exam.length - 1 ? 'Next question →' : 'See result →'}</button>
+      </div>
+    `;
+  };
+  window.nextExam = function () {
+    if (examState.idx < chapter.exam.length - 1) {
+      examState.idx++; renderExamQuestion();
+    } else {
+      // Done. Pass or fail.
+      const passed = examState.correct >= examState.passNeeded;
+      if (passed) {
+        finishLesson();
+      } else {
+        document.getElementById('stepHost').querySelector('.step.active').innerHTML = `
+          <div class="reading-card" style="border-color: var(--danger); background: #fce8e8;">
+            <h3 style="color: var(--danger); margin-top: 0;">Not yet — try again.</h3>
+            <p>You got ${examState.correct} of ${chapter.exam.length}. You need ${examState.passNeeded} to pass.</p>
+            <p>Review the chapters in this module on the path, then come back.</p>
+          </div>
+          <div class="lesson-actions">
+            <button class="btn btn-secondary btn-lg" onclick="location.reload()">Retake the exam</button>
+            <a class="btn btn-primary btn-lg" href="roadmap.html">Back to path →</a>
+          </div>
+        `;
+      }
+    }
+  };
+
+  // ---------- FINISH-BUTTON FLOOR GATE ----------
+  // While the loop player is on its last beat ("Finish ✓"), poll the server's
+  // §84.501 active-time status. If the floor isn't met, grey the button out
+  // and update its label with how many minutes remain. Re-color it when met.
+  let _finishFloorTimer = null;
+  function installFinishFloorGate() {
+    if (_finishFloorTimer) clearInterval(_finishFloorTimer);
+    const tick = async () => {
+      const btn = document.getElementById('lpNext');
+      if (!btn) return;
+      const finishLabels = ['Finish ✓', 'Terminar ✓'];
+      const isFinishBeat = finishLabels.includes((btn.textContent || '').trim());
+      if (!isFinishBeat) {
+        btn.classList.remove('floor-pending');
+        btn.title = '';
+        return;
+      }
+      try {
+        const r = await fetch('/api/compliance/timer/status?lesson_id=' + encodeURIComponent(chapter.id), { credentials: 'include' });
+        if (!r.ok) return;
+        const st = await r.json();
+        if (st && st.met === false) {
+          const remMin = Math.max(1, Math.ceil((st.remaining_seconds || 0) / 60));
+          btn.disabled = true;
+          btn.classList.add('floor-pending');
+          btn.textContent = L2(remMin + ' more min', remMin + ' min más');
+          btn.title = L2(
+            'Texas §84.501 requires more active time on this chapter before you can finish.',
+            'La regla §84.501 de Texas requiere más tiempo activo en este capítulo.'
+          );
+        } else {
+          btn.disabled = false;
+          btn.classList.remove('floor-pending');
+          btn.textContent = L2('Finish ✓', 'Terminar ✓');
+          btn.title = '';
+        }
+      } catch (e) { /* offline — leave as-is */ }
+    };
+    tick();
+    _finishFloorTimer = setInterval(tick, 4000);
+  }
+
+  // ---------- COMPLETE PANEL ----------
+  function completePanel() {
+    const next = (window.APEX_CURRICULUM && APEX_CURRICULUM.nextChapter)
+      ? APEX_CURRICULUM.nextChapter(chapter.id) : null;
+    const nextBtn = next
+      ? `<a href="lesson.html?id=${encodeURIComponent(next.id)}" class="btn btn-primary btn-lg">${L2('Next chapter · ' + next.id + ' →', 'Siguiente capítulo · ' + next.id + ' →')}</a>`
+      : `<a href="roadmap.html" class="btn btn-primary btn-lg">${L2('Back to path →', 'Regresar al camino →')}</a>`;
+    return `
+      <div class="complete-frame">
+        <div class="complete-circle">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h2 class="font-display" style="font-size: 32px; font-weight: 800; margin: 0 0 8px; letter-spacing: -0.02em;">${L2('Chapter', 'Capítulo')} ${chapter.id} ${L2('mastered.', 'dominado.')}</h2>
+        <p style="color: var(--ink-500); margin: 0 0 8px;" id="completeBlurb"></p>
+        <div class="reward-row">
+          <div class="reward"><div class="num">+50</div><div class="lbl">${L2('XP earned', 'XP ganada')}</div></div>
+          <div class="reward"><div class="num">+1</div><div class="lbl">${L2('Streak day', 'Día de racha')}</div></div>
+          <div class="reward"><div class="num" id="completedCount">—</div><div class="lbl">${L2('Chapters', 'Capítulos')}</div></div>
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 24px;">
+          <a href="roadmap.html" class="btn btn-secondary btn-lg">${L2('Back to path', 'Regresar')}</a>
+          ${nextBtn}
+        </div>
+      </div>
+    `;
+  }
+
+  // ---------- STEP NAV ----------
+  function setStep(n) {
+    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+    const target = document.querySelector('.step[data-step="' + n + '"]');
+    if (target) target.classList.add('active');
+    const dots = document.querySelectorAll('#steps .step-dot');
+    dots.forEach((d, i) => {
+      d.classList.remove('done', 'current');
+      if (i + 1 < n) d.classList.add('done');
+      if (i + 1 === n) d.classList.add('current');
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function goStep(n) { setStep(n); }
+  window.goStep = goStep;
+
+  // ---------- CHOICE PICK ----------
+  function pickChoice(letter) {
+    document.querySelectorAll('#choiceList .choice').forEach(c => c.disabled = true);
+    const c = chapter.consequences[letter] || { good: false, title: 'No outcome defined.', body: '' };
+    document.getElementById('consequence').innerHTML = `
+      <div class="feedback ${c.good ? 'good' : 'bad'}">
+        <div class="feedback-icon">
+          ${c.good
+            ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+            : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+          }
+        </div>
+        <div>
+          <div style="font-weight: 700; margin-bottom: 6px;">${c.title}</div>
+          <div style="font-size: 14px; line-height: 1.55;">${c.body}</div>
+        </div>
+      </div>
+    `;
+    setTimeout(() => goStep(3), 350);
+  }
+  window.pickChoice = pickChoice;
+
+  // ---------- QUIZ ----------
+  let qIndex = 0;
+  let wrongOnce = false;
+  function renderQuiz() {
+    const q = chapter.quiz[qIndex];
+    document.getElementById('qNum').textContent = (qIndex + 1);
+    document.getElementById('quizContent').innerHTML = `
+      <p class="question" style="font-size: 18px;">${q.q}</p>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        ${q.options.map((opt, i) => `
+          <button class="choice" data-i="${i}" onclick="answerQuiz(${i})">
+            <span class="choice-letter">${String.fromCharCode(65 + i)}</span>${opt}
+          </button>
+        `).join('')}
+      </div>
+      <div id="quizFeedback"></div>
+    `;
+  }
+  function answerQuiz(picked) {
+    const q = chapter.quiz[qIndex];
+    document.querySelectorAll('#quizContent .choice').forEach(c => c.disabled = true);
+    const correct = picked === q.correct;
+    const pickedBtn = document.querySelector('#quizContent .choice[data-i="' + picked + '"]');
+    pickedBtn.classList.add(correct ? 'correct' : 'wrong');
+    if (!correct) {
+      const correctBtn = document.querySelector('#quizContent .choice[data-i="' + q.correct + '"]');
+      if (correctBtn) correctBtn.classList.add('correct');
+      wrongOnce = true;
+    }
+    document.getElementById('quizFeedback').innerHTML = `
+      <div class="feedback ${correct ? 'good' : 'bad'}" style="margin-top: 18px;">
+        <div class="feedback-icon">
+          ${correct
+            ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
+            : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+          }
+        </div>
+        <div>
+          <div style="font-weight: 700; margin-bottom: 6px;">${correct ? 'Nailed it.' : "Not quite — let's lock this one in."}</div>
+          <div style="font-size: 14px; line-height: 1.55;">${q.why}</div>
+        </div>
+      </div>
+      <div class="lesson-actions">
+        <button class="btn btn-primary btn-lg" onclick="nextQuiz()">${qIndex < chapter.quiz.length - 1 ? 'Next question →' : (wrongOnce ? 'Retry the missed ones →' : 'Finish chapter →')}</button>
+      </div>
+    `;
+  }
+  window.answerQuiz = answerQuiz;
+  function nextQuiz() {
+    if (qIndex < chapter.quiz.length - 1) {
+      qIndex++; renderQuiz();
+    } else if (wrongOnce) {
+      qIndex = 0; wrongOnce = false; renderQuiz();
+    } else {
+      finishLesson();
+    }
+  }
+  window.nextQuiz = nextQuiz;
+
+  // ---------- FINISH ----------
+  async function finishLesson() {
+    // §84.501 floor guard: confirm minimum time before completing, so the
+    // loop player's Finish button can't bypass the time requirement (server
+    // would 409 anyway; this keeps the local state honest and informs the user).
+    try {
+      const r = await fetch('/api/compliance/timer/status?lesson_id=' + encodeURIComponent(chapter.id), { credentials: 'include' });
+      if (r.ok) {
+        const st = await r.json();
+        if (st && st.met === false) {
+          const remMin = Math.max(1, Math.ceil((st.remaining_seconds || 0) / 60));
+          alert(L2(
+            'Texas rule §84.501 requires more time on this chapter — about ' + remMin + ' more minute(s) before you can finish. Keep reviewing; the bar at the top shows your progress.',
+            'La regla de Texas §84.501 requiere más tiempo en este capítulo — unos ' + remMin + ' minuto(s) más antes de poder terminar. Sigue repasando; la barra de arriba muestra tu progreso.'
+          ));
+          return;
+        }
+      }
+    } catch (e) { /* if status unavailable, fall through (server still enforces) */ }
+    stopTimer();
+    if (_finishFloorTimer) { clearInterval(_finishFloorTimer); _finishFloorTimer = null; }
+    APEX.awardXP(50);
+    APEX.bumpStreak();
+    APEX.completeLesson(chapter.id);
+    try { sessionStorage.setItem('apex_just_completed', '1'); } catch(e){}
+    // Credit either real engaged time, or the chapter's planned minutes if shorter is suspicious.
+    const engagedMin = Math.max(1, Math.floor(engagedSec / 60));
+    const credit = Math.min(chapter.minutes, engagedMin || chapter.minutes);
+    APEX.addChapterMinutes(chapter.id, credit);
+    // Server sync (fire-and-forget — local already updated optimistically).
+    APEX.finishLessonOnServer(chapter.id, credit, 50);
+
+    // Render complete panel. With the loop player active the step DOM is gone,
+    // so always build the completion panel into stepHost. (Legacy scenario flow
+    // had a step-6 panel, but the loop player replaces that.)
+    const _loopActive = !!(window.APEX_LOOP && (chapter.body || chapter.exam || chapter.options));
+    if (!_loopActive && chapter.type === 'scenario' && chapter.options && chapter.quiz) {
+      goStep(6);
+    } else {
+      document.getElementById('stepHost').innerHTML = `<section class="step active">${completePanel()}</section>`;
+    }
+    const completed = (APEX.load().completedLessons || []).length;
+    const total = APEX_CURRICULUM.allChapters.length;
+    const cc = document.getElementById('completedCount');
+    if (cc) cc.textContent = `${completed}/${total}`;
+    const blurb = document.getElementById('completeBlurb');
+    if (blurb) blurb.textContent = L2(`Credited ${credit} min toward your 32 TDLR hours.`, `Se acreditaron ${credit} min hacia tus 32 horas TDLR.`);
+    fireXpBurst(50);
+    fireConfetti(120);
+  }
+  window.finishLesson = finishLesson;
+
+  // Boot
+  render();
+</script>
+<script src="scripts/lang-toggle.js"></script>
+<script type="module">
+  // TDLR compliance: anti-skip timer + tamper signals + identity challenge + gate UI
+  import { startTimer } from './scripts/compliance/timer.js';
+  import { startTamperWatch } from './scripts/compliance/tamper.js';
+  import { maybeChallenge } from './scripts/compliance/identity.js';
+  import { attachLessonGate } from './scripts/compliance/lesson-gate.js';
+  const _lessonId = new URLSearchParams(location.search).get('id');
+  if (_lessonId) {
+    startTimer(_lessonId).catch(() => {});
+    startTamperWatch(_lessonId);
+    maybeChallenge(_lessonId);
+    // Gate attaches after first render so buttons exist in the DOM.
+    setTimeout(() => attachLessonGate(_lessonId), 500);
+  }
+</script>
+<script type="module" src="scripts/compliance/bootstrap.js"></script>
+<script>if(window.APEX&&APEX.requireTrack)APEX.requireTrack("teen");</script>
+</body>
+</html>

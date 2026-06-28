@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — Parent Companion · BTW Logbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/app.css" />
+<style>
+  .kpi-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 24px; }
+  @media (min-width: 720px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+  .kpi { padding: 22px; background: var(--bg-2); border: 1px solid var(--hairline); border-radius: 14px; box-shadow: var(--shadow-sm); }
+  .kpi .lbl { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; letter-spacing: 0.16em; color: var(--ink-700); text-transform: uppercase; }
+  .kpi .val { font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 32px; letter-spacing: -0.025em; color: var(--ink-50); margin-top: 6px; line-height: 1; }
+  .kpi .val .small { font-size: 16px; color: var(--ink-500); font-weight: 600; }
+  .kpi .sub { font-size: 12.5px; color: var(--ink-500); margin-top: 8px; }
+  .kpi.signal .val { color: var(--signal-deep); }
+
+  .pbar { margin-top: 10px; height: 6px; background: var(--bg-3); border-radius: 999px; overflow: hidden; border: 1px solid var(--hairline); }
+  .pbar > div { height: 100%; background: linear-gradient(90deg, var(--signal), var(--signal-soft)); border-radius: 999px; transition: width 0.6s ease; }
+
+  .add-card { padding: 24px; background: var(--bg-2); border: 1px solid var(--hairline); border-radius: 14px; box-shadow: var(--shadow-sm); margin-bottom: 24px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+  .form-grid label { display: block; font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-500); margin-bottom: 4px; }
+  .form-grid input, .form-grid select, .form-grid textarea { width: 100%; }
+  textarea { min-height: 70px; resize: vertical; }
+  .gps-status { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; letter-spacing: 0.12em; padding: 8px 12px; border-radius: 8px; margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; }
+  .gps-status.idle { background: var(--bg-3); color: var(--ink-500); border: 1px solid var(--hairline); }
+  .gps-status.ok   { background: var(--signal-bg); color: var(--signal-deep); border: 1px solid rgba(29,78,216,0.3); }
+  .gps-status.err  { background: #fce8e8; color: var(--danger); border: 1px solid #f5c6c6; }
+
+  .drive-list { background: var(--bg-2); border: 1px solid var(--hairline); border-radius: 14px; box-shadow: var(--shadow-sm); overflow: hidden; }
+  .drive-row {
+    display: grid; grid-template-columns: 110px 1fr 80px 90px 110px 90px 36px; gap: 12px; align-items: center;
+    padding: 14px 16px; border-bottom: 1px solid var(--hairline); font-size: 13.5px;
+  }
+  .drive-row:last-child { border-bottom: 0; }
+  .drive-row.head { background: var(--bg-3); font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-700); }
+  .drive-row .verified { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; padding: 3px 8px; border-radius: 5px; letter-spacing: 0.10em; }
+  .verified.yes { background: var(--signal-bg); color: var(--signal-deep); border: 1px solid rgba(29,78,216,0.3); }
+  .verified.no  { background: var(--bg-3); color: var(--ink-700); border: 1px solid var(--hairline); }
+  .drive-row .del-btn { background: transparent; border: 0; color: var(--ink-700); cursor: pointer; padding: 4px; border-radius: 6px; }
+  .drive-row .del-btn:hover { color: var(--danger); background: #fce8e8; }
+  @media (max-width: 720px) {
+    .drive-row { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .drive-row.head { display: none; }
+  }
+
+  .empty { text-align: center; padding: 48px 24px; color: var(--ink-500); }
+</style>
+</head>
+<body>
+<div class="app-layout">
+
+  <aside class="sidebar">
+    <a href="dashboard.html" class="sidebar-logo">
+      <div class="sidebar-logo-mark" style="background:#ffffff;border:1px solid var(--hairline);box-shadow:var(--shadow-sm);"><svg viewBox="0 0 32 32" fill="none" width="22" height="22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g stroke="#1d4ed8" stroke-width="2.4" stroke-linecap="round"><path d="M 14 4 C 6 12, 22 18, 12 24 C 6 28, 16 30, 14 30"/><path d="M 20 4 C 28 12, 12 18, 22 24 C 28 28, 18 30, 20 30"/></g></svg></div>
+      <span class="sidebar-logo-text"><span style="color:#1d4ed8;">Good</span><span style="color:#f59e0b;">Lane</span></span>
+    </a>
+    <div class="nav-section-label">Family</div>
+    <a class="nav-item" href="dashboard.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4v-7H10v7H6a2 2 0 0 1-2-2V9z"/></svg>
+      <span data-i18n="nav.dashboard">Dashboard</span>
+    </a>
+    <a class="nav-item active" href="parent.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm14 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/><path d="M3 17V9l2-5h14l2 5v8h-3M16 17H8"/></svg>
+      <span data-i18n="nav.btw_logbook">BTW Logbook</span>
+    </a>
+    <a class="nav-item" href="roadmap.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l-6 6 6 6M9 5h6a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4H9"/></svg>
+      <span data-i18n="nav.teen_path">Teen's path</span>
+    </a>
+    <a class="nav-item" href="dmv-test.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1h3M18 9h2a2 2 0 0 0 2-2V6a1 1 0 0 0-1-1h-3M6 9V3h12v6a6 6 0 0 1-12 0zM9 21h6M12 17v4"/></svg>
+      <span data-i18n="nav.dmv_sim">DMV Day Sim</span>
+    </a>
+    <div class="nav-section-label">Trust</div>
+    <a class="nav-item" href="compliance.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span data-i18n="nav.compliance">Compliance</span>
+    </a>
+    <button class="signout" onclick="signOut()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      <span data-i18n="nav.signout">Sign out</span>
+    </button>
+  </aside>
+
+  <main class="main">
+    <div id="topbar"></div>
+
+    <div class="topbar" style="margin-bottom: 4px;">
+      <div>
+        <h1><span data-i18n="btw.title">Behind-the-wheel logbook</span></h1>
+        <p>TX requires <strong>30 hours</strong> of supervised driving (10 at night) before the road test. Goodlane captures GPS at start &amp; end and exports a TDLR DE-964 / DE-964E sheet for DPS.</p>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <a href="parent_learn.html" class="btn btn-primary"><span data-i18n="btw.parent_track">📘 Parent track →</span></a>
+        <button class="btn btn-secondary" onclick="downloadDE964()"><span data-i18n="btw.export">⬇ Export DE-964 CSV</span></button>
+      </div>
+    </div>
+
+    <a href="parent_learn.html" class="card card-hover" style="margin-bottom: 22px; display: flex; gap: 16px; align-items: center; padding: 18px 20px; background: linear-gradient(135deg, #15191f 0%, #1f242c 100%); border-color: #2a313b; color: #faf6ec; text-decoration: none; position: relative; overflow: hidden;">
+      <span style="position: absolute; top: 0; bottom: 0; left: 0; width: 6px; background: repeating-linear-gradient(180deg, #faf6ec 0 12px, #15191f 12px 24px);"></span>
+      <div style="width: 48px; height: 48px; border-radius: 10px; background: rgba(251,191,36,0.18); color: #fbbf24; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      </div>
+      <div style="flex: 1; min-width: 0;">
+        <div style="font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; color: #fbbf24; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;" data-i18n="btw.parent_track_eyebrow">PARENT TRACK · 8 TOPICS · ~50 MIN</div>
+        <h3 style="font-family: 'Inter', system-ui, sans-serif; font-size: 18px; font-weight: 800; font-style: italic; margin: 0 0 4px;" data-i18n="btw.parent_track_h">Everything you need to supervise.</h3>
+        <p style="margin: 0; color: rgba(250,246,236,0.72); font-size: 13.5px;" data-i18n="btw.parent_track_b">Quick visual cards. No quizzes. GDL rules · DPS road test · insurance · crash protocol.</p>
+      </div>
+      <div style="font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: #fbbf24; letter-spacing: 0.16em; font-weight: 700;">OPEN →</div>
+    </a>
+
+    <div class="kpi-grid">
+      <div class="kpi signal">
+        <div class="lbl"><span data-i18n="btw.total_hours">Total hours</span></div>
+        <div class="val" id="kpiHours">0.0<span class="small"> / 30</span></div>
+        <div class="pbar"><div id="kpiHoursBar" style="width: 0%;"></div></div>
+        <div class="sub" id="kpiHoursLeft">30 hours remaining</div>
+      </div>
+      <div class="kpi">
+        <div class="lbl"><span data-i18n="btw.night_hours">Night hours</span></div>
+        <div class="val" id="kpiNight">0.0<span class="small"> / 10</span></div>
+        <div class="pbar"><div id="kpiNightBar" style="width: 0%;"></div></div>
+        <div class="sub" id="kpiNightLeft">10 night hours remaining</div>
+      </div>
+      <div class="kpi">
+        <div class="lbl"><span data-i18n="btw.drives_logged">Drives logged</span></div>
+        <div class="val" id="kpiDrives">0</div>
+        <div class="sub" id="kpiVerified">0 GPS-verified</div>
+      </div>
+      <div class="kpi">
+        <div class="lbl"><span data-i18n="btw.miles_driven">Miles driven</span></div>
+        <div class="val" id="kpiMiles">0</div>
+        <div class="sub">Across all logged drives</div>
+      </div>
+    </div>
+
+    <div class="add-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 12px;">
+        <h2 class="font-display" style="font-size: 18px; font-weight: 700; margin: 0;"><span data-i18n="btw.log_new">Log a new drive</span></h2>
+        <button class="btn btn-primary" id="captureGpsBtn" onclick="captureGPS()"><span data-i18n="btw.capture_gps">📍 Capture GPS now</span></button>
+      </div>
+      <div class="gps-status idle" id="gpsStatus">▸ GPS NOT CAPTURED — TAP "CAPTURE GPS" WHEN YOU START &amp; AGAIN WHEN YOU END</div>
+      <form id="driveForm" onsubmit="saveDrive(event)" style="margin-top: 14px;">
+        <div class="form-grid">
+          <div><label>Date</label><input type="date" id="f-date" required /></div>
+          <div><label>Duration (minutes)</label><input type="number" id="f-duration" min="1" max="600" required placeholder="45" /></div>
+          <div><label>Start time</label><input type="time" id="f-start" /></div>
+          <div><label>End time</label><input type="time" id="f-end" /></div>
+          <div><label>Miles driven</label><input type="number" id="f-miles" min="0" max="500" step="0.1" placeholder="12.5" /></div>
+          <div><label>Day or night?</label>
+            <select id="f-night">
+              <option value="0">Day</option>
+              <option value="1">Night</option>
+            </select>
+          </div>
+          <div><label>Weather</label>
+            <select id="f-weather">
+              <option>Clear</option><option>Cloudy</option><option>Rain</option>
+              <option>Heavy rain</option><option>Fog</option><option>Wind</option><option>Other</option>
+            </select>
+          </div>
+          <div><label>Road type</label>
+            <select id="f-road">
+              <option>Residential</option><option>Urban</option><option>Highway</option>
+              <option>Mixed</option><option>Parking lot</option>
+            </select>
+          </div>
+          <div><label>Parent / instructor name</label><input type="text" id="f-pname" placeholder="Diego Martinez" /></div>
+          <div><label>Parent / instructor TX license #</label><input type="text" id="f-plic" placeholder="12345678" /></div>
+          <div style="grid-column: 1 / -1;"><label>Notes</label><textarea id="f-notes" placeholder="Drove the loop down Lamar to Mopac. Practiced merging."></textarea></div>
+        </div>
+        <div style="margin-top: 16px; display: flex; gap: 10px; align-items: center;">
+          <button type="submit" class="btn btn-primary"><span data-i18n="btw.save_drive">Save drive</span></button>
+          <span style="font-size: 12.5px; color: var(--ink-500);">Saved drives sync to your TDLR DE-964 export.</span>
+        </div>
+      </form>
+    </div>
+
+    <div class="drive-list" id="driveList">
+      <div class="drive-row head">
+        <div>Date</div><div>Duration</div><div>Miles</div><div>Day/Night</div><div>Weather</div><div>GPS</div><div></div>
+      </div>
+      <div class="empty">No drives logged yet. Add your first one above.</div>
+    </div>
+  </main>
+</div>
+
+<script src="scripts/api.js"></script>
+<script src="scripts/app.js"></script>
+<script>
+  let pendingGPSStart = null, pendingGPSEnd = null;
+
+  (async () => {
+    try { if (window.APEX_API) await APEX.refresh(); } catch (e) {}
+    init();
+  })();
+
+  function init() {
+    const s = APEX.guard(); if (!s) return;
+    document.getElementById('topbar').innerHTML = APEX_TOPBAR(
+      'Parent companion · ' + (s.user || ''),
+      'Track every supervised drive · GPS-verified · DE-964 export ready'
+    );
+    document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+    refresh();
+  }
+
+  function captureGPS() {
+    const btn = document.getElementById('captureGpsBtn');
+    const status = document.getElementById('gpsStatus');
+    if (!navigator.geolocation) {
+      status.className = 'gps-status err';
+      status.textContent = '✕ GEOLOCATION NOT SUPPORTED IN THIS BROWSER';
+      return;
+    }
+    btn.disabled = true; btn.textContent = '📍 Capturing…';
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        if (!pendingGPSStart) {
+          pendingGPSStart = { lat: latitude, lng: longitude };
+          status.className = 'gps-status ok';
+          status.textContent = `▸ START CAPTURED · ${latitude.toFixed(4)}, ${longitude.toFixed(4)} — DRIVE, THEN CAPTURE END`;
+          btn.disabled = false; btn.textContent = '📍 Capture GPS end';
+        } else {
+          pendingGPSEnd = { lat: latitude, lng: longitude };
+          status.className = 'gps-status ok';
+          status.textContent = `▸ END CAPTURED — DRIVE GPS-VERIFIED. SAVE DRIVE BELOW.`;
+          btn.disabled = false; btn.textContent = '📍 GPS captured ✓';
+        }
+      },
+      (err) => {
+        btn.disabled = false; btn.textContent = '<span data-i18n="btw.capture_gps">📍 Capture GPS now</span>';
+        status.className = 'gps-status err';
+        status.textContent = '✕ ' + (err.message || 'Geolocation denied').toUpperCase();
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  async function saveDrive(e) {
+    e.preventDefault();
+    const payload = {
+      date: document.getElementById('f-date').value,
+      start_time: document.getElementById('f-start').value || null,
+      end_time: document.getElementById('f-end').value || null,
+      duration_min: parseInt(document.getElementById('f-duration').value, 10),
+      miles: parseFloat(document.getElementById('f-miles').value || 0),
+      is_night: document.getElementById('f-night').value === '1',
+      weather: document.getElementById('f-weather').value,
+      road_type: document.getElementById('f-road').value,
+      gps_start_lat: pendingGPSStart && pendingGPSStart.lat,
+      gps_start_lng: pendingGPSStart && pendingGPSStart.lng,
+      gps_end_lat: pendingGPSEnd && pendingGPSEnd.lat,
+      gps_end_lng: pendingGPSEnd && pendingGPSEnd.lng,
+      parent_name: document.getElementById('f-pname').value || null,
+      parent_license: document.getElementById('f-plic').value || null,
+      notes: document.getElementById('f-notes').value || null,
+    };
+    try {
+      const r = await fetch('/api/btw_drives', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!r.ok) throw new Error('save failed');
+      document.getElementById('driveForm').reset();
+      document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+      pendingGPSStart = pendingGPSEnd = null;
+      const status = document.getElementById('gpsStatus');
+      status.className = 'gps-status idle';
+      status.textContent = '▸ GPS NOT CAPTURED — TAP "CAPTURE GPS" WHEN YOU START & AGAIN WHEN YOU END';
+      document.getElementById('captureGpsBtn').textContent = '<span data-i18n="btw.capture_gps">📍 Capture GPS now</span>';
+      await refresh();
+      window.scrollTo({ top: document.getElementById('driveList').offsetTop - 24, behavior: 'smooth' });
+    } catch (e) {
+      alert('Could not save the drive. Make sure you are signed in.');
+    }
+  }
+  window.saveDrive = saveDrive;
+  window.captureGPS = captureGPS;
+
+  async function refresh() {
+    let data = null;
+    try {
+      const r = await fetch('/api/btw_drives', { credentials: 'include' });
+      if (r.ok) data = await r.json();
+    } catch (e) {}
+    if (!data) return;
+    const totalH = data.total_hours, nightH = data.night_hours;
+    document.getElementById('kpiHours').innerHTML = totalH.toFixed(1) + '<span class="small"> / 30</span>';
+    document.getElementById('kpiHoursBar').style.width = Math.min(100, (totalH / 30) * 100) + '%';
+    document.getElementById('kpiHoursLeft').textContent = Math.max(0, (30 - totalH)).toFixed(1) + ' hours remaining';
+    document.getElementById('kpiNight').innerHTML = nightH.toFixed(1) + '<span class="small"> / 10</span>';
+    document.getElementById('kpiNightBar').style.width = Math.min(100, (nightH / 10) * 100) + '%';
+    document.getElementById('kpiNightLeft').textContent = Math.max(0, (10 - nightH)).toFixed(1) + ' night hours remaining';
+    document.getElementById('kpiDrives').textContent = data.drives.length;
+    document.getElementById('kpiVerified').textContent = data.verified_count + ' GPS-verified';
+    document.getElementById('kpiMiles').textContent = data.miles.toFixed(0);
+
+    const list = document.getElementById('driveList');
+    if (!data.drives.length) {
+      list.innerHTML = `
+        <div class="drive-row head"><div>Date</div><div>Duration</div><div>Miles</div><div>Day/Night</div><div>Weather</div><div>GPS</div><div></div></div>
+        <div class="empty">No drives logged yet. Add your first one above.</div>`;
+      return;
+    }
+    list.innerHTML = `
+      <div class="drive-row head"><div>Date</div><div>Duration</div><div>Miles</div><div>Day/Night</div><div>Weather</div><div>GPS</div><div></div></div>
+      ${data.drives.map(d => `
+        <div class="drive-row">
+          <div>${escape(d.date)}</div>
+          <div>${(d.duration_min || 0)} min · <span style="color: var(--ink-500); font-size: 12px;">${((d.duration_min||0)/60).toFixed(1)} hr</span></div>
+          <div>${(d.miles || 0).toFixed(1)}</div>
+          <div>${d.is_night ? '🌙 Night' : '☀ Day'}</div>
+          <div>${escape(d.weather || '—')}</div>
+          <div><span class="verified ${d.gps_verified ? 'yes' : 'no'}">${d.gps_verified ? 'GPS ✓' : 'NO GPS'}</span></div>
+          <div><button class="del-btn" onclick="deleteDrive(${d.id})" title="Delete">✕</button></div>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  async function deleteDrive(id) {
+    if (!confirm('Delete this drive entry?')) return;
+    try {
+      await fetch('/api/btw_drives/' + id, { method: 'DELETE', credentials: 'include' });
+      await refresh();
+    } catch (e) {}
+  }
+  window.deleteDrive = deleteDrive;
+
+  function downloadDE964() { location.href = '/api/btw_drives/export'; }
+  window.downloadDE964 = downloadDE964;
+
+  function escape(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  async function signOut() { try { await APEX.logout(); } catch (e) {} location.href = 'index.html'; }
+  window.signOut = signOut;
+</script>
+<script src="scripts/i18n.js"></script>
+<script src="scripts/lang-toggle.js"></script>
+<script type="module" src="scripts/compliance/bootstrap.js"></script>
+<script>if(window.APEX&&APEX.requireTrack)APEX.requireTrack("parent");</script>
+</body>
+</html>

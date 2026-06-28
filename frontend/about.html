@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — About · TDLR-track Texas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/app.css" />
+<style>
+  body { padding: 0; }
+  .container { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+  .container.wide { max-width: 1180px; }
+
+  .top-strip { background: var(--ink-50); border-bottom: 1px solid var(--ink-50); color: #f5f1e8; font-family: 'Inter', system-ui, sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; padding: 9px 0; text-align: center; position: relative; z-index: 60; }
+  .top-strip a { color: var(--signal-soft); }
+  .top-strip .pulse { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--signal-soft); margin-right: 8px; vertical-align: middle; animation: tspulse 1.6s ease-in-out infinite; }
+  @keyframes tspulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .nav-wrap { position: sticky; top: 0; z-index: 50; background: rgba(251,250,246,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--hairline); }
+  .nav { height: 64px; display: flex; align-items: center; justify-content: space-between; }
+  .nav-logo { display: flex; align-items: center; gap: 10px; }
+  .nav-logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--signal); color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 17px; box-shadow: var(--shadow-primary); }
+  .nav-logo-text { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 17px; }
+  .nav-links { display: none; gap: 28px; font-size: 13.5px; color: var(--ink-500); }
+  @media (min-width: 768px) { .nav-links { display: flex; } }
+  .nav-links a { color: var(--ink-500); }
+  .nav-links a:hover { color: var(--ink-50); }
+  .nav-links a.active { color: var(--signal); }
+  .nav-cta { background: var(--signal); color: #ffffff; font-family: 'Inter', system-ui, sans-serif; font-weight: 600; font-size: 13px; padding: 10px 16px; border-radius: 8px; box-shadow: var(--shadow-primary); }
+
+  .hero { padding: 80px 0 40px; }
+  h1 { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: clamp(36px, 5.5vw, 60px); letter-spacing: -0.03em; line-height: 1.05; color: var(--ink-50); margin-bottom: 18px; }
+  h2 { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -0.02em; color: var(--ink-50); margin: 36px 0 12px; }
+  p.lead { color: var(--ink-300); font-size: 17.5px; line-height: 1.6; max-width: 660px; }
+  p { color: var(--ink-500); line-height: 1.65; font-size: 15px; }
+  p strong { color: var(--ink-100); }
+  .eyebrow { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; letter-spacing: 0.20em; text-transform: uppercase; color: var(--signal); margin-bottom: 18px; }
+
+  .credentials { padding: 50px 0; border-top: 1px solid var(--hairline); margin-top: 40px; }
+  .cred-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .cred { padding: 22px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--hairline); box-shadow: var(--shadow-sm); }
+  .cred .lbl { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-700); margin-bottom: 8px; }
+  .cred .val { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 18px; color: var(--ink-50); letter-spacing: -0.01em; }
+  .cred .val.signal { color: var(--signal); }
+  .cred .sub { font-size: 12.5px; color: var(--ink-500); margin-top: 6px; line-height: 1.5; }
+
+  .principles { padding: 50px 0; }
+  .principle { display: grid; grid-template-columns: 80px 1fr; gap: 24px; padding: 22px 0; border-bottom: 1px solid var(--hairline); }
+  .principle:last-child { border-bottom: 0; }
+  .principle .num { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--signal); letter-spacing: 0.20em; padding-top: 4px; }
+  .principle h3 { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -0.015em; color: var(--ink-50); margin-bottom: 10px; }
+  .principle p { color: var(--ink-300); font-size: 14.5px; line-height: 1.6; }
+
+  footer { padding: 40px 0 60px; border-top: 1px solid var(--hairline); margin-top: 60px; }
+</style>
+</head>
+<body>
+
+<div class="top-strip">
+  <span class="pulse"></span>
+  <span>About Goodlane · TDLR-track · Texas</span>
+</div>
+
+<div class="nav-wrap">
+  <div class="container wide nav">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-mark">A</div>
+      <span class="nav-logo-text">Goodlane</span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html#how">How it works</a>
+      <a href="plans.html">Plans</a>
+      <a href="about.html" class="active">About</a>
+      <a href="compliance.html">Compliance</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+    <a href="login.html" style="font-size:13.5px;font-weight:600;color:var(--ink-500,#5d6776);padding:8px 12px;text-decoration:none;">Sign in</a>
+      <a href="plans.html" class="nav-cta">Get started</a>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="container">
+    <div class="eyebrow">/ About</div>
+    <h1>Drivers ed without the<br/>dark patterns.</h1>
+    <p class="lead">Goodlane is a Texas TDLR-track drivers-ed school built on one rule: the product can't trick you. No forced timers. No auto-renewals. No "free roadside trial" that bills $5/mo for the next four years. The course is the product. We charge once. You finish, you get your TDLR-issued certificate.</p>
+  </div>
+</section>
+
+<!-- CREDENTIALS -->
+<section class="credentials">
+  <div class="container">
+    <div class="eyebrow">/ Credentials &amp; identity</div>
+    <h2>The exact things every TX driving school must publish.</h2>
+    <p style="margin-top: 10px; max-width: 620px;">A Auto Driving School publishes their TDLR license number (#C3630) and Irving address. We will publish ours the moment TDLR issues it — not before. Anything below marked "pending" is in active filing.</p>
+
+    <div class="cred-grid" style="margin-top: 28px;">
+      <div class="cred">
+        <div class="lbl">Regulator</div>
+        <div class="val">TX TDLR</div>
+        <div class="sub">Texas Department of Licensing &amp; Regulation, Driver Education &amp; Safety program (16 TAC Ch. 84).</div>
+      </div>
+      <div class="cred">
+        <div class="lbl">License #</div>
+        <div class="val signal">Pending issuance</div>
+        <div class="sub">Filed Q1. Will be displayed on every page once issued — and on each certificate we print.</div>
+      </div>
+      <div class="cred">
+        <div class="lbl">Surety bond</div>
+        <div class="val">$10,000 face</div>
+        <div class="sub">Required by TX Education Code §1001.205. Protects students if a school fails to deliver.</div>
+      </div>
+      <div class="cred">
+        <div class="lbl">Course types filed</div>
+        <div class="val">4</div>
+        <div class="sub">Teen Instructor-Taught · Parent-Taught (PTDE) · Adult 18+ · Defensive Driving / Traffic Safety.</div>
+      </div>
+      <div class="cred">
+        <div class="lbl">Certificates</div>
+        <div class="val">DE-964 / ADE-1317 / Driving Safety</div>
+        <div class="sub">All certificates are issued from TDLR-approved templates with TDLR-purchased certificate numbers.</div>
+      </div>
+      <div class="cred">
+        <div class="lbl">Refund window</div>
+        <div class="val">14 days</div>
+        <div class="sub">Full refund inside 14 days, no questions. No restocking fee. No clawback if a chargeback hits.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRINCIPLES -->
+<section class="principles">
+  <div class="container">
+    <div class="eyebrow">/ Principles</div>
+    <h2>What we will and won't do.</h2>
+
+    <div class="principle">
+      <div class="num">01</div>
+      <div>
+        <h3>One charge. Forever.</h3>
+        <p>You pay $29–$129 depending on your course tier. That's it. No subscription. No "complimentary" roadside-assistance trial that auto-converts. No re-bill if you take longer than 30 days.</p>
+      </div>
+    </div>
+    <div class="principle">
+      <div class="num">02</div>
+      <div>
+        <h3>State minutes from real engagement.</h3>
+        <p>Texas requires 32 instructional hours for the teen course. Other schools enforce that with per-slide timers (60–90 seconds locked) and call it compliance. We track active engagement: scenarios, decisions, mastery quizzes. Idle = paused. The total still hits 32 TDLR hours, you just don't sit watching a countdown.</p>
+      </div>
+    </div>
+    <div class="principle">
+      <div class="num">03</div>
+      <div>
+        <h3>Public anything that's auditable.</h3>
+        <p>The full course tree, time-credit map, refund policy, regulator filings, and pass-rate (once we have one) live on the public site. If a regulator audits us, the same information they ask for is what students already see.</p>
+      </div>
+    </div>
+    <div class="principle">
+      <div class="num">04</div>
+      <div>
+        <h3>Bilingual is not a translation layer.</h3>
+        <p>A Auto, NHSA, Aceable all sell "Spanish drivers ed" — usually a Google-translated text dump. Goodlane ships native voice instruction in Spanish, scripted by a licensed bilingual TX instructor, with cultural framing ("imagínate que estás en una glorieta en Houston"), not a dictionary swap.</p>
+      </div>
+    </div>
+    <div class="principle">
+      <div class="num">05</div>
+      <div>
+        <h3>Parents are copilots, not invigilators.</h3>
+        <p>Most "parent dashboards" are a glorified gradebook. Goodlane gives parents a behind-the-wheel logbook, daily scenario prompts to coach during real drives, and a clean weekly progress digest. The product turns drives into teaching moments, not just minutes-completed audits.</p>
+      </div>
+    </div>
+    <div class="principle">
+      <div class="num">06</div>
+      <div>
+        <h3>If it can't pass TDLR, we don't ship it.</h3>
+        <p>Every course goes through TDLR curriculum review and licensed-instructor co-authoring before public sale. We do not market a course as state-approved before it actually is — full stop.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container wide" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; color: var(--ink-700); font-size: 13px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 24px; height: 24px; border-radius: 6px; background: linear-gradient(135deg, var(--signal), var(--cyan)); display: flex; align-items: center; justify-content: center; color: var(--bg-0); font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 13px;">A</div>
+      <span class="font-display" style="font-weight: 700; color: var(--ink-100);">Goodlane</span>
+      <span>© 2026</span>
+    </div>
+    <div style="display: flex; gap: 24px;">
+      <a href="plans.html" style="color: var(--ink-500);">Plans</a>
+      <a href="compliance.html" style="color: var(--ink-500);">Compliance</a>
+      <a href="contact.html" style="color: var(--ink-500);">Contact / Refund</a>
+    </div>
+  </div>
+</footer>
+
+<script src="scripts/i18n.js"></script>
+<script src="scripts/lang-toggle.js"></script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — Privacy Policy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/app.css" />
+<style>
+  body { background: var(--paper-2, #faf6ec); padding: 0; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 28px 22px 100px; line-height: 1.65; color: var(--ink-300, #2a313b); }
+  .back { color: var(--ink-500); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 7px; }
+  .back:hover { background: var(--bg-3); color: var(--ink-50); }
+  h1 { font-family: 'Inter', system-ui, sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink-50); margin: 18px 0 6px; }
+  h2 { font-family: 'Inter', system-ui, sans-serif; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink-50); margin: 32px 0 8px; }
+  p, li { font-size: 14.5px; }
+  ul { padding-left: 20px; }
+  .crumb { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; color: var(--signal-deep); letter-spacing: 0.20em; text-transform: uppercase; font-weight: 700; }
+  .legal-meta { font-family: 'Inter', system-ui, sans-serif; font-size: 11.5px; color: var(--ink-700); margin: 6px 0 24px; }
+  .lang-switch { font-size: 12px; color: var(--ink-500); margin-bottom: 18px; }
+  .lang-switch a { color: var(--signal-deep); cursor: pointer; }
+  .lang-switch a.active { font-weight: 700; }
+  .callout { background: var(--bg-2); border: 1px solid var(--hairline); border-left: 3px solid var(--signal); padding: 14px 16px; border-radius: 8px; margin: 14px 0; font-size: 14px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13.5px; }
+  th, td { text-align: left; padding: 9px 12px; border: 1px solid var(--hairline, #e6dfcc); vertical-align: top; }
+  th { background: var(--bg-3, #ede4d0); font-family: 'Inter', system-ui, sans-serif; font-weight: 700; color: var(--ink-50); }
+  [data-lang]:not(.active) { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="javascript:history.back()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    <span>Back</span>
+  </a>
+
+  <div class="lang-switch">
+    <a id="btnEn" class="active" onclick="showLang('en')">English</a> · <a id="btnEs" onclick="showLang('es')">Español</a>
+  </div>
+
+  <!-- ENGLISH -->
+  <section data-lang="en" class="active">
+    <div class="crumb">/ Privacy</div>
+    <h1>Privacy at Goodlane</h1>
+    <p class="legal-meta">Last updated: 2026-05-31 · Operator: Goodlane (working name) · Contact: privacy@goodlane.example</p>
+
+    <p>This page explains, in plain English, what data we collect from you, why we collect it, and what control you have over it. We try to collect as little as we need to run a legitimate Texas driver-education course — nothing more.</p>
+
+    <div class="callout">
+      <strong>Short version.</strong> We collect your name, email, course progress, and time-on-task. We keep it because TDLR makes us. You can download it or delete your account anytime from Settings.
+    </div>
+
+    <h2>1. What we collect</h2>
+    <table>
+      <tr><th>Category</th><th>Examples</th><th>Why</th></tr>
+      <tr><td>Account</td><td>Email, password (hashed), name, role (teen/parent), preferred language.</td><td>Identify you and let you sign back in.</td></tr>
+      <tr><td>Course progress</td><td>Chapters completed, minutes spent on each chapter, quiz answers, game scores, drive scores, shorts watched.</td><td>Required by TDLR (16 TAC §84.501) to prove you actually took the course.</td></tr>
+      <tr><td>Identity validation</td><td>Five personal-question answers you pick at signup; pass/fail of each challenge.</td><td>Required by §84.501 to confirm the person doing the course is the person who signed up.</td></tr>
+      <tr><td>Behind-the-wheel log</td><td>Date, duration, miles, weather, optional GPS coordinates, parent name + license number.</td><td>Required for the DE-964 export to TDLR.</td></tr>
+      <tr><td>Audit events</td><td>Logins, tab switches during a lesson, pauses, timeouts, lockout triggers, payment events.</td><td>TDLR audit trail. Retained 3 years.</td></tr>
+      <tr><td>Technical</td><td>IP address on auth events, session cookie, browser-reported language.</td><td>Spot abuse, rate-limit brute-force, keep you signed in.</td></tr>
+    </table>
+
+    <p>We do <strong>not</strong> collect: contacts, photos, location outside the optional BTW GPS points, microphone, camera, advertising IDs, or any third-party analytics tracker. There are no ad-tech pixels on this site.</p>
+
+    <h2>2. Why we keep it</h2>
+    <ul>
+      <li><strong>Run the course</strong> — show you what you've done and what's next.</li>
+      <li><strong>Comply with Texas</strong> — TDLR requires us to keep proof you took the course for 3 years after completion.</li>
+      <li><strong>Pay the right people</strong> — your purchase records prove you bought the course.</li>
+      <li><strong>Stop abuse</strong> — IP and session data lets us block brute-force login attempts.</li>
+    </ul>
+
+    <h2>3. Who can see it</h2>
+    <ul>
+      <li><strong>You</strong> — anytime, from your dashboard or via Settings → Download my data.</li>
+      <li><strong>TDLR auditors</strong> — only if Texas asks, and only the records §84.501 requires.</li>
+      <li><strong>Our payment processor</strong> — when you check out. They get name, email, amount; they do not get your course progress.</li>
+      <li><strong>Nobody else.</strong> We don't sell, rent, or share your data. There are no ad partners. There is no "data broker."</li>
+    </ul>
+
+    <h2>4. How long we keep it</h2>
+    <ul>
+      <li><strong>Active account</strong> — for as long as you have one.</li>
+      <li><strong>Course completion records</strong> — 3 years after you finish, because TDLR requires it. We keep the minimum: name, email, completion date, time-on-task, identity-validation outcomes.</li>
+      <li><strong>Audit events</strong> — 3 years from when the event happened.</li>
+      <li><strong>Deleted accounts</strong> — your data is removed within 30 days of deletion, except for the small TDLR-required completion record above.</li>
+    </ul>
+
+    <h2>5. How we protect it</h2>
+    <ul>
+      <li>Passwords are stored as <strong>PBKDF2-SHA256</strong> hashes with a per-user salt and 200,000 iterations. We never see your plaintext password.</li>
+      <li>Login is rate-limited (10 attempts per minute per IP). Repeated failures don't reveal whether the email is real.</li>
+      <li>Session cookies are <code>HttpOnly</code> and <code>SameSite=Lax</code>; we set <code>Secure</code> in production.</li>
+      <li>We send <code>Content-Security-Policy</code>, <code>X-Frame-Options: DENY</code>, <code>X-Content-Type-Options: nosniff</code>, and <code>Permissions-Policy</code> to lock down what the browser can do on our pages.</li>
+      <li>You can change your password and "sign out everywhere" from Settings if you think your account was touched by someone else.</li>
+    </ul>
+
+    <h2>6. Your rights</h2>
+    <ul>
+      <li><strong>See it</strong> — Settings → Download my data → JSON export of everything we have on you.</li>
+      <li><strong>Fix it</strong> — Settings → Account → change name, email, language, password.</li>
+      <li><strong>Delete it</strong> — Settings → Delete my account → confirm with your password and the word DELETE.</li>
+      <li><strong>Email us</strong> — privacy@goodlane.example. We answer within 30 days.</li>
+    </ul>
+
+    <h2>7. Students under 13 (COPPA)</h2>
+    <p>Goodlane is not aimed at children under 13. Texas driver education starts at 14. If you're under 13, please don't create an account. If you're a parent and your child under 13 has one, email us and we'll delete it.</p>
+
+    <h2>8. Cookies</h2>
+    <p>One cookie: <code>apex_sess</code>. It holds a random session token, lives 30 days, and is HttpOnly. We use no advertising or analytics cookies.</p>
+
+    <h2>9. Changes to this page</h2>
+    <p>If we change something material, we'll post a notice on your dashboard the next time you sign in. The "Last updated" date at the top always reflects the current version.</p>
+
+    <h2>10. Contact</h2>
+    <p>Questions, requests, or complaints: <strong>privacy@goodlane.example</strong>. We answer.</p>
+  </section>
+
+  <!-- SPANISH -->
+  <section data-lang="es">
+    <div class="crumb">/ Privacidad</div>
+    <h1>Privacidad en Goodlane</h1>
+    <p class="legal-meta">Última actualización: 2026-05-31 · Operador: Goodlane (nombre de trabajo) · Contacto: privacy@goodlane.example</p>
+
+    <p>Esta página explica, en español sencillo, qué datos guardamos de ti, por qué los guardamos y qué control tienes sobre ellos. Tratamos de pedir lo mínimo para operar un curso legítimo de manejo en Texas — nada más.</p>
+
+    <div class="callout">
+      <strong>Resumen.</strong> Guardamos tu nombre, correo, progreso del curso y tiempo activo. Lo guardamos porque TDLR lo exige. Puedes descargarlo o borrar tu cuenta cuando quieras desde Ajustes.
+    </div>
+
+    <h2>1. Qué guardamos</h2>
+    <table>
+      <tr><th>Categoría</th><th>Ejemplos</th><th>Razón</th></tr>
+      <tr><td>Cuenta</td><td>Correo, contraseña (en hash), nombre, rol (adolescente/padre), idioma.</td><td>Identificarte y poder volver a iniciar sesión.</td></tr>
+      <tr><td>Progreso</td><td>Capítulos completados, minutos por capítulo, respuestas, puntajes de juegos y manejo, clips vistos.</td><td>Requerido por TDLR (16 TAC §84.501) para comprobar que tomaste el curso.</td></tr>
+      <tr><td>Validación de identidad</td><td>Cinco respuestas personales que eliges al registrarte; resultado de cada reto.</td><td>Requerido por §84.501 para confirmar que la persona que toma el curso es la registrada.</td></tr>
+      <tr><td>Bitácora detrás del volante</td><td>Fecha, duración, millas, clima, coordenadas GPS opcionales, nombre + licencia del padre.</td><td>Requerido para la exportación DE-964 a TDLR.</td></tr>
+      <tr><td>Eventos de auditoría</td><td>Inicios de sesión, cambios de pestaña en una lección, pausas, expiraciones, bloqueos, eventos de pago.</td><td>Rastro de auditoría para TDLR. Se guarda 3 años.</td></tr>
+      <tr><td>Técnico</td><td>IP en eventos de autenticación, cookie de sesión, idioma del navegador.</td><td>Detectar abuso, limitar intentos, mantener tu sesión.</td></tr>
+    </table>
+
+    <p>Lo que <strong>no</strong> guardamos: tus contactos, fotos, ubicación fuera de los puntos GPS opcionales de la bitácora, micrófono, cámara, IDs de publicidad o cualquier rastreador externo. No hay píxeles publicitarios en este sitio.</p>
+
+    <h2>2. Por qué lo guardamos</h2>
+    <ul>
+      <li><strong>Operar el curso</strong> — mostrarte qué llevas y qué sigue.</li>
+      <li><strong>Cumplir con Texas</strong> — TDLR exige guardar prueba de que tomaste el curso por 3 años después de terminarlo.</li>
+      <li><strong>Cobrar correctamente</strong> — los registros de compra prueban que pagaste por el curso.</li>
+      <li><strong>Frenar abuso</strong> — la IP y la sesión nos dejan bloquear ataques de fuerza bruta.</li>
+    </ul>
+
+    <h2>3. Quién puede verlo</h2>
+    <ul>
+      <li><strong>Tú</strong> — en cualquier momento, desde Ajustes → Descargar mis datos.</li>
+      <li><strong>Auditores de TDLR</strong> — solo si Texas lo pide, y solo los registros que §84.501 exige.</li>
+      <li><strong>Nuestro procesador de pagos</strong> — cuando pagas. Recibe nombre, correo y monto; no recibe tu progreso del curso.</li>
+      <li><strong>Nadie más.</strong> No vendemos ni rentamos tus datos. No hay socios publicitarios. No hay "intermediario de datos."</li>
+    </ul>
+
+    <h2>4. Cuánto tiempo lo guardamos</h2>
+    <ul>
+      <li><strong>Cuenta activa</strong> — mientras tengas cuenta.</li>
+      <li><strong>Registro de finalización</strong> — 3 años después de terminar, porque TDLR lo exige. Solo lo mínimo: nombre, correo, fecha de finalización, tiempo activo, resultados de validación de identidad.</li>
+      <li><strong>Eventos de auditoría</strong> — 3 años desde que ocurrió el evento.</li>
+      <li><strong>Cuentas borradas</strong> — eliminamos tus datos dentro de 30 días después del borrado, excepto el pequeño registro de finalización que TDLR exige.</li>
+    </ul>
+
+    <h2>5. Cómo lo protegemos</h2>
+    <ul>
+      <li>Contraseñas guardadas como hashes <strong>PBKDF2-SHA256</strong> con salt por usuario y 200,000 iteraciones. Nunca vemos tu contraseña en texto claro.</li>
+      <li>Inicio de sesión limitado a 10 intentos por minuto por IP. Los fallos no revelan si el correo existe.</li>
+      <li>Cookies de sesión son <code>HttpOnly</code> y <code>SameSite=Lax</code>; activamos <code>Secure</code> en producción.</li>
+      <li>Mandamos <code>Content-Security-Policy</code>, <code>X-Frame-Options: DENY</code>, <code>X-Content-Type-Options: nosniff</code> y <code>Permissions-Policy</code> para limitar lo que el navegador puede hacer en nuestras páginas.</li>
+      <li>Puedes cambiar tu contraseña y "cerrar sesión en todos lados" desde Ajustes si crees que alguien más tocó tu cuenta.</li>
+    </ul>
+
+    <h2>6. Tus derechos</h2>
+    <ul>
+      <li><strong>Verlo</strong> — Ajustes → Descargar mis datos → JSON con todo lo que tenemos de ti.</li>
+      <li><strong>Corregirlo</strong> — Ajustes → Cuenta → cambia nombre, correo, idioma, contraseña.</li>
+      <li><strong>Borrarlo</strong> — Ajustes → Borrar mi cuenta → confirma con tu contraseña y la palabra DELETE.</li>
+      <li><strong>Escríbenos</strong> — privacy@goodlane.example. Respondemos en 30 días.</li>
+    </ul>
+
+    <h2>7. Estudiantes menores de 13 (COPPA)</h2>
+    <p>Goodlane no es para menores de 13. La educación vial en Texas empieza a los 14. Si tienes menos de 13, por favor no crees cuenta. Si eres padre y tu hijo menor de 13 ya tiene una, escríbenos y la borramos.</p>
+
+    <h2>8. Cookies</h2>
+    <p>Una cookie: <code>apex_sess</code>. Guarda un token de sesión aleatorio, vive 30 días, y es HttpOnly. No usamos cookies publicitarias ni analíticas.</p>
+
+    <h2>9. Cambios a esta página</h2>
+    <p>Si cambiamos algo importante, lo avisamos en tu panel la próxima vez que inicies sesión. La fecha de "Última actualización" arriba siempre refleja la versión vigente.</p>
+
+    <h2>10. Contacto</h2>
+    <p>Preguntas, solicitudes o quejas: <strong>privacy@goodlane.example</strong>. Respondemos.</p>
+  </section>
+</div>
+
+<script>
+  function showLang(lang) {
+    document.querySelectorAll('[data-lang]').forEach(s => {
+      s.classList.toggle('active', s.dataset.lang === lang);
+    });
+    document.getElementById('btnEn').classList.toggle('active', lang === 'en');
+    document.getElementById('btnEs').classList.toggle('active', lang === 'es');
+    document.documentElement.lang = lang;
+    try { localStorage.setItem('apex_lang', lang); } catch (e) {}
+  }
+  // Honor stored language preference if user has set one
+  try {
+    var saved = localStorage.getItem('apex_lang');
+    if (saved === 'es') showLang('es');
+  } catch (e) {}
+</script>
+</body>
+</html>

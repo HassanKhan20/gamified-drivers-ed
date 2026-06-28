@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/app.css" />
+<style>
+  body { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .auth-frame { position: relative; max-width: 420px; width: 100%; background: var(--bg-2); border: 1px solid var(--hairline); border-radius: 14px; padding: 36px; box-shadow: var(--shadow-lg); }
+  .auth-frame::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--signal); border-radius: 14px 14px 0 0; }
+  .auth-corners::before, .auth-corners::after, .auth-corners > i::before, .auth-corners > i::after { content: ''; position: absolute; width: 14px; height: 14px; border-color: var(--signal); border-style: solid; border-width: 0; opacity: 0.45; }
+  .auth-corners::before { top: 12px; left: 12px; border-top-width: 1.5px; border-left-width: 1.5px; }
+  .auth-corners::after  { top: 12px; right: 12px; border-top-width: 1.5px; border-right-width: 1.5px; }
+  .auth-corners > i::before { bottom: 12px; left: 12px; border-bottom-width: 1.5px; border-left-width: 1.5px; }
+  .auth-corners > i::after  { bottom: 12px; right: 12px; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+  .auth-corners > i { position: absolute; inset: 0; pointer-events: none; }
+
+  label { display: block; font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; font-weight: 600; margin-bottom: 6px; color: var(--ink-500); letter-spacing: 0.14em; text-transform: uppercase; }
+  input[type=email], input[type=password] { width: 100%; padding: 11px 13px; border-radius: 9px; border: 1px solid var(--hairline); background: var(--bg-2); color: var(--ink-100); font-size: 14.5px; font-family: inherit; }
+  input:focus { outline: none; border-color: var(--signal); box-shadow: 0 0 0 3px rgba(29,78,216,0.15); }
+
+  .auth-eyebrow { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; color: var(--signal); letter-spacing: 0.20em; text-transform: uppercase; margin-bottom: 14px; }
+  h1 { font-family: 'Inter', system-ui, sans-serif; font-size: 28px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.025em; color: var(--ink-50); }
+  .sub { color: var(--ink-500); font-size: 13.5px; margin: 0 0 24px; }
+  .err { display: none; margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: #fce8e8; border: 1px solid #f5c6c6; color: var(--danger); font-family: 'Inter', system-ui, sans-serif; font-size: 12px; letter-spacing: 0.05em; }
+  .alt-link { font-size: 13px; color: var(--ink-500); text-align: center; margin-top: 20px; }
+  .alt-link a { color: var(--signal); }
+</style>
+</head>
+<body>
+  <div class="auth-frame auth-corners fade-in">
+    <i></i>
+    <a href="index.html" style="display: inline-flex; align-items: center; gap: 10px; margin-bottom: 22px;">
+      <div class="sidebar-logo-mark" style="background:#ffffff;border:1px solid var(--hairline);box-shadow:var(--shadow-sm);width:30px;height:30px;font-size:15px;"><svg viewBox="0 0 32 32" fill="none" width="22" height="22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g stroke="#1d4ed8" stroke-width="2.4" stroke-linecap="round"><path d="M 14 4 C 6 12, 22 18, 12 24 C 6 28, 16 30, 14 30"/><path d="M 20 4 C 28 12, 12 18, 22 24 C 28 28, 18 30, 20 30"/></g></svg></div>
+      <span class="sidebar-logo-text" style="font-size:15px;"><span style="color:#1d4ed8;">Good</span><span style="color:#f59e0b;">Lane</span></span>
+    </a>
+
+    <div class="auth-eyebrow">/ Sign in</div>
+    <h1 data-i18n="auth.welcome_back">Welcome back.</h1>
+    <p class="sub"><span data-i18n="auth.welcome_back_sub">Pick up where you left off — your streak is waiting.</span></p>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div style="margin-bottom: 14px;">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="you@example.com" required autofocus />
+      </div>
+      <div style="margin-bottom: 22px;">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="••••••••" required />
+      </div>
+      <button type="submit" id="submitBtn" class="btn btn-primary btn-lg btn-block" data-i18n="nav.signin">Sign in →</button>
+      <div id="err" class="err"></div>
+    </form>
+
+    <p class="alt-link"><span data-i18n="auth.no_account">No account yet?</span> <a href="signup.html"><span data-i18n="auth.create_one">Create one →</span></a></p>
+  </div>
+
+  <script src="scripts/api.js"></script>
+  <script src="scripts/app.js"></script>
+  <script>
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const errEl = document.getElementById('err');
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      btn.disabled = true; btn.textContent = 'Signing in…'; errEl.style.display = 'none';
+      try {
+        await APEX.login({ email, password });
+        const s = APEX.load();
+        // Not entitled yet → send to checkout. Entitled → their dashboard.
+        if (!Array.isArray(s.allowedTracks) || s.allowedTracks.length === 0) {
+          location.href = 'checkout.html';
+        } else {
+          location.href = s.role === 'parent' ? 'parent.html' : 'dashboard.html';
+        }
+      } catch (err) {
+        errEl.textContent = '▸ ' + (err.message || 'Could not sign in').toUpperCase();
+        errEl.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Sign in →';
+      }
+    }
+  </script>
+<script src="scripts/i18n.js"></script>
+<script src="scripts/lang-toggle.js"></script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account paused · Goodlane</title>
+  <link rel="stylesheet" href="styles/app.css">
+</head>
+<body>
+  <main style="max-width:520px;margin:0 auto;padding:80px 20px;text-align:center;">
+    <div style="font-size:48px;line-height:1;">⏸</div>
+    <h1 id="hdr" style="margin:18px 0 8px;">Your account is paused</h1>
+    <p id="body1" style="color:#5d6776;margin:0 0 18px;">
+      Per <strong>16 TAC §84.501</strong>, your access to the course is temporarily paused while
+      we verify your identity. This is a Texas regulatory requirement, not a punishment.
+    </p>
+    <p id="body2" style="margin:18px 0;">
+      Please email <a href="mailto:support@apex.example">support@apex.example</a> with your name and we'll get you back in.
+    </p>
+    <p id="info" style="color:#5d6776;margin-top:24px;font-size:14px;"></p>
+    <p style="margin-top:32px;">
+      <a id="signout" href="login.html" style="color:#1d4ed8;">Sign out</a>
+    </p>
+  </main>
+  <script type="module">
+    function lang() { try { const v = localStorage.getItem('apex_lang'); if (v === 'es' || v === 'en') return v; } catch (_) {} return 'en'; }
+    function T(en, es) { return lang() === 'es' ? es : en; }
+    document.getElementById('hdr').textContent = T('Your account is paused', 'Tu cuenta está en pausa');
+    document.getElementById('body1').innerHTML = T(
+      'Per <strong>16 TAC §84.501</strong>, your access to the course is temporarily paused while we verify your identity. This is a Texas regulatory requirement, not a punishment.',
+      'Conforme a la regla <strong>16 TAC §84.501</strong>, tu acceso al curso está pausado temporalmente mientras verificamos tu identidad. Es un requisito regulatorio de Texas, no un castigo.'
+    );
+    document.getElementById('body2').innerHTML = T(
+      'Please email <a href="mailto:support@apex.example">support@apex.example</a> with your name and we\'ll get you back in.',
+      'Envía un correo a <a href="mailto:support@apex.example">support@apex.example</a> con tu nombre y te reactivamos.'
+    );
+    document.getElementById('signout').textContent = T('Sign out', 'Cerrar sesión');
+    fetch('/api/compliance/lockouts/me', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        if (d.open) {
+          document.getElementById('info').textContent = T('Reason', 'Motivo') + `: ${d.reason} · ` + T('Opened', 'Abierto') + `: ${d.opened_at}`;
+        } else {
+          location.href = '/dashboard.html';
+        }
+      })
+      .catch(() => {});
+  </script>
+</body>
+</html>

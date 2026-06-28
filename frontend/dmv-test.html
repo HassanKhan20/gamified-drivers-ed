@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — DMV Day Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/app.css" />
+<style>
+  body { padding: 0; margin: 0; overflow: hidden; background: #cfddea; }
+  body::before { display: none; }
+  #stage { position: fixed; inset: 0; }
+  canvas { display: block; outline: none; }
+
+  .hud-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  .hud-overlay > * { pointer-events: auto; }
+
+  .hud-back, .hud-pill {
+    padding: 9px 14px; border-radius: 8px;
+    background: rgba(255,255,255,0.94); border: 1px solid var(--hairline);
+    backdrop-filter: blur(8px); box-shadow: var(--shadow-sm);
+    font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 700;
+    color: var(--ink-300); letter-spacing: 0.12em; text-transform: uppercase;
+    text-decoration: none; transition: all 0.15s; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .hud-back:hover { color: var(--signal-deep); }
+  .hud-pill.signal { color: #fff; border-color: var(--signal); background: var(--signal); }
+  .hud-pill.warn   { color: #fff; border-color: var(--cyan); background: var(--cyan); }
+
+  .hud-top-left { position: fixed; top: 16px; left: 16px; display: flex; gap: 8px; align-items: center; }
+  .hud-top-right { position: fixed; top: 16px; right: 16px; display: flex; gap: 8px; align-items: center; }
+
+  .site-card {
+    position: fixed; top: 60px; left: 16px;
+    background: rgba(255,255,255,0.96); border: 1px solid var(--hairline);
+    border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow);
+    max-width: 320px;
+  }
+  .site-card .lbl { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; color: var(--signal-deep); letter-spacing: 0.18em; }
+  .site-card .name { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 16px; color: var(--ink-50); margin-top: 4px; letter-spacing: -0.01em; }
+  .site-card .addr { font-size: 11.5px; color: var(--ink-500); margin-top: 2px; }
+
+  /* Gate panel — rolling list of gates with status pips */
+  .gate-panel {
+    position: fixed; top: 60px; right: 16px;
+    background: rgba(255,255,255,0.96); border: 1px solid var(--hairline);
+    border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow);
+    width: 300px;
+  }
+  .gate-panel h4 { margin: 0 0 10px; font-family: 'Inter', system-ui, sans-serif; font-size: 14px; color: var(--ink-50); font-weight: 700; }
+  .gate-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--hairline); font-size: 13px; color: var(--ink-300); }
+  .gate-row:first-of-type { border-top: 0; }
+  .gate-row.current { color: var(--signal-deep); font-weight: 600; }
+  .gate-row.done { color: var(--ink-500); text-decoration: line-through; }
+  .gate-row .pip { width: 12px; height: 12px; border-radius: 50%; background: var(--bg-3); border: 1.5px solid var(--hairline); flex-shrink: 0; }
+  .gate-row.current .pip { background: var(--signal); border-color: var(--signal); animation: pulse 1.6s ease-in-out infinite; }
+  .gate-row.done .pip { background: var(--signal); border-color: var(--signal); }
+  .gate-row.failed .pip { background: var(--danger); border-color: var(--danger); }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(29,78,216,0.4); } 50% { box-shadow: 0 0 0 6px rgba(29,78,216,0); } }
+  .gate-row .points { margin-left: auto; font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; letter-spacing: 0.10em; color: var(--ink-500); }
+
+  /* Bottom HUD: speed + score + objective */
+  .hud-bottom {
+    position: fixed; bottom: 16px; left: 16px; right: 16px;
+    display: flex; gap: 10px; justify-content: space-between; align-items: flex-end; flex-wrap: wrap;
+  }
+  .speed-card {
+    padding: 14px 18px; border-radius: 12px;
+    background: rgba(255,255,255,0.95); border: 1px solid var(--hairline); box-shadow: var(--shadow);
+    display: flex; gap: 18px; align-items: flex-end;
+  }
+  .speed-card .lbl { font-family: 'Inter', system-ui, sans-serif; font-size: 10px; letter-spacing: 0.20em; color: var(--ink-700); text-transform: uppercase; }
+  .speed-card .val { font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 44px; line-height: 1; color: var(--ink-50); letter-spacing: -0.04em; }
+  .speed-card .unit { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--ink-500); letter-spacing: 0.16em; }
+
+  .score-card {
+    padding: 14px 18px; border-radius: 12px;
+    background: rgba(255,255,255,0.95); border: 1px solid var(--hairline); box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 4px; align-items: center;
+  }
+  .score-card .num { font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 36px; color: var(--signal-deep); letter-spacing: -0.025em; line-height: 1; }
+  .score-card .lbl { font-family: 'Inter', system-ui, sans-serif; font-size: 10px; color: var(--ink-700); letter-spacing: 0.18em; text-transform: uppercase; }
+
+  .objective {
+    padding: 14px 18px; border-radius: 12px;
+    background: var(--signal); color: #fff;
+    box-shadow: var(--shadow-primary);
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 15px;
+    flex: 1; min-width: 280px;
+  }
+  .objective .tag { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; letter-spacing: 0.18em; color: rgba(255,255,255,0.85); margin-bottom: 4px; }
+
+  .help { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); padding: 6px 12px; border-radius: 7px; background: rgba(255,255,255,0.92); font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; color: var(--ink-500); display: none; }
+
+  /* Compass arrow pointing at current gate */
+  .compass {
+    position: fixed; bottom: 150px; left: 50%; transform: translateX(-50%); z-index: 6;
+    background: rgba(255,255,255,0.95); border: 1px solid var(--hairline);
+    border-radius: 999px; padding: 8px 14px;
+    box-shadow: var(--shadow);
+    display: none; align-items: center; gap: 10px;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.10em; color: var(--ink-300);
+  }
+  .compass.show { display: inline-flex; }
+  .compass .arrow {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--signal); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    transform: rotate(0deg); transition: transform 0.18s ease;
+  }
+  .compass .arrow svg { width: 14px; height: 14px; }
+  .compass .dist { color: var(--signal-deep); font-weight: 800; }
+
+  /* End / evaluation overlay (DPS-style) */
+  .eval-mask { position: fixed; inset: 0; background: rgba(13,17,23,0.55); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+  .eval-mask.show { display: flex; }
+  .eval-card {
+    max-width: 540px; width: 100%; padding: 28px 24px;
+    background: var(--bg-2); border: 1px solid var(--hairline); border-radius: 14px;
+    box-shadow: var(--shadow-lg);
+  }
+  .eval-card .stamp {
+    display: inline-block; font-family: 'Inter', system-ui, sans-serif; font-size: 11px; letter-spacing: 0.16em; padding: 4px 10px; border-radius: 6px;
+  }
+  .eval-card .stamp.pass { background: var(--signal-bg); color: var(--signal-deep); border: 1px solid rgba(29,78,216,0.3); }
+  .eval-card .stamp.fail { background: #fce8e8; color: var(--danger); border: 1px solid #f5c6c6; }
+  .eval-card h2 { font-family: 'Inter', system-ui, sans-serif; font-size: 26px; font-weight: 800; margin: 12px 0 4px; color: var(--ink-50); letter-spacing: -0.02em; }
+  .eval-card p { color: var(--ink-500); margin: 0 0 14px; }
+  .eval-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 14px 0 18px; }
+  .eval-item { padding: 10px 12px; background: var(--bg-3); border-radius: 8px; border: 1px solid var(--hairline); font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+  .eval-item.pass { border-color: rgba(29,78,216,0.3); background: var(--signal-bg); color: var(--signal-deep); }
+  .eval-item.fail { border-color: rgba(185,28,28,0.3); background: #fce8e8; color: var(--danger); }
+
+  #boot { position: fixed; inset: 0; background: var(--bg-1); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; gap: 14px; }
+  #boot .ring { width: 50px; height: 50px; border: 3px solid var(--hairline); border-top-color: var(--signal); border-radius: 50%; animation: spin 0.9s linear infinite; }
+  #boot .lbl { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--signal-deep); letter-spacing: 0.20em; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <div class="ring"></div>
+  <div class="lbl">▸ ARRIVING AT DPS</div>
+</div>
+
+<div id="stage"></div>
+
+<div class="hud-overlay">
+  <div class="hud-top-left">
+    <a class="hud-back" href="roadmap.html">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      EXIT
+    </a>
+    <span class="hud-pill signal" id="phaseBadge">CHECK-IN</span>
+  </div>
+
+  <div class="hud-top-right">
+    <select id="sitePicker" class="hud-pill" style="appearance: none; padding-right: 26px; background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235d6776' stroke-width='1.5' fill='none'/%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 8px center;">
+      <option value="austin-north">Austin North · 6121 N Lamar</option>
+      <option value="austin-south">Austin South · 6425 S Pleasant Valley</option>
+      <option value="austin-east">Austin East · 6425 De Zavala Rd</option>
+    </select>
+    <button class="hud-pill" id="restartBtn" onclick="restart()">RESTART</button>
+  </div>
+
+  <div class="site-card" id="siteCard">
+    <div class="lbl">YOUR DPS SITE</div>
+    <div class="name" id="siteName">Austin North</div>
+    <div class="addr" id="siteAddr">6121 N Lamar Blvd, Austin TX 78752</div>
+  </div>
+
+  <div class="gate-panel" id="gatePanel">
+    <h4>Test sequence</h4>
+    <div id="gateList"></div>
+  </div>
+
+  <div class="hud-bottom">
+    <div class="objective" id="objective">
+      <div class="tag">▸ OBJECTIVE</div>
+      <div id="objText">Drive to the first cone and stop.</div>
+    </div>
+    <div class="speed-card">
+      <div>
+        <div class="lbl">Speed</div>
+        <div class="val" id="speedVal">00</div>
+        <div class="unit">MPH</div>
+      </div>
+    </div>
+    <div class="score-card">
+      <div class="num" id="scoreVal">100</div>
+      <div class="lbl">DPS Score</div>
+    </div>
+  </div>
+
+  <div class="help" id="help">W A S D — drive · C — camera · R — restart</div>
+
+  <!-- Compass to current gate -->
+  <div class="compass" id="compass">
+    <div class="arrow" id="compassArrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l8 16-8-4-8 4z"/></svg>
+    </div>
+    <span>NEXT GATE</span>
+    <span class="dist" id="compassDist">0 m</span>
+  </div>
+
+  <div class="eval-mask" id="evalMask">
+    <div class="eval-card">
+      <span class="stamp" id="evalStamp">PASS</span>
+      <h2 id="evalTitle">Road test cleared.</h2>
+      <p id="evalSub">Show your TDLR cert + this evaluation to the examiner.</p>
+      <div class="eval-grid" id="evalGrid"></div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn btn-secondary" onclick="restart()">Try again</button>
+        <a class="btn btn-primary" href="roadmap.html">Back to path →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+<script src="scripts/api.js"></script>
+<script src="scripts/app.js"></script>
+<script src="scripts/cars.js"></script>
+
+<script type="module">
+  import * as THREE from 'three';
+
+  // ---------- Sites: real Austin DPS road-test locations ----------
+  const SITES = {
+    'austin-north': { name: 'Austin North', addr: '6121 N Lamar Blvd, Austin TX 78752' },
+    'austin-south': { name: 'Austin South', addr: '6425 S Pleasant Valley Rd, Austin TX 78744' },
+    'austin-east':  { name: 'Austin East',  addr: '6425 De Zavala Rd, Austin TX 78217' },
+  };
+
+  // ---------- Test gates (mirrors actual DPS Class C road test sequence) ----------
+  // Each gate = a (x,z) target, a triggering distance, a maneuver type, max points.
+  function buildGates() {
+    return [
+      { id: 'arrival',  label: 'Arrive at examiner',         pts: 5,  pos: [0,  -10],   r: 4, type: 'arrive',
+        objective: 'Drive forward and stop at the cone.' },
+      { id: 'controlled', label: 'Stop at controlled intersection', pts: 20, pos: [0, 30], r: 4, type: 'stop',
+        objective: 'Approach the stop sign at <15 mph and come to a complete stop.' },
+      { id: 'left-turn', label: 'Left turn from stop',       pts: 15, pos: [-30, 30], r: 4, type: 'pass',
+        objective: 'Turn left, signal early, stay in the proper lane.' },
+      { id: '3point',   label: '3-point turn',                pts: 20, pos: [-30, 0],  r: 4, type: 'pass',
+        objective: 'Use the 3-point turn box to reverse direction.' },
+      { id: 'parallel', label: 'Parallel park',               pts: 20, pos: [0, -30],  r: 4, type: 'pass',
+        objective: 'Pull alongside, then back into the parallel parking space.' },
+      { id: 'return',   label: 'Return to examiner',          pts: 20, pos: [0, -8],   r: 4, type: 'arrive',
+        objective: 'Drive back to the start and stop. Wait for evaluation.' },
+    ];
+  }
+
+  // ---------- Boot ----------
+  const stage = document.getElementById('stage');
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0xcfddea, 1);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  stage.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0xc7d3df, 0.006);
+  const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 800);
+
+  scene.add(new THREE.HemisphereLight(0xc8dff5, 0x6e7461, 0.85));
+  const sun = new THREE.DirectionalLight(0xfff4d6, 1.05);
+  sun.position.set(120, 180, 80); sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -120; sun.shadow.camera.right = 120;
+  sun.shadow.camera.top = 120; sun.shadow.camera.bottom = -120;
+  scene.add(sun);
+
+  // Ground (DPS testing area = asphalt parking lot)
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(400, 400),
+    new THREE.MeshStandardMaterial({ color: 0x4a4f57, roughness: 0.92 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // Painted parking lines around the perimeter (white stripes)
+  const stripeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  for (let i = -5; i <= 5; i++) {
+    const s = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 6), stripeMat);
+    s.rotation.x = -Math.PI / 2;
+    s.position.set(50, 0.04, i * 8);
+    scene.add(s);
+    const s2 = s.clone(); s2.position.set(-50, 0.04, i * 8); scene.add(s2);
+  }
+
+  // Yellow center dashes on the test loop
+  for (let i = -50; i <= 50; i += 6) {
+    const d = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.2), new THREE.MeshBasicMaterial({ color: 0xfde68a }));
+    d.rotation.x = -Math.PI / 2; d.position.set(0, 0.04, i); scene.add(d);
+  }
+
+  // DPS office building (a stylized 2-story rectangle, beige)
+  const dpsBuilding = new THREE.Mesh(
+    new THREE.BoxGeometry(40, 8, 16),
+    new THREE.MeshStandardMaterial({ color: 0xd6cdb6 })
+  );
+  dpsBuilding.position.set(0, 4, -42); dpsBuilding.castShadow = true; dpsBuilding.receiveShadow = true;
+  scene.add(dpsBuilding);
+  // "DPS" sign
+  const sign = new THREE.Mesh(new THREE.BoxGeometry(10, 2.4, 0.4), new THREE.MeshStandardMaterial({ color: 0x0e7c5d, emissive: 0x0e7c5d, emissiveIntensity: 0.2 }));
+  sign.position.set(0, 9.5, -34); scene.add(sign);
+
+  // Stop sign at the controlled intersection
+  function buildStopSign(x, z) {
+    const g = new THREE.Group();
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 3.2, 8), new THREE.MeshStandardMaterial({ color: 0x9aa0a8 }));
+    pole.position.y = 1.6; g.add(pole);
+    const oct = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.7, 0.7, 0.06, 8),
+      new THREE.MeshStandardMaterial({ color: 0xdc2626 })
+    );
+    oct.rotation.x = Math.PI / 2; oct.position.y = 3.0; g.add(oct);
+    g.position.set(x, 0, z);
+    return g;
+  }
+  scene.add(buildStopSign(2.5, 24));
+
+  // Parallel parking cones — 4 cones marking a 6m space
+  function buildCone(x, z) {
+    const c = new THREE.Mesh(new THREE.ConeGeometry(0.3, 1.0, 12), new THREE.MeshStandardMaterial({ color: 0xff7a3c }));
+    c.position.set(x, 0.5, z); c.castShadow = true; return c;
+  }
+  scene.add(buildCone(-3, -28)); scene.add(buildCone(-3, -32));
+  scene.add(buildCone( 3, -28)); scene.add(buildCone( 3, -32));
+
+  // 3-point turn box — 4 cones marking the dead-end
+  scene.add(buildCone(-26,  3)); scene.add(buildCone(-34,  3));
+  scene.add(buildCone(-26, -3)); scene.add(buildCone(-34, -3));
+
+  // ---------- Player car ----------
+  let carDef = (window.APEX_CAR_BY_ID && window.APEX_CAR_BY_ID['sedan-base']) || (window.APEX_CARS && window.APEX_CARS[0]);
+  try {
+    const owned = await fetch('/api/cars/owned', { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+    if (owned && window.APEX_CAR_BY_ID[owned.selected]) carDef = window.APEX_CAR_BY_ID[owned.selected];
+  } catch (e) {}
+
+  function buildCarMesh(def) {
+    const grp = new THREE.Group();
+    const { length, width, height, hood, trunk, cabinHeight } = def.body;
+    const lower = new THREE.Mesh(new THREE.BoxGeometry(width, height * 0.55, length),
+      new THREE.MeshStandardMaterial({ color: def.color, roughness: 0.30, metalness: 0.55 }));
+    lower.position.y = height * 0.55 / 2 + 0.32; lower.castShadow = true; grp.add(lower);
+    const cabinW = width * 0.85, cabinL = length - hood - trunk;
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(cabinW, height * cabinHeight, cabinL),
+      new THREE.MeshStandardMaterial({ color: 0x222831, roughness: 0.22, metalness: 0.12 }));
+    cabin.position.set(0, lower.position.y + lower.geometry.parameters.height / 2 + (height * cabinHeight) / 2 - 0.05, (trunk - hood) / 2);
+    grp.add(cabin);
+    const wheelGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.28, 16); wheelGeo.rotateZ(Math.PI / 2);
+    const wheels = [];
+    [
+      [-width/2 - 0.05,  length/2 - 0.7, true],
+      [ width/2 + 0.05,  length/2 - 0.7, true],
+      [-width/2 - 0.05, -length/2 + 0.7, false],
+      [ width/2 + 0.05, -length/2 + 0.7, false],
+    ].forEach(([x, z, isFront]) => {
+      const pivot = new THREE.Group(); pivot.position.set(x, 0.36, z);
+      const w = new THREE.Mesh(wheelGeo, new THREE.MeshStandardMaterial({ color: 0x1a1d24, roughness: 0.8 }));
+      pivot.add(w); grp.add(pivot);
+      wheels.push({ mesh: w, pivot: isFront ? pivot : null, isFront });
+    });
+    return { group: grp, length, width, wheels };
+  }
+  const car = buildCarMesh(carDef);
+  scene.add(car.group);
+
+  // ---------- State ----------
+  let velocity = 0, steer = 0;
+  const ACCEL = 14, BRAKE_DECEL = 22, COAST = 4, MAX_STEER = THREE.MathUtils.degToRad(34), STEER_RATE = 2.4, STEER_RETURN = 4.0;
+  const MAX_SPEED_MPH = 25; // DPS test = low speed
+  const mphToMs = m => m * 0.44704, msToMph = m => m / 0.44704;
+
+  let gates = buildGates();
+  let gateIndex = 0;
+  let score = 100;
+  let runEnded = false;
+  let topSpeedAtGate = 0;
+  const gateResults = []; // { id, label, status: 'pass'|'fail', deduction, reason }
+
+  // Render gate list
+  function renderGates() {
+    const el = document.getElementById('gateList');
+    el.innerHTML = gates.map((g, i) => {
+      const cls = i < gateIndex ? 'done' : i === gateIndex ? 'current' : '';
+      const result = gateResults.find(r => r.id === g.id);
+      const failed = result && result.status === 'fail';
+      return `<div class="gate-row ${cls} ${failed ? 'failed' : ''}">
+        <span class="pip"></span>
+        <span>${g.label}</span>
+        <span class="points">${g.pts} pts</span>
+      </div>`;
+    }).join('');
+    document.getElementById('objective').querySelector('#objText').textContent =
+      gateIndex < gates.length ? gates[gateIndex].objective : 'All gates cleared. Wait for evaluation.';
+    document.getElementById('phaseBadge').textContent =
+      gateIndex < gates.length ? `GATE ${gateIndex + 1} / ${gates.length}` : 'EVALUATION';
+    document.getElementById('scoreVal').textContent = score;
+  }
+
+  // Site selector
+  const sitePicker = document.getElementById('sitePicker');
+  function updateSiteLabel() {
+    const s = SITES[sitePicker.value];
+    document.getElementById('siteName').textContent = s.name;
+    document.getElementById('siteAddr').textContent = s.addr;
+  }
+  sitePicker.addEventListener('change', updateSiteLabel);
+  updateSiteLabel();
+
+  // ---------- Controls ----------
+  const keys = {};
+  window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if (e.key.toLowerCase() === 'r') restart(); });
+  window.addEventListener('keyup',   e => { keys[e.key.toLowerCase()] = false; });
+
+  function input() {
+    const throttle = (keys['w'] || keys['arrowup']) ? 1 : 0;
+    const brake    = (keys['s'] || keys['arrowdown']) ? 1 : 0;
+    let st = 0;
+    if (keys['a'] || keys['arrowleft'])  st += 1;
+    if (keys['d'] || keys['arrowright']) st -= 1;
+    return { throttle, brake, steer: st };
+  }
+
+  // ---------- Tick ----------
+  function tick(dt) {
+    const { throttle, brake, steer: stIn } = input();
+
+    if (throttle) velocity += ACCEL * dt;
+    if (brake) {
+      if (velocity > 0) velocity -= BRAKE_DECEL * dt;
+      else velocity -= ACCEL * 0.5 * dt;
+    }
+    if (!throttle && !brake) {
+      const dec = COAST * dt;
+      if (velocity > 0) velocity = Math.max(0, velocity - dec);
+      else if (velocity < 0) velocity = Math.min(0, velocity + dec);
+    }
+    velocity = Math.max(-mphToMs(8), Math.min(mphToMs(MAX_SPEED_MPH), velocity));
+
+    const targetSteer = stIn * MAX_STEER;
+    const sDelta = targetSteer - steer;
+    const ease = stIn === 0 ? STEER_RETURN : STEER_RATE;
+    steer += Math.sign(sDelta || 0) * Math.min(Math.abs(sDelta), ease * dt);
+    if (Math.abs(steer) < 0.001) steer = 0;
+
+    car.group.rotation.y += (velocity / 8) * steer * dt;
+    const fwd = new THREE.Vector3(0, 0, 1).applyEuler(car.group.rotation);
+    car.group.position.x += fwd.x * velocity * dt;
+    car.group.position.z += fwd.z * velocity * dt;
+
+    // Wheels: roll on local X (cylinder geo was rotateZ(PI/2) → axis points along X);
+    // pivots on front wheels rotate Y for visible steering.
+    const wheelRot = (velocity * dt) / 0.36;
+    (car.wheels || []).forEach(w => {
+      w.mesh.rotation.x += wheelRot;
+      if (w.pivot) w.pivot.rotation.y = steer * 0.85;
+    });
+
+    const mph = Math.abs(msToMph(velocity));
+    document.getElementById('speedVal').textContent = String(Math.round(mph)).padStart(2, '0');
+    if (mph > topSpeedAtGate) topSpeedAtGate = mph;
+
+    // Camera — chase
+    const cam = new THREE.Vector3(0, 3.4, -8.5).applyEuler(car.group.rotation).add(car.group.position);
+    camera.position.lerp(cam, Math.min(1, dt * 7));
+    const look = new THREE.Vector3(0, 1.2, 6).applyEuler(car.group.rotation).add(car.group.position);
+    camera.lookAt(look);
+
+    // Gate detection
+    if (gateIndex < gates.length && !runEnded) {
+      const g = gates[gateIndex];
+      const dx = car.group.position.x - g.pos[0];
+      const dz = car.group.position.z - g.pos[1];
+      if (dx*dx + dz*dz < g.r * g.r) {
+        evaluateGate(g, mph);
+      }
+    }
+
+    // Compass + distance to current gate
+    updateGateCompass();
+  }
+
+  // ---- 3D Guidance system: beacon at gate + hood arrow + ground line ----
+  // Same design as drive.html so the DMV-day sim isn't a black sheep.
+  let dmvBeacon = null, dmvLine = null, dmvHoodArrow = null;
+  function buildDmvBeacon() {
+    const grp = new THREE.Group();
+    const pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06, 0.06, 5, 8),
+      new THREE.MeshBasicMaterial({ color: 0x14a37e })
+    );
+    pole.position.y = 2.5; grp.add(pole);
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(1.6, 0.16, 8, 28),
+      new THREE.MeshBasicMaterial({ color: 0x14a37e, transparent: true, opacity: 0.85 })
+    );
+    ring.rotation.x = -Math.PI / 2; ring.position.y = 0.06; grp.add(ring);
+    const disc = new THREE.Mesh(
+      new THREE.CircleGeometry(1.5, 28),
+      new THREE.MeshBasicMaterial({ color: 0x14a37e, transparent: true, opacity: 0.20 })
+    );
+    disc.rotation.x = -Math.PI / 2; disc.position.y = 0.05; grp.add(disc);
+    const chev = new THREE.Mesh(
+      new THREE.ConeGeometry(0.65, 1.1, 6),
+      new THREE.MeshStandardMaterial({ color: 0x14a37e, emissive: 0x14a37e, emissiveIntensity: 0.7 })
+    );
+    chev.position.y = 4.4; chev.rotation.x = Math.PI; grp.add(chev);
+    return grp;
+  }
+  function buildDmvLine() {
+    const segs = new THREE.Group();
+    const lineGeo = new THREE.PlaneGeometry(0.50, 1, 1, 1);
+    for (let i = 0; i < 30; i++) {
+      const seg = new THREE.Mesh(lineGeo, new THREE.MeshBasicMaterial({ color: 0x14a37e, transparent: true, opacity: 0.65 }));
+      seg.rotation.x = -Math.PI / 2;
+      segs.add(seg);
+    }
+    return segs;
+  }
+  function buildDmvHoodArrow() {
+    const grp = new THREE.Group();
+    const bladeGeo = new THREE.PlaneGeometry(1.4, 0.30);
+    const bladeMat = new THREE.MeshBasicMaterial({ color: 0x14a37e, transparent: true, opacity: 0.92 });
+    const left  = new THREE.Mesh(bladeGeo, bladeMat);
+    left.rotation.x = -Math.PI / 2; left.rotation.z =  Math.PI / 4; left.position.set(-0.45, 0, 0); grp.add(left);
+    const right = new THREE.Mesh(bladeGeo, bladeMat);
+    right.rotation.x = -Math.PI / 2; right.rotation.z = -Math.PI / 4; right.position.set( 0.45, 0, 0); grp.add(right);
+    return grp;
+  }
+
+  function updateGateCompass() {
+    const compass = document.getElementById('compass');
+    if (gateIndex >= gates.length) {
+      compass.classList.remove('show');
+      if (dmvBeacon)    dmvBeacon.visible    = false;
+      if (dmvLine)      dmvLine.visible      = false;
+      if (dmvHoodArrow) dmvHoodArrow.visible = false;
+      return;
+    }
+    const g = gates[gateIndex];
+    const dx = g.pos[0] - car.group.position.x;
+    const dz = g.pos[1] - car.group.position.z;
+    const dist = Math.sqrt(dx*dx + dz*dz);
+    document.getElementById('compassDist').textContent = Math.round(dist) + ' m';
+    const bearingWorld = Math.atan2(dx, dz);
+    const bearing = bearingWorld - car.group.rotation.y;
+    let deg = (bearing * 180 / Math.PI) % 360;
+    if (deg > 180) deg -= 360;
+    if (deg < -180) deg += 360;
+    document.getElementById('compassArrow').style.transform = `rotate(${deg}deg)`;
+    compass.classList.add('show');
+
+    // ---- Beacon ----
+    if (!dmvBeacon) { dmvBeacon = buildDmvBeacon(); scene.add(dmvBeacon); }
+    dmvBeacon.visible = true;
+    dmvBeacon.position.set(g.pos[0], Math.sin(performance.now() / 280) * 0.15, g.pos[1]);
+    dmvBeacon.rotation.y = performance.now() / 1400;
+
+    // ---- Hood arrow (4 m ahead of car, rotates toward target) ----
+    if (!dmvHoodArrow) { dmvHoodArrow = buildDmvHoodArrow(); scene.add(dmvHoodArrow); }
+    dmvHoodArrow.visible = dist > 1.5;
+    const hoodFwd = new THREE.Vector3(0, 0, 1).applyEuler(car.group.rotation);
+    dmvHoodArrow.position.set(
+      car.group.position.x + hoodFwd.x * 4.0,
+      0.10 + Math.sin(performance.now() / 220) * 0.05,
+      car.group.position.z + hoodFwd.z * 4.0
+    );
+    dmvHoodArrow.rotation.y = bearingWorld - Math.PI / 2;
+
+    // ---- Ground line ----
+    if (!dmvLine) { dmvLine = buildDmvLine(); scene.add(dmvLine); }
+    dmvLine.visible = true;
+    const segCount = dmvLine.children.length;
+    const stepLen = Math.sqrt((dx/segCount)**2 + (dz/segCount)**2);
+    const phase = (performance.now() / 700) % 1;
+    for (let i = 0; i < segCount; i++) {
+      const seg = dmvLine.children[i];
+      const t01 = (i + phase) / segCount;
+      seg.position.set(
+        car.group.position.x + dx * t01,
+        0.07,
+        car.group.position.z + dz * t01,
+      );
+      seg.rotation.z = -Math.atan2(dz, dx);
+      seg.material.opacity = 0.65 * (1 - t01) + 0.20;
+      seg.scale.y = stepLen;
+    }
+  }
+
+  // ---------- Gate evaluation ----------
+  function evaluateGate(g, currentMph) {
+    let pass = true, deduction = 0, reason = '';
+    if (g.type === 'arrive' || g.type === 'stop') {
+      // Must be near-stopped
+      if (currentMph > 6) { pass = false; deduction = g.pts; reason = 'Did not come to a complete stop.'; }
+    }
+    if (g.type === 'pass') {
+      // Must have approached at <= a sane speed (no deduction unless you ran the cone box)
+      if (topSpeedAtGate > 22) { deduction = Math.min(g.pts, 8); reason = 'Excessive speed in the maneuver area.'; }
+    }
+    score = Math.max(0, score - deduction);
+    gateResults.push({ id: g.id, label: g.label, status: pass && deduction === 0 ? 'pass' : (pass ? 'partial' : 'fail'), deduction, reason });
+    gateIndex += 1;
+    topSpeedAtGate = 0;
+    renderGates();
+    // If car already past last gate, end the run
+    if (gateIndex >= gates.length) endRun();
+  }
+
+  function endRun() {
+    if (runEnded) return;
+    runEnded = true;
+    const passed = score >= 70;
+    const stamp = document.getElementById('evalStamp');
+    stamp.className = 'stamp ' + (passed ? 'pass' : 'fail');
+    stamp.textContent = passed ? 'PASS · ' + score + ' / 100' : 'FAIL · ' + score + ' / 100';
+    document.getElementById('evalTitle').textContent = passed ? 'Road test cleared.' : 'Not yet — try again.';
+    document.getElementById('evalSub').textContent = passed
+      ? 'You scored ' + score + '/100 on the simulated DPS Class C road test. Pass threshold is 70. Bring this confidence to your real test.'
+      : 'You scored ' + score + '/100. The DPS pass threshold is 70. Review your missed gates below and re-run.';
+    document.getElementById('evalGrid').innerHTML = gateResults.map(r => {
+      const cls = r.status === 'pass' ? 'pass' : (r.status === 'partial' ? '' : 'fail');
+      return `<div class="eval-item ${cls}">
+        <span>${r.label}</span>
+        <span style="font-family: 'Inter', system-ui, sans-serif; font-size: 11px;">${r.deduction === 0 ? '✓ 0 pts' : '−' + r.deduction + ' pts'}</span>
+      </div>`;
+    }).join('');
+    document.getElementById('evalMask').classList.add('show');
+    // Persist the run as a "drive" event
+    fetch('/api/drives', {
+      method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        scenario: 'dmv-' + sitePicker.value, car_id: carDef.id,
+        duration_sec: 60, distance_m: 0, top_speed: 0,
+        checkpoints_hit: gateResults.filter(r => r.status === 'pass').length,
+        checkpoints_total: gates.length,
+        score,
+      })
+    }).catch(() => {});
+    if (passed) try { sessionStorage.setItem('apex_just_completed', '1'); } catch (e) {}
+  }
+
+  window.restart = function () {
+    document.getElementById('evalMask').classList.remove('show');
+    car.group.position.set(0, 0, -25);
+    car.group.rotation.y = 0;
+    velocity = 0; steer = 0; runEnded = false;
+    gateIndex = 0; gateResults.length = 0; score = 100; topSpeedAtGate = 0;
+    renderGates();
+  };
+
+  // ---------- Init ----------
+  car.group.position.set(0, 0, -25);
+  renderGates();
+  document.getElementById('boot').style.display = 'none';
+
+  let last = performance.now();
+  function loop() {
+    const now = performance.now();
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    tick(dt);
+    renderer.render(scene, camera);
+    requestAnimationFrame(loop);
+  }
+  loop();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+</script>
+<script src="scripts/i18n.js"></script>
+<script src="scripts/lang-toggle.js"></script>
+<script type="module" src="scripts/compliance/bootstrap.js"></script>
+<script>if(window.APEX&&APEX.requireTrack)APEX.requireTrack("teen");</script>
+</body>
+</html>

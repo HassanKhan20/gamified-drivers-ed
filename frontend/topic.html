@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Goodlane — Topic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles/app.css" />
+<style>
+  body { background: var(--paper-2, #faf6ec); padding: 0; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 24px 18px 90px; }
+  .back { color: var(--ink-500); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 8px; }
+  .back:hover { background: var(--bg-3, #ede4d0); color: var(--ink-50, #15191f); }
+
+  .hero {
+    margin: 16px 0 14px;
+    background: linear-gradient(180deg, #ffffff 0%, var(--bg-2, #fbfaf6) 100%);
+    border: 1px solid var(--hairline, #e6dfcc); border-radius: 18px;
+    padding: 22px 24px; box-shadow: 0 8px 24px -12px rgba(15,17,22,0.10);
+  }
+  .crumbs {
+    font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; color: var(--signal-deep, #1e3a8a);
+    letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; margin-bottom: 8px;
+  }
+  .hero h1 { font-family: 'Inter', system-ui, sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 6px; color: var(--ink-50, #15191f); }
+  .hero p.lede { color: var(--ink-500, #5d6776); margin: 0 0 14px; line-height: 1.5; font-size: 14.5px; }
+  .hero .meta-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .meta-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 10px; border-radius: 999px;
+    background: var(--bg-2, #fbfaf6); border: 1px solid var(--hairline, #e6dfcc);
+    font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 700;
+    color: var(--ink-300, #2a313b); letter-spacing: 0.06em;
+  }
+  .meta-pill.xp     { color: var(--signal-deep, #1e3a8a); border-color: #b9e0cf; background: var(--signal-bg, #ebf7f1); }
+  .meta-pill.locked { color: #8a6d36; border-color: #f3d7b1; background: #fef3c7; }
+
+  .topic-progress { margin-top: 14px; }
+  .topic-progress .bar { height: 8px; border-radius: 999px; background: var(--bg-3, #ede4d0); border: 1px solid var(--hairline, #e6dfcc); overflow: hidden; }
+  .topic-progress .bar > div { height: 100%; background: linear-gradient(90deg, var(--signal, #1d4ed8), var(--signal-soft, #3b82f6)); transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
+  .topic-progress .lbl { display: flex; justify-content: space-between; font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; color: var(--ink-700, #485265); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px; }
+
+  .section-title {
+    font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 700;
+    color: var(--ink-700, #485265); letter-spacing: 0.18em; text-transform: uppercase;
+    margin: 28px 4px 10px;
+  }
+
+  /* Step row styling */
+  .steps { display: flex; flex-direction: column; gap: 10px; }
+  .step {
+    background: var(--bg-2, #fbfaf6);
+    border: 1px solid var(--hairline, #e6dfcc); border-radius: 14px;
+    padding: 16px 18px;
+    display: grid; grid-template-columns: 44px 1fr auto; gap: 14px; align-items: center;
+    transition: all 0.15s; position: relative;
+  }
+  .step.available { border-color: var(--signal, #1d4ed8); box-shadow: 0 8px 20px -10px rgba(29,78,216,0.30); }
+  .step.done      { background: #f3faf6; border-color: #b9e0cf; }
+  .step.locked    { opacity: 0.62; background: #f5f1e8; }
+
+  .step-num {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-3, #ede4d0); color: var(--ink-300, #2a313b);
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 800; font-size: 14px;
+    border: 1px solid var(--hairline, #e6dfcc);
+  }
+  .step.done .step-num { background: var(--signal, #1d4ed8); color: #ffffff; border-color: var(--signal, #1d4ed8); }
+  .step.available .step-num { background: var(--signal, #1d4ed8); color: #ffffff; border-color: var(--signal, #1d4ed8); animation: pulse-soft 2s ease-out infinite; }
+  @keyframes pulse-soft {
+    0%,100% { box-shadow: 0 0 0 0 rgba(29,78,216,0.45); }
+    50%     { box-shadow: 0 0 0 8px rgba(29,78,216,0); }
+  }
+
+  .step-body .ttl { font-family: 'Inter', system-ui, sans-serif; font-size: 16px; font-weight: 700; color: var(--ink-50, #15191f); letter-spacing: -0.01em; }
+  .step-body .sub { color: var(--ink-500, #5d6776); font-size: 12.5px; margin-top: 3px; }
+  .step-body .child-list {
+    margin-top: 8px; display: flex; flex-direction: column; gap: 4px;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--ink-700, #485265);
+  }
+  .step-body .child-list .ci { display: inline-flex; align-items: center; gap: 6px; }
+  .step-body .child-list .ci.done { color: var(--signal-deep, #1e3a8a); }
+  .step-body .child-list .ci .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+
+  .step-cta {
+    background: var(--signal, #1d4ed8); color: #ffffff;
+    padding: 10px 16px; border-radius: 10px;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 13.5px;
+    box-shadow: 0 4px 14px -4px rgba(29,78,216,0.40);
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: all 0.15s; white-space: nowrap;
+    border: 0; cursor: pointer;
+  }
+  .step-cta:hover { background: var(--signal-deep, #1e3a8a); transform: translateY(-1px); }
+  .step.locked .step-cta {
+    background: var(--bg-3, #ede4d0); color: var(--ink-700, #485265); cursor: not-allowed; box-shadow: none;
+    pointer-events: none;
+  }
+  .step.done .step-cta {
+    background: transparent; color: var(--signal-deep, #1e3a8a);
+    border: 1px solid #b9e0cf; box-shadow: none;
+  }
+
+  .step-icon {
+    width: 22px; height: 22px; flex-shrink: 0;
+    color: var(--ink-700, #485265); display: inline-flex; align-items: center; justify-content: center;
+  }
+  .step-icon.complete { color: var(--signal, #1d4ed8); }
+
+  /* completion banner */
+  .complete-banner {
+    margin: 20px 0; padding: 18px 22px;
+    background: linear-gradient(135deg, #fef3c7, var(--bg-2, #fbfaf6));
+    border: 1px solid #f3d7b1; border-radius: 14px;
+    display: flex; gap: 14px; align-items: center;
+  }
+  .complete-banner .dot {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #ffffff; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 22px -6px rgba(245,158,11,0.40);
+  }
+
+  /* Locked banner if prereq isn't done */
+  .locked-banner {
+    margin: 18px 0; padding: 16px 18px;
+    background: #fef3c7; border: 1px solid #f3d7b1; border-radius: 12px;
+    color: #8a6d36; font-size: 14px;
+  }
+
+  /* Quiz inline modal */
+  .quiz-modal-mask {
+    position: fixed; inset: 0; background: rgba(15,17,22,0.55); backdrop-filter: blur(4px);
+    z-index: 90; display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .quiz-modal-mask.show { display: flex; }
+  .quiz-modal {
+    background: var(--bg-2, #fbfaf6); border-radius: 16px;
+    width: 100%; max-width: 520px; padding: 24px;
+    box-shadow: 0 24px 60px -10px rgba(15,17,22,0.45);
+    border: 1px solid var(--hairline, #e6dfcc);
+    max-height: 86vh; overflow-y: auto;
+  }
+  .quiz-modal h3 { font-family: 'Inter', system-ui, sans-serif; font-size: 17px; font-weight: 700; margin: 0 0 14px; color: var(--ink-50, #15191f); }
+  .quiz-modal .qq { font-size: 15px; line-height: 1.5; color: var(--ink-300, #2a313b); margin: 8px 0 12px; }
+  .quiz-opt {
+    display: block; width: 100%; text-align: left; padding: 11px 14px; border-radius: 10px;
+    background: #ffffff; border: 1px solid var(--hairline, #e6dfcc);
+    font-family: inherit; font-size: 13.5px; color: var(--ink-50, #15191f);
+    cursor: pointer; transition: all 0.12s; margin-bottom: 8px;
+  }
+  .quiz-opt:hover:not(:disabled) { border-color: var(--signal, #1d4ed8); }
+  .quiz-opt.right { background: var(--signal-bg, #ebf7f1); border-color: var(--signal, #1d4ed8); color: var(--signal-deep, #1e3a8a); font-weight: 600; }
+  .quiz-opt.wrong { background: #fdeeee; border-color: #d97757; color: #8a3925; }
+  .quiz-fb {
+    margin-top: 12px; padding: 12px 14px; border-radius: 10px;
+    background: var(--bg-3, #ede4d0); font-size: 13px; color: var(--ink-300, #2a313b);
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="roadmap.html" class="back" data-i18n="back_to_path">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    <span data-i18n="back_to_path_label">Back to your path</span>
+  </a>
+
+  <div id="lockedBanner" class="locked-banner" style="display: none;">
+    <strong data-i18n="topic_locked_h">Topic locked.</strong>
+    <span data-i18n="topic_locked_b"> Finish the previous topic to unlock this one.</span>
+  </div>
+
+  <div class="hero">
+    <div class="crumbs" id="crumbs">—</div>
+    <h1 id="topicTitle">—</h1>
+    <p class="lede" id="topicLede">—</p>
+    <div class="meta-row" id="metaRow"></div>
+    <div class="topic-progress">
+      <div class="lbl">
+        <span data-i18n="topic_progress">Topic progress</span>
+        <span id="progPct">0%</span>
+      </div>
+      <div class="bar"><div id="progBar" style="width: 0%;"></div></div>
+    </div>
+  </div>
+
+  <div id="completeBanner" style="display: none;" class="complete-banner">
+    <div class="dot">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div>
+      <div style="font-family: 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 16px; color: var(--ink-50, #15191f);" data-i18n="topic_complete_h">Topic complete.</div>
+      <div style="color: var(--ink-500, #5d6776); font-size: 13px;" data-i18n="topic_complete_b">Nice work. The next topic is now unlocked on your path.</div>
+    </div>
+  </div>
+
+  <div class="section-title" data-i18n="whats_inside">What's inside — complete in order</div>
+  <div id="steps" class="steps"></div>
+</div>
+
+<!-- Quiz modal -->
+<div id="quizMask" class="quiz-modal-mask">
+  <div class="quiz-modal">
+    <h3 id="quizTitle">Quiz</h3>
+    <div id="quizQ" class="qq"></div>
+    <div id="quizOpts"></div>
+    <div id="quizFB" class="quiz-fb" style="display: none;"></div>
+    <div style="display: flex; gap: 10px; justify-content: space-between; margin-top: 14px;">
+      <span id="quizCounter" style="font-family: 'Inter', system-ui, sans-serif; font-size: 11px; color: var(--ink-700, #485265); letter-spacing: 0.14em;">1 / 1</span>
+      <button id="quizNext" style="background: var(--signal, #1d4ed8); color: #fff; padding: 10px 16px; border-radius: 10px; border: 0; cursor: pointer; font-family: 'Inter', system-ui, sans-serif; font-weight: 700;">Next</button>
+    </div>
+  </div>
+</div>
+
+<script src="scripts/api.js"></script>
+<script src="scripts/app.js"></script>
+<script src="scripts/curriculum.js"></script>
+<script src="scripts/curriculum_es.js"></script>
+<script src="scripts/shorts.js"></script>
+<script src="scripts/topics.js"></script>
+
+<script>
+(async function () {
+  const T = window.APEX_TOPICS;
+  // Pull server progress into localStorage before rendering.
+  try { if (T && T.refreshFromServer) await T.refreshFromServer(); } catch (e) {}
+  const params = new URLSearchParams(location.search);
+  const topicId = params.get('id');
+  const topic = T && T.get(topicId);
+  if (!topic) {
+    document.querySelector('.wrap').innerHTML =
+      '<p style="margin: 80px auto; text-align: center; color: var(--ink-500);">Topic not found. <a href="roadmap.html">Back to your path</a></p>';
+    return;
+  }
+
+  const lang = T.lang();
+  const Tr = (en, es) => (lang === 'es' ? es : en);
+
+  // ---------- HERO ----------
+  // Race-style "LAP NN / 42" counter + module crumb
+  const lapNum = String(topic.order).padStart(2, '0');
+  document.getElementById('crumbs').innerHTML =
+    '<span class="lap-pill">LAP ' + lapNum + ' / 42</span>' +
+    '<span style="margin: 0 10px; color: var(--ink-700);">·</span>' +
+    Tr('Module ' + topic.moduleNum, 'Módulo ' + topic.moduleNum) +
+    ' · ' + topic.chapter_label;
+
+  document.getElementById('topicTitle').textContent = T.t(topic, 'title');
+  document.getElementById('topicLede').textContent =
+    T.t(topic, 'moduleTitle') || topic.moduleTitle;
+
+  const progress = T.loadProgress();
+  const unlocked = T.topicUnlocked(topic, progress);
+  if (!unlocked) document.getElementById('lockedBanner').style.display = 'block';
+
+  const xpReward = topic.xp_reward;
+  const mins = topic.minutes_estimate;
+  const metaRow = document.getElementById('metaRow');
+  metaRow.innerHTML = `
+    <span class="meta-pill">⏱ ${mins} ${Tr('min', 'min')}</span>
+    <span class="meta-pill xp">⭐ ${xpReward} XP</span>
+    ${!unlocked ? '<span class="meta-pill locked">🔒 ' + Tr('Locked', 'Bloqueado') + '</span>' : ''}
+  `;
+
+  // ---------- STEPS ----------
+  const steps = T.steps(topic);
+  const totalSteps = steps.length;
+  const doneSteps = steps.filter(s => T.isStepDone(topic.id, s, progress)).length;
+  const pct = totalSteps ? Math.round(doneSteps / totalSteps * 100) : 0;
+  document.getElementById('progPct').textContent = pct + '%';
+  setTimeout(() => { document.getElementById('progBar').style.width = pct + '%'; }, 60);
+  if (pct === 100) document.getElementById('completeBanner').style.display = 'flex';
+
+  const stepsEl = document.getElementById('steps');
+  let firstAvailableShown = false;
+
+  steps.forEach((s, i) => {
+    const isDone = T.isStepDone(topic.id, s, progress);
+    let isAvailable = !isDone && unlocked && !firstAvailableShown;
+    if (isAvailable) firstAvailableShown = true;
+    const isLocked = !isDone && !isAvailable;
+
+    const cls = isDone ? 'done' : isAvailable ? 'available' : 'locked';
+    let title, sub, ctaLabel, ctaAction = '';
+    let extra = '';
+
+    if (s.kind === 'shorts') {
+      title = Tr(s.count + ' shorts', s.count + ' clips cortos');
+      sub = Tr('Quick clips that set up this topic. Auto-advances. ~' + s.count * 15 + 's total.',
+               'Clips rápidos que introducen el tema. Avance automático. ~' + s.count * 15 + 's en total.');
+      const watched = (progress[topic.id] && progress[topic.id].shorts) || [];
+      const items = topic.assets.shorts.map(sh =>
+        `<span class="ci ${watched.includes(sh.id) ? 'done' : ''}"><span class="dot"></span>${esc(sh.title_en)}</span>`
+      ).join('');
+      extra = `<div class="child-list">${items}</div>`;
+      ctaLabel = isDone ? Tr('Re-watch', 'Repetir') : Tr('Watch', 'Ver');
+      ctaAction = `location.href='shorts.html?topic=${encodeURIComponent(topic.id)}'`;
+    }
+    if (s.kind === 'article') {
+      title = Tr('Read the article', 'Leer el artículo');
+      sub = '~' + s.read_minutes + ' min · ' + Tr('article finishes when you scroll to the end.',
+                                                  'el artículo termina cuando haces scroll al final.');
+      ctaLabel = isDone ? Tr('Review', 'Revisar') : Tr('Read', 'Leer');
+      ctaAction = `location.href='lesson.html?id=${encodeURIComponent(topic.id)}&topic_step=article'`;
+    }
+    if (s.kind === 'quiz') {
+      title = s.type === 'exam'
+        ? Tr('Module checkpoint exam', 'Examen de control del módulo')
+        : Tr('Quiz: ' + s.qs + ' questions', 'Cuestionario: ' + s.qs + ' preguntas');
+      const passPct = Math.round(s.pass * 100);
+      sub = Tr('Pass at ' + passPct + '%+ to unlock the next step.',
+               'Aprueba con ' + passPct + '% o más para desbloquear el siguiente paso.');
+      ctaLabel = isDone ? Tr('Retake', 'Volver a tomar') : Tr('Start quiz', 'Iniciar');
+      ctaAction = `window._openTopicQuiz('${topic.id}')`;
+    }
+    if (s.kind === 'game') {
+      title = Tr('Game: ' + s.game_id, 'Juego: ' + s.game_id);
+      sub = Tr('Hit the pass score (' + s.pass_score + ') to unlock the next step.',
+               'Alcanza el puntaje (' + s.pass_score + ') para desbloquear el siguiente paso.');
+      ctaLabel = isDone ? Tr('Replay', 'Volver a jugar') : Tr('Play', 'Jugar');
+      ctaAction = `location.href='${s.route}?topic=${encodeURIComponent(topic.id)}'`;
+    }
+    if (s.kind === 'drive') {
+      title = Tr(topic.assets.drive.label_en, topic.assets.drive.label_es || topic.assets.drive.label_en);
+      sub = Tr('Guided sim with voice tutor. Complete the scenario without violations.',
+               'Simulación guiada con tutor por voz. Completa el escenario sin infracciones.');
+      ctaLabel = isDone ? Tr('Re-drive', 'Volver a manejar') : Tr('Drive', 'Manejar');
+      ctaAction = `location.href='${s.route}&topic=${encodeURIComponent(topic.id)}'`;
+    }
+
+    const div = document.createElement('div');
+    div.className = 'step ' + cls;
+    div.innerHTML = `
+      <div class="step-num">${isDone ? '✓' : (i + 1)}</div>
+      <div class="step-body">
+        <div class="ttl">${esc(title)}</div>
+        <div class="sub">${esc(sub)}</div>
+        ${extra}
+      </div>
+      <button class="step-cta" onclick="${ctaAction}">${esc(ctaLabel)}</button>
+    `;
+    stepsEl.appendChild(div);
+  });
+
+  // ---------- INLINE QUIZ ----------
+  // Loads quiz from curriculum or curriculum_es. Records quiz score on pass.
+  let quizState = null;
+  window._openTopicQuiz = function (tid) {
+    const ch = findChapterById(tid);
+    if (!ch) return;
+    const useEs = lang === 'es';
+    const esCh = useEs && window.APEX_CHAPTER_ES ? window.APEX_CHAPTER_ES(tid) : null;
+    const questions = (esCh && (esCh.quiz || esCh.exam)) || ch.quiz || ch.exam;
+    if (!questions || !questions.length) return;
+    quizState = { tid, questions, idx: 0, correct: 0 };
+    document.getElementById('quizTitle').textContent =
+      ch.type === 'checkpoint'
+        ? Tr('Module checkpoint exam', 'Examen de control del módulo')
+        : Tr('Quiz', 'Cuestionario');
+    document.getElementById('quizMask').classList.add('show');
+    renderQuizQ();
+  };
+  function renderQuizQ() {
+    const q = quizState.questions[quizState.idx];
+    document.getElementById('quizQ').textContent = q.q;
+    document.getElementById('quizCounter').textContent = (quizState.idx + 1) + ' / ' + quizState.questions.length;
+    const optsEl = document.getElementById('quizOpts');
+    optsEl.innerHTML = '';
+    const fb = document.getElementById('quizFB');
+    fb.style.display = 'none'; fb.textContent = '';
+    document.getElementById('quizNext').style.display = 'none';
+    q.options.forEach((opt, i) => {
+      const b = document.createElement('button');
+      b.className = 'quiz-opt';
+      b.textContent = opt;
+      b.onclick = () => {
+        optsEl.querySelectorAll('.quiz-opt').forEach(x => x.disabled = true);
+        const correct = i === q.correct;
+        if (correct) quizState.correct += 1;
+        b.classList.add(correct ? 'right' : 'wrong');
+        if (!correct && optsEl.children[q.correct]) optsEl.children[q.correct].classList.add('right');
+        fb.textContent = q.why || (correct ? Tr('Correct.', 'Correcto.') : Tr('Wrong — review the article and try again.', 'Incorrecto — revisa el artículo e intenta de nuevo.'));
+        fb.style.display = 'block';
+        document.getElementById('quizNext').style.display = 'inline-flex';
+        document.getElementById('quizNext').textContent =
+          quizState.idx + 1 < quizState.questions.length
+            ? Tr('Next →', 'Siguiente →')
+            : Tr('Finish', 'Terminar');
+      };
+      optsEl.appendChild(b);
+    });
+  }
+  document.getElementById('quizNext').onclick = () => {
+    quizState.idx += 1;
+    if (quizState.idx >= quizState.questions.length) {
+      const score01 = quizState.correct / quizState.questions.length;
+      T.recordQuizScore(quizState.tid, score01);
+      // Also push lesson completion to backend if signed in
+      if (window.APEX_API) {
+        try { window.APEX_API.completeLesson({ lesson_id: quizState.tid, minutes: 0, xp: Math.round(score01 * 50) }); } catch (e) {}
+      }
+      const passed = score01 >= 0.66;
+      document.getElementById('quizMask').classList.remove('show');
+      sessionStorage.setItem('apex_just_completed', '1');
+      // Reload to refresh step states
+      setTimeout(() => location.reload(), 250);
+      return;
+    }
+    renderQuizQ();
+  };
+  document.getElementById('quizMask').addEventListener('click', (e) => {
+    if (e.target.id === 'quizMask') {
+      document.getElementById('quizMask').classList.remove('show');
+    }
+  });
+
+  function findChapterById(id) {
+    const C = window.APEX_CURRICULUM;
+    for (const m of C.modules) for (const ch of m.chapters) if (ch.id === id) return ch;
+    return null;
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // Mark complete if every step is done (idempotent)
+  if (pct === 100) T.markCompleteIfReady(topic.id);
+})();
+</script>
+<script src="scripts/i18n.js"></script>
+<script src="scripts/lang-toggle.js"></script>
+<script type="module">
+  // TDLR compliance: anti-skip timer + tamper signals + identity challenge + gate UI
+  import { startTimer } from './scripts/compliance/timer.js';
+  import { startTamperWatch } from './scripts/compliance/tamper.js';
+  import { maybeChallenge } from './scripts/compliance/identity.js';
+  import { attachLessonGate } from './scripts/compliance/lesson-gate.js';
+  const _topicId = new URLSearchParams(location.search).get('id') || new URLSearchParams(location.search).get('topic');
+  if (_topicId) {
+    startTimer(_topicId).catch(() => {});
+    startTamperWatch(_topicId);
+    maybeChallenge(_topicId);
+    setTimeout(() => attachLessonGate(_topicId), 500);
+  }
+</script>
+<script type="module" src="scripts/compliance/bootstrap.js"></script>
+<script>if(window.APEX&&APEX.requireTrack)APEX.requireTrack("teen");</script>
+</body>
+</html>
